@@ -12,4 +12,14 @@ public class ConfigData {
     public List<String> muteBlockedCommands = Arrays.asList("msg", "me");
     public String defaultTempPunishmentDurationLimit = "-1";
     public HashMap<String, String> permissionTempLimit = new HashMap<>();
+
+    public String databaseType = "sqlite";
+
+    public String sqliteDatabaseLocation = "banhammer.db";
+    public String mysqlDatabaseAddress = "";
+    public String mysqlDatabaseName = "";
+    public String mysqlDatabaseUsername = "";
+    public String mysqlDatabasePassword = "";
+
+
 }

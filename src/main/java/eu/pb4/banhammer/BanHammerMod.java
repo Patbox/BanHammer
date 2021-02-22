@@ -1,8 +1,10 @@
 package eu.pb4.banhammer;
 
 import eu.pb4.banhammer.commands.Commands;
+import eu.pb4.banhammer.config.ConfigData;
 import eu.pb4.banhammer.config.ConfigManager;
 import eu.pb4.banhammer.database.DatabaseHandlerInterface;
+import eu.pb4.banhammer.database.MySQLDatabase;
 import eu.pb4.banhammer.database.SQLiteDatabase;
 import eu.pb4.banhammer.types.BasicPunishment;
 import eu.pb4.banhammer.types.PunishmentTypes;
@@ -17,9 +19,11 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 
 public class BanHammerMod implements ModInitializer {
 	public static final Logger LOGGER = LogManager.getLogger("BanHammer");
@@ -35,19 +39,46 @@ public class BanHammerMod implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+
 		ServerLifecycleEvents.SERVER_STARTING.register(server -> {
 			AUDIENCE = FabricServerAudiences.of(server);
 			SERVER = server;
-			DATABASE = new SQLiteDatabase();
+			boolean loaded = ConfigManager.loadConfig();
+			if (loaded) {
+				ConfigData configData = ConfigManager.getConfig().getConfigData();
+
+				try {
+					switch (configData.databaseType.toLowerCase(Locale.ROOT)) {
+						case "sqlite":
+							DATABASE = new SQLiteDatabase(configData.sqliteDatabaseLocation);
+							break;
+						case "mysql":
+							DATABASE = new MySQLDatabase(configData.mysqlDatabaseAddress, configData.mysqlDatabaseName, configData.mysqlDatabaseUsername, configData.mysqlDatabasePassword);
+							break;
+						default:
+							LOGGER.error("Config file is invalid (database)! Stopping server...");
+							server.stop(true);
+					}
+				} catch (SQLException e) {
+					e.printStackTrace();
+
+					LOGGER.error("Couldn't connect to database! Stopping server...");
+					server.stop(true);
+				}
+			} else {
+				LOGGER.error("Config file is invalid! Stopping server...");
+				server.stop(true);
+			}
 		});
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
-			DATABASE.closeConnection();
+			if (DATABASE != null) {
+				DATABASE.closeConnection();
+			}
 			SERVER = null;
 			AUDIENCE = null;
 			DATABASE = null;
 		});
 
-		ConfigManager.loadConfig();
 		Commands.register();
 	}
 

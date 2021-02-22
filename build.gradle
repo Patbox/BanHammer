@@ -34,7 +34,9 @@ dependencies {
 	modImplementation include("net.kyori:adventure-platform-fabric:4.0.0-SNAPSHOT")
 	implementation include("net.kyori:adventure-text-minimessage:4.1.0-SNAPSHOT")
 
-	implementation(include('org.xerial:sqlite-jdbc:3.32.3.2'))
+	implementation include('org.xerial:sqlite-jdbc:3.34.0')
+	implementation include('mysql:mysql-connector-java:8.0.23')
+
 
 	modImplementation include("com.github.Patbox:FabricPlaceholderAPI:0.2.0")
 	modImplementation "com.github.SuperCoder7979:databreaker:0.2.6"
