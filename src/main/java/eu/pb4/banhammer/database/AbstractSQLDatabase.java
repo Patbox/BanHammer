@@ -15,25 +15,18 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
     protected Connection conn;
     protected Statement stat;
 
-    public boolean createTables()  {
+    public void createTables() throws SQLException  {
         String create = "CREATE TABLE IF NOT EXISTS %s (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "bannedUUID varchar(36), bannedIP varchar(15), bannedName varchar(16), bannedDisplay varchar(512), " +
-                "adminUUID varchar(36), adminDisplay varchar(512), time BIGINT, duration BIGINT, reason varchar(128))";
+                "adminUUID varchar(36), adminDisplay TEXT, time BIGINT, duration BIGINT, reason varchar(128))";
         String createHistory = "CREATE TABLE IF NOT EXISTS history (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "bannedUUID varchar(36), bannedIP varchar(15), bannedName varchar(16), bannedDisplay varchar(512), " +
-                "adminUUID varchar(36), adminDisplay varchar(512), time BIGINT, duration BIGINT, reason varchar(128), type varchar(16))";
+                "adminUUID varchar(36), adminDisplay TEXT, time BIGINT, duration BIGINT, reason varchar(128), type varchar(16))";
 
-        try {
-            stat.execute(String.format(create, PunishmentTypes.BAN.databaseName));
-            stat.execute(String.format(create, PunishmentTypes.IPBAN.databaseName));
-            stat.execute(String.format(create, PunishmentTypes.MUTE.databaseName));
-            stat.execute(createHistory);
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
-        return true;
+        stat.execute(String.format(create, PunishmentTypes.BAN.databaseName));
+        stat.execute(String.format(create, PunishmentTypes.IPBAN.databaseName));
+        stat.execute(String.format(create, PunishmentTypes.MUTE.databaseName));
+        stat.execute(createHistory);
     }
 
     public boolean insertPunishmentIntoHistory(BasicPunishment punishment) {
@@ -174,10 +167,6 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
         } catch (Exception x) {
             x.printStackTrace();
         }
-    }
-
-    public void reconnect() {
-
     }
 
     public void closeConnection() {

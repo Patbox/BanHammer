@@ -1,5 +1,8 @@
 package eu.pb4.banhammer;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import eu.pb4.banhammer.commands.Commands;
 import eu.pb4.banhammer.config.ConfigData;
 import eu.pb4.banhammer.config.ConfigManager;
@@ -9,24 +12,34 @@ import eu.pb4.banhammer.database.SQLiteDatabase;
 import eu.pb4.banhammer.types.BasicPunishment;
 import eu.pb4.banhammer.types.PunishmentTypes;
 import eu.pb4.banhammer.types.SyncedPunishment;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.event.Event;
+import net.fabricmc.fabric.api.event.EventFactory;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.kyori.adventure.platform.fabric.FabricServerAudiences;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.minecraft.network.MessageType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
+import net.minecraft.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.*;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
 
 public class BanHammerMod implements ModInitializer {
 	public static final Logger LOGGER = LogManager.getLogger("BanHammer");
+	private static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
 
 	public static final MiniMessage miniMessage = MiniMessage.get();
 	public static String VERSION = FabricLoader.getInstance().getModContainer("banhammer").get().getMetadata().getVersion().getFriendlyString();
@@ -35,7 +48,7 @@ public class BanHammerMod implements ModInitializer {
 
 	public static DatabaseHandlerInterface DATABASE;
 
-	public static HashMap<String, String> IPCACHE = new HashMap();
+	public static HashMap<String, String> IP_CACHE = null;
 
 	@Override
 	public void onInitialize() {
@@ -44,8 +57,18 @@ public class BanHammerMod implements ModInitializer {
 			AUDIENCE = FabricServerAudiences.of(server);
 			SERVER = server;
 			boolean loaded = ConfigManager.loadConfig();
+
+			File ipcacheFile = Paths.get("ipcache.json").toFile();
+
+			try {
+				IP_CACHE = ipcacheFile.exists() ? GSON.fromJson(new FileReader(ipcacheFile), new TypeToken<HashMap<String, String>>() {}.getType()) : new HashMap<>();
+			} catch (FileNotFoundException e) {
+				LOGGER.warn("Couldn't load ipcache.json! Creating new one...");
+				IP_CACHE = new HashMap<>();
+			}
+
 			if (loaded) {
-				ConfigData configData = ConfigManager.getConfig().getConfigData();
+				ConfigData configData = ConfigManager.getConfig().configData;
 
 				try {
 					switch (configData.databaseType.toLowerCase(Locale.ROOT)) {
@@ -77,6 +100,16 @@ public class BanHammerMod implements ModInitializer {
 			SERVER = null;
 			AUDIENCE = null;
 			DATABASE = null;
+
+			File ipcacheFile = Paths.get("ipcache.json").toFile();
+
+			try {
+				BufferedWriter writer = new BufferedWriter(new FileWriter(ipcacheFile));
+				writer.write(GSON.toJson(IP_CACHE));
+				writer.close();
+			} catch (IOException exception) {
+				exception.printStackTrace();
+			}
 		});
 
 		Commands.register();
@@ -86,26 +119,45 @@ public class BanHammerMod implements ModInitializer {
 		return AUDIENCE;
 	}
 
-	public static void punishPlayer(BasicPunishment punishment) {
-		DATABASE.insertPunishment(punishment);
+	public static void punishPlayer(BasicPunishment punishment, boolean silent) {
+		CompletableFuture.runAsync(() -> {
+			if (punishment.getType().databaseName != null) {
+				DATABASE.insertPunishment(punishment);
+			}
 
-		if (ConfigManager.getConfig().getConfigData().storeAllPunishmentsInHistory) {
-			DATABASE.insertPunishmentIntoHistory(punishment);
-		}
+			if (ConfigManager.getConfig().configData.storeAllPunishmentsInHistory) {
+				DATABASE.insertPunishmentIntoHistory(punishment);
+			}
+		});
 
 		if (punishment.getType().kick && punishment.getType().ipBased) {
 			for (ServerPlayerEntity player : SERVER.getPlayerManager().getPlayerList()) {
 				if (player.getIp().equals(punishment.getIPofPlayer())) {
-					player.networkHandler.disconnect(Helpers.parseMessage(ConfigManager.getConfig().getBanScreenMessage(), Helpers.getTemplateFor(punishment)));
+					player.networkHandler.disconnect(punishment.getDisconnectMessage());
 				}
 			}
 		} else if (punishment.getType().kick) {
 			ServerPlayerEntity player = SERVER.getPlayerManager().getPlayer(punishment.getUUIDofPlayer());
 
 			if (player != null) {
-				player.networkHandler.disconnect(Helpers.parseMessage(ConfigManager.getConfig().getBanScreenMessage(), Helpers.getTemplateFor(punishment)));
+				player.networkHandler.disconnect(punishment.getDisconnectMessage());
 			}
 		}
+
+		if (!silent) {
+			SERVER.getPlayerManager().broadcastChatMessage(punishment.getChatMessage(), MessageType.SYSTEM, Util.NIL_UUID);
+		} else {
+			Text message = punishment.getChatMessage();
+
+			SERVER.sendSystemMessage(message, Util.NIL_UUID);
+
+			for (ServerPlayerEntity player : SERVER.getPlayerManager().getPlayerList()) {
+				if (Permissions.check(player, "banhammer.seesilent", 1)) {
+					player.sendMessage(message, MessageType.SYSTEM, Util.NIL_UUID);
+				}
+			}
+		}
+		PUNISHMENT_EVENT.invoker().onPunishment(punishment);
 	}
 
 	public static void removePunishment(String id, PunishmentTypes type) {
@@ -138,5 +190,16 @@ public class BanHammerMod implements ModInitializer {
 		}
 
 		return false;
+	}
+
+	public static final Event<BanHammerMod.PunishmentEvent> PUNISHMENT_EVENT = EventFactory.createArrayBacked(PunishmentEvent.class, (callbacks) -> (punishment) -> {
+		for(PunishmentEvent callback : callbacks ) {
+			callback.onPunishment(punishment);
+		}
+	});
+
+	@FunctionalInterface
+	public interface PunishmentEvent {
+		void onPunishment(BasicPunishment punishment);
 	}
 }

@@ -20,6 +20,4 @@ public class ConfigData {
     public String mysqlDatabaseName = "";
     public String mysqlDatabaseUsername = "";
     public String mysqlDatabasePassword = "";
-
-
 }

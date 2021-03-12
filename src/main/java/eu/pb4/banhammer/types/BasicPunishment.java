@@ -1,5 +1,6 @@
 package eu.pb4.banhammer.types;
 
+import eu.pb4.banhammer.Helpers;
 import eu.pb4.banhammer.config.MessageConfigData;
 import eu.pb4.banhammer.config.ConfigManager;
 import net.minecraft.text.Text;
@@ -75,18 +76,18 @@ public class BasicPunishment {
     }
 
     public Date getExpirationDate() {
-        return this.duration > -1 ? new Date((this.time + this.duration ) * 1000) : new Date(32503676400000l);
+        return this.duration > -1 ? new Date((this.time + this.duration ) * 1000) : new Date(32503676400000L);
     }
 
     public String getFormattedExpirationDate() {
-        return this.duration > -1 ? ConfigManager.getConfig().getDateFormatter().format(this.getExpirationDate()) : ConfigManager.getConfig().getNeverExpires();
+        return this.duration > -1 ? ConfigManager.getConfig().dateTimeFormatter.format(this.getExpirationDate()) : ConfigManager.getConfig().neverExpires;
     }
 
     public String getFormattedExpirationTime() {
         if (this.duration > -1) {
             long x = this.duration + this.time - System.currentTimeMillis() / 1000;
 
-            MessageConfigData data = ConfigManager.getConfig().getMessageConfigData();
+            MessageConfigData data = ConfigManager.getConfig().messageConfigData;
 
             long seconds = x % 60;
             long minutes = (x / 60) % 60;
@@ -108,7 +109,51 @@ public class BasicPunishment {
                 return String.format("0%s", data.secondsText);
             }
         } else {
-            return ConfigManager.getConfig().getNeverExpires();
+            return ConfigManager.getConfig().neverExpires;
         }
+    }
+
+
+    public Text getDisconnectMessage() {
+        String message;
+
+        switch (this.type) {
+            case KICK:
+                message = ConfigManager.getConfig().kickScreenMessage;
+                break;
+            case BAN:
+                message = ConfigManager.getConfig().banScreenMessage;
+                break;
+            case IPBAN:
+                message = ConfigManager.getConfig().ipBanScreenMessage;
+                break;
+            default:
+                message = "";
+        }
+
+        return Helpers.parseMessage(message, Helpers.getTemplateFor(this));
+    }
+
+    public Text getChatMessage() {
+        String message;
+
+        switch (this.type) {
+            case KICK:
+                message = ConfigManager.getConfig().kickChatMessage;
+                break;
+            case BAN:
+                message = ConfigManager.getConfig().banChatMessage;
+                break;
+            case IPBAN:
+                message = ConfigManager.getConfig().ipBanChatMessage;
+                break;
+            case MUTE:
+                message = ConfigManager.getConfig().muteChatMessage;
+                break;
+            default:
+                message = "";
+        }
+
+        return Helpers.parseMessage(message, Helpers.getTemplateFor(this));
     }
 }

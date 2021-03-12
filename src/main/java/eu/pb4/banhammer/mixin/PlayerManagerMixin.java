@@ -3,7 +3,6 @@ package eu.pb4.banhammer.mixin;
 import com.mojang.authlib.GameProfile;
 import eu.pb4.banhammer.BanHammerMod;
 import eu.pb4.banhammer.Helpers;
-import eu.pb4.banhammer.config.ConfigManager;
 import eu.pb4.banhammer.types.BasicPunishment;
 import eu.pb4.banhammer.types.PunishmentTypes;
 import net.minecraft.network.ClientConnection;
@@ -23,7 +22,7 @@ public class PlayerManagerMixin {
 
     @Inject(method = "onPlayerConnect", at = @At("HEAD"))
     private void cachePlayersIP(ClientConnection connection, ServerPlayerEntity player, CallbackInfo ci) {
-        BanHammerMod.IPCACHE.put(player.getUuid().toString(), Helpers.stringifyAddress(connection.getAddress()));
+        BanHammerMod.IP_CACHE.put(player.getUuid().toString(), Helpers.stringifyAddress(connection.getAddress()));
     }
 
     @Inject(method = "checkCanJoin", at = @At("TAIL"), cancellable = true)
@@ -37,8 +36,7 @@ public class PlayerManagerMixin {
         }
 
         if (punishment != null) {
-            Text out = Helpers.parseMessage(ConfigManager.getConfig().getBanScreenMessage(), Helpers.getTemplateFor(punishment));
-            cir.setReturnValue(out);
+            cir.setReturnValue(punishment.getDisconnectMessage());
         }
     }
 }

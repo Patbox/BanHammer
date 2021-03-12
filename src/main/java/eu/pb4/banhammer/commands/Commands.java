@@ -146,11 +146,7 @@ public class Commands {
                 } else {
                     long temp2 = ConfigManager.getConfig().getDurationLimit(ctx.getSource());
 
-                    if (temp2 > temp) {
-                        duration = temp;
-                    } else {
-                        duration = temp2;
-                    }
+                    duration = Math.min(temp2, temp);
                 }
 
             } catch (Exception e) {
@@ -165,14 +161,14 @@ public class Commands {
         try {
             reason = ctx.getArgument("reason", String.class);
         } catch (Exception e) {
-            reason = config.getDefaultReason();
+            reason = config.defaultReason;
         }
 
         ServerPlayerEntity player = server.getPlayerManager().getPlayer(playerName);
 
         UUID playerUUID = null;
-        Text playerNameText = null;
-        String playerNameRaw = null;
+        Text playerNameText;
+        String playerNameRaw;
         String playerIP = null;
 
         if (player != null) {
@@ -183,7 +179,7 @@ public class Commands {
         } else if (type.ipBased && InetAddresses.isInetAddress(playerName)) {
             GameProfile profile = null;
 
-            for (Map.Entry<String, String> entry : BanHammerMod.IPCACHE.entrySet()) {
+            for (Map.Entry<String, String> entry : BanHammerMod.IP_CACHE.entrySet()) {
                 if (entry.getValue().equals(playerName)) {
                     playerUUID = UUID.fromString(entry.getKey());
                     playerIP = entry.getKey();
@@ -206,7 +202,7 @@ public class Commands {
 
             if (profile != null) {
                 playerUUID = profile.getId();
-                playerIP = BanHammerMod.IPCACHE.get(playerUUID);
+                playerIP = BanHammerMod.IP_CACHE.get(playerUUID.toString());
                 playerNameText = new LiteralText(profile.getName());
                 playerNameRaw = profile.getName();
             } else {
@@ -221,60 +217,15 @@ public class Commands {
             executor = ctx.getSource().getPlayer();
             executorUUID = executor.getUuid();
         } catch (Exception e) {
-            executor = null;
             executorUUID = null;
         }
 
         BasicPunishment punishment = new BasicPunishment(playerUUID, playerIP, playerNameText, playerNameRaw, executorUUID, ctx.getSource().getDisplayName(), System.currentTimeMillis() / 1000, duration, reason, type);
 
-        if (type.databaseName != null) {
-            BanHammerMod.punishPlayer(punishment);
-        } else if (player != null && type.kick) {
-            player.networkHandler.disconnect(Helpers.parseMessage(ConfigManager.getConfig().getKickScreenMessage(), Helpers.getTemplateFor(punishment)));
-        } else if (type.kick && type.ipBased) {
-            for (ServerPlayerEntity player2 : server.getPlayerManager().getPlayerList()) {
-                if (player2.getIp().equals(playerIP)) {
-                    player2.networkHandler.disconnect(Helpers.parseMessage(ConfigManager.getConfig().getKickScreenMessage(), Helpers.getTemplateFor(punishment)));
-                }
-            }
-        }
+        BanHammerMod.punishPlayer(punishment, config.configData.punishmentsAreSilent);
 
-        String message;
-
-        switch (type) {
-            case BAN:
-            case IPBAN:
-                message = config.getBanChatMessage();
-                break;
-            case MUTE:
-                message = config.getMuteChatMessage();
-                break;
-            case KICK:
-                message = config.getKickChatMessage();
-                if (ConfigManager.getConfig().getConfigData().storeAllPunishmentsInHistory) {
-                    BanHammerMod.DATABASE.insertPunishmentIntoHistory(punishment);
-                }
-                break;
-            default:
-                message = "";
-        }
-
-        Text textMessage = Helpers.parseMessage(message, Helpers.getTemplateFor(punishment));
-
-        if (config.getConfigData().punishmentsAreSilent){
-            if (player != null && !type.kick) {
-                player.sendMessage(textMessage, false);
-            }
-
-            ctx.getSource().sendFeedback(textMessage, false);
-        } else {
-            ctx.getSource().sendFeedback(textMessage, false);
-
-            for (ServerPlayerEntity player2 : server.getPlayerManager().getPlayerList()) {
-                if (player2 != executor) {
-                    player2.sendMessage(textMessage, MessageType.SYSTEM, Util.NIL_UUID);
-                }
-            }
+        if (config.configData.punishmentsAreSilent && !Permissions.check(ctx.getSource(), "banhammer.seesilent", 1)) {
+            ctx.getSource().sendFeedback(punishment.getChatMessage(), false);
         }
 
         return 1;
@@ -297,7 +248,7 @@ public class Commands {
             playerIP = player.getIp();
         } else if (type != null && type.ipBased && InetAddresses.isInetAddress(playerName)) {
             GameProfile profile = null;
-            for (Map.Entry<String, String> entry : BanHammerMod.IPCACHE.entrySet()) {
+            for (Map.Entry<String, String> entry : BanHammerMod.IP_CACHE.entrySet()) {
                 if (entry.getValue().equals(playerName)) {
                     playerUUID = UUID.fromString(entry.getKey());
                     playerIP = entry.getKey();
@@ -313,7 +264,7 @@ public class Commands {
             GameProfile profile = server.getUserCache().findByName(playerName);
             if (profile != null) {
                 playerUUID = profile.getId();
-                playerIP = BanHammerMod.IPCACHE.get(playerUUID);
+                playerIP = BanHammerMod.IP_CACHE.get(playerUUID.toString());
             } else {
                 ctx.getSource().sendError(new LiteralText("Couldn't find player!"));
                 return 0;
@@ -333,32 +284,32 @@ public class Commands {
             switch (type) {
                 case BAN:
                     BanHammerMod.removePunishment(playerUUID.toString(), PunishmentTypes.BAN);
-                    message = config.getUnbanChatMessage();
+                    message = config.unbanChatMessage;
                     break;
                 case IPBAN:
                     BanHammerMod.removePunishment(playerIP, PunishmentTypes.IPBAN);
-                    message = config.getUnbanChatMessage();
+                    message = config.ipUnbanChatMessage;
                     break;
                 case MUTE:
                     BanHammerMod.removePunishment(playerUUID.toString(), PunishmentTypes.MUTE);
-                    message = config.getUnmuteChatMessage();
+                    message = config.unmuteChatMessage;
                     break;
             }
         } else {
             BanHammerMod.removePunishment(playerUUID.toString(), PunishmentTypes.BAN);
             BanHammerMod.removePunishment(playerIP, PunishmentTypes.IPBAN);
             BanHammerMod.removePunishment(playerUUID.toString(), PunishmentTypes.MUTE);
-            message = config.getPardonChatMessage();
+            message = config.pardonChatMessage;
         }
 
-        ArrayList<Template> list = new ArrayList();
+        ArrayList<Template> list = new ArrayList<>();
 
         list.add(Template.of("operator", BanHammerMod.getAdventure().toAdventure(ctx.getSource().getDisplayName())));
         list.add(Template.of("banned", playerName));
 
         Text textMessage = Helpers.parseMessage(message, list);
 
-        if (config.getConfigData().punishmentsAreSilent) {
+        if (config.configData.punishmentsAreSilent) {
             if (player != null) {
                 player.sendMessage(textMessage, false);
             }

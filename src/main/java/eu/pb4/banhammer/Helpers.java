@@ -1,10 +1,7 @@
 package eu.pb4.banhammer;
 
-import com.google.common.net.InetAddresses;
 import eu.pb4.banhammer.types.BasicPunishment;
-import eu.pb4.placeholders.PlaceholderAPI;
 import net.kyori.adventure.text.minimessage.Template;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 
 import java.net.SocketAddress;
@@ -30,17 +27,8 @@ public class Helpers {
         return BanHammerMod.getAdventure().toNative(BanHammerMod.miniMessage.parse(minimessage, templates)).shallowCopy();
     }
 
-    public static Text parseMessage(String minimessage) {
-        return BanHammerMod.getAdventure().toNative(BanHammerMod.miniMessage.parse(minimessage)).shallowCopy();
-    }
-
-    public static Text parseMessageWithPlaceholders(String minimessage, List<Template> templates, ServerPlayerEntity player) {
-        Text text = BanHammerMod.getAdventure().toNative(BanHammerMod.miniMessage.parse(minimessage, templates)).shallowCopy();
-        return PlaceholderAPI.parseText(text, player);
-    }
-
     public static List<Template> getTemplateFor(BasicPunishment punishment) {
-        ArrayList<Template> list = new ArrayList();
+        ArrayList<Template> list = new ArrayList<>();
 
         list.add(Template.of("operator", BanHammerMod.getAdventure().toAdventure(punishment.getNameOfAdmin().shallowCopy())));
         list.add(Template.of("reason", punishment.getReason()));
@@ -54,8 +42,7 @@ public class Helpers {
     public static long parseDuration(String text) throws NumberFormatException {
         text = text.toLowerCase(Locale.ROOT);
         try {
-            long out = Long.parseLong(text);
-            return out;
+            return Long.parseLong(text);
         } catch (NumberFormatException e) {
             String[] times = text.replaceAll("([a-z]+)", "$1|").split("\\|");
             long time = 0;
@@ -65,7 +52,7 @@ public class Helpers {
 
                 switch (suffixOnly) {
                     case "c":
-                        time += Double.parseDouble(numberOnly) * 3155692600l;
+                        time += Double.parseDouble(numberOnly) * 3155692600L;
                         break;
                     case "y":
                         time += Double.parseDouble(numberOnly) * 31556926;

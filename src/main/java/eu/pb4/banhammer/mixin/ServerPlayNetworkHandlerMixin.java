@@ -23,17 +23,17 @@ public class ServerPlayNetworkHandlerMixin {
             if (string.startsWith("/") && string.length() > 1) {
                 int x = string.indexOf(" ");
                 String rawCommand = string.substring(1, x != -1 ? x : string.length());
-                for (String command : ConfigManager.getConfig().getMutedCommands()) {
+                for (String command : ConfigManager.getConfig().mutedCommands) {
                     if (rawCommand.startsWith(command)) {
                         ci.cancel();
                         BasicPunishment punishment = BanHammerMod.getPlayersPunishments(this.player.getUuid().toString(), PunishmentTypes.MUTE).get(0);
-                        this.player.sendMessage(Helpers.parseMessage(ConfigManager.getConfig().getMutedMessage(), Helpers.getTemplateFor(punishment)), false);
+                        this.player.sendMessage(Helpers.parseMessage(ConfigManager.getConfig().mutedMessage, Helpers.getTemplateFor(punishment)), false);
                         return;
                     }
                 }
             } else {
                 BasicPunishment punishment = BanHammerMod.getPlayersPunishments(this.player.getUuid().toString(), PunishmentTypes.MUTE).get(0);
-                this.player.sendMessage(Helpers.parseMessage(ConfigManager.getConfig().getMutedMessage(), Helpers.getTemplateFor(punishment)), false);
+                this.player.sendMessage(Helpers.parseMessage(ConfigManager.getConfig().mutedMessage, Helpers.getTemplateFor(punishment)), false);
                 ci.cancel();
             }
         }
