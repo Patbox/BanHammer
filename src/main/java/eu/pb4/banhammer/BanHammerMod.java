@@ -3,7 +3,9 @@ package eu.pb4.banhammer;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import eu.pb4.banhammer.commands.Commands;
+import eu.pb4.banhammer.commands.GeneralCommands;
+import eu.pb4.banhammer.commands.PunishCommands;
+import eu.pb4.banhammer.commands.UnpunishCommands;
 import eu.pb4.banhammer.config.ConfigData;
 import eu.pb4.banhammer.config.ConfigManager;
 import eu.pb4.banhammer.database.DatabaseHandlerInterface;
@@ -31,11 +33,11 @@ import org.apache.logging.log4j.Logger;
 import java.io.*;
 import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class BanHammerMod implements ModInitializer {
 	public static final Logger LOGGER = LogManager.getLogger("BanHammer");
@@ -48,7 +50,7 @@ public class BanHammerMod implements ModInitializer {
 
 	public static DatabaseHandlerInterface DATABASE;
 
-	public static HashMap<String, String> IP_CACHE = null;
+	public static ConcurrentHashMap<String, String> IP_CACHE = null;
 
 	@Override
 	public void onInitialize() {
@@ -61,10 +63,10 @@ public class BanHammerMod implements ModInitializer {
 			File ipcacheFile = Paths.get("ipcache.json").toFile();
 
 			try {
-				IP_CACHE = ipcacheFile.exists() ? GSON.fromJson(new FileReader(ipcacheFile), new TypeToken<HashMap<String, String>>() {}.getType()) : new HashMap<>();
+				IP_CACHE = ipcacheFile.exists() ? GSON.fromJson(new FileReader(ipcacheFile), new TypeToken<ConcurrentHashMap<String, String>>() {}.getType()) : new ConcurrentHashMap<>();
 			} catch (FileNotFoundException e) {
 				LOGGER.warn("Couldn't load ipcache.json! Creating new one...");
-				IP_CACHE = new HashMap<>();
+				IP_CACHE = new ConcurrentHashMap<>();
 			}
 
 			if (loaded) {
@@ -112,7 +114,10 @@ public class BanHammerMod implements ModInitializer {
 			}
 		});
 
-		Commands.register();
+		PunishCommands.register();
+		UnpunishCommands.register();
+		GeneralCommands.register();
+
 	}
 
 	public static FabricServerAudiences getAdventure() {

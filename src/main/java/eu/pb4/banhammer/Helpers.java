@@ -23,6 +23,10 @@ public class Helpers {
         return string;
     }
 
+    public static Text parseMessage(String minimessage) {
+        return BanHammerMod.getAdventure().toNative(BanHammerMod.miniMessage.parse(minimessage)).shallowCopy();
+    }
+
     public static Text parseMessage(String minimessage, List<Template> templates) {
         return BanHammerMod.getAdventure().toNative(BanHammerMod.miniMessage.parse(minimessage, templates)).shallowCopy();
     }

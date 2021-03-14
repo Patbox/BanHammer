@@ -11,18 +11,14 @@ public class ConfigManager {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 
     private static Config CONFIG;
-    private static boolean ENABLED = false;
 
     public static Config getConfig() {
         return CONFIG;
     }
 
-    public static boolean isEnabled() {
-        return ENABLED;
-    }
-
     public static boolean loadConfig() {
-        ENABLED = false;
+        Config oldConfig = CONFIG;
+        boolean success;
 
         CONFIG = null;
         try {
@@ -46,14 +42,15 @@ public class ConfigManager {
             writer2.write(GSON.toJson(messageConfigData));
             writer2.close();
 
-            ENABLED = true;
+            success = true;
         }
         catch(IOException exception) {
-            ENABLED = false;
+            success = false;
+            CONFIG = oldConfig;
             BanHammerMod.LOGGER.error("Something went wrong while reading config!");
             exception.printStackTrace();
         }
 
-        return ENABLED;
+        return success;
     }
 }
