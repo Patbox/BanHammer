@@ -11,6 +11,7 @@ import eu.pb4.banhammer.config.ConfigManager;
 import eu.pb4.banhammer.database.DatabaseHandlerInterface;
 import eu.pb4.banhammer.database.MySQLDatabase;
 import eu.pb4.banhammer.database.SQLiteDatabase;
+import eu.pb4.banhammer.imports.VanillaImport;
 import eu.pb4.banhammer.types.BasicPunishment;
 import eu.pb4.banhammer.types.PunishmentTypes;
 import eu.pb4.banhammer.types.SyncedPunishment;
@@ -33,6 +34,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.*;
 import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -46,11 +48,13 @@ public class BanHammerMod implements ModInitializer {
 	public static final MiniMessage miniMessage = MiniMessage.get();
 	public static String VERSION = FabricLoader.getInstance().getModContainer("banhammer").get().getMetadata().getVersion().getFriendlyString();
 	private static FabricServerAudiences AUDIENCE;
-	private static MinecraftServer SERVER;
+	public static MinecraftServer SERVER;
 
 	public static DatabaseHandlerInterface DATABASE;
 
 	public static ConcurrentHashMap<String, String> IP_CACHE = null;
+
+	public static HashMap<String, PunishmentImporter> IMPORTERS = new HashMap<>();
 
 	@Override
 	public void onInitialize() {
@@ -90,10 +94,13 @@ public class BanHammerMod implements ModInitializer {
 					LOGGER.error("Couldn't connect to database! Stopping server...");
 					server.stop(true);
 				}
+
+				IMPORTERS.put("vanilla", new VanillaImport());
 			} else {
 				LOGGER.error("Config file is invalid! Stopping server...");
 				server.stop(true);
 			}
+
 		});
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
 			if (DATABASE != null) {
@@ -125,6 +132,10 @@ public class BanHammerMod implements ModInitializer {
 	}
 
 	public static void punishPlayer(BasicPunishment punishment, boolean silent) {
+		punishPlayer(punishment, silent, false);
+	}
+
+	public static void punishPlayer(BasicPunishment punishment, boolean silent, boolean invisible) {
 		CompletableFuture.runAsync(() -> {
 			if (punishment.getType().databaseName != null) {
 				DATABASE.insertPunishment(punishment);
@@ -149,24 +160,26 @@ public class BanHammerMod implements ModInitializer {
 			}
 		}
 
-		if (!silent) {
-			SERVER.getPlayerManager().broadcastChatMessage(punishment.getChatMessage(), MessageType.SYSTEM, Util.NIL_UUID);
-		} else {
-			Text message = punishment.getChatMessage();
+		if (!invisible) {
+			if (!silent) {
+				SERVER.getPlayerManager().broadcastChatMessage(punishment.getChatMessage(), MessageType.SYSTEM, Util.NIL_UUID);
+			} else {
+				Text message = punishment.getChatMessage();
 
-			SERVER.sendSystemMessage(message, Util.NIL_UUID);
+				SERVER.sendSystemMessage(message, Util.NIL_UUID);
 
-			for (ServerPlayerEntity player : SERVER.getPlayerManager().getPlayerList()) {
-				if (Permissions.check(player, "banhammer.seesilent", 1)) {
-					player.sendMessage(message, MessageType.SYSTEM, Util.NIL_UUID);
+				for (ServerPlayerEntity player : SERVER.getPlayerManager().getPlayerList()) {
+					if (Permissions.check(player, "banhammer.seesilent", 1)) {
+						player.sendMessage(message, MessageType.SYSTEM, Util.NIL_UUID);
+					}
 				}
 			}
 		}
 		PUNISHMENT_EVENT.invoker().onPunishment(punishment);
 	}
 
-	public static void removePunishment(String id, PunishmentTypes type) {
-		DATABASE.removePunishment(id, type);
+	public static int removePunishment(String id, PunishmentTypes type) {
+		return DATABASE.removePunishment(id, type);
 	}
 
 	public static List<SyncedPunishment> getPlayersPunishments(String id, PunishmentTypes type) {
@@ -206,5 +219,10 @@ public class BanHammerMod implements ModInitializer {
 	@FunctionalInterface
 	public interface PunishmentEvent {
 		void onPunishment(BasicPunishment punishment);
+	}
+
+	@FunctionalInterface
+	public interface PunishmentImporter {
+		boolean importPunishments(boolean remove);
 	}
 }

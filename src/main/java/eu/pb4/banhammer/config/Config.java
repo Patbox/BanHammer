@@ -32,23 +32,23 @@ public class Config {
     public final String ipBanScreenMessage;
 
     public Config(ConfigData data, MessageConfigData mData) {
-        this.mutedMessage = String.join("\n", mData.mutedText);
-        this.banScreenMessage = String.join("\n", mData.banScreen);
-        this.ipBanScreenMessage = String.join("\n", mData.ipBanScreen);
-        this.kickScreenMessage = String.join("\n", mData.kickScreen);
+        this.mutedMessage = toSingleString(mData.mutedText);
+        this.banScreenMessage = toSingleString(mData.banScreen);
+        this.ipBanScreenMessage = toSingleString(mData.ipBanScreen);
+        this.kickScreenMessage = toSingleString(mData.kickScreen);
         this.mutedCommands = data.muteBlockedCommands;
         this.dateTimeFormatter = new SimpleDateFormat(mData.dateFormat);
         this.defaultReason = mData.defaultReason;
         this.neverExpires = mData.neverExpiresText;
-        this.banChatMessage = String.join("\n", mData.banChatMessage);
-        this.ipBanChatMessage = String.join("\n", mData.ipBanChatMessage);
-        this.muteChatMessage = String.join("\n", mData.muteChatMessage);
-        this.kickChatMessage = String.join("\n", mData.kickChatMessage);
+        this.banChatMessage = toSingleString(mData.banChatMessage);
+        this.ipBanChatMessage = toSingleString(mData.ipBanChatMessage);
+        this.muteChatMessage = toSingleString(mData.muteChatMessage);
+        this.kickChatMessage = toSingleString(mData.kickChatMessage);
 
-        this.unbanChatMessage = String.join("\n", mData.unbanChatMessage);
-        this.ipUnbanChatMessage = String.join("\n", mData.ipUnbanChatMessage);
-        this.unmuteChatMessage = String.join("\n", mData.unmuteChatMessage);
-        this.pardonChatMessage = String.join("\n", mData.pardonChatMessage);
+        this.unbanChatMessage = toSingleString(mData.unbanChatMessage);
+        this.ipUnbanChatMessage = toSingleString(mData.ipUnbanChatMessage);
+        this.unmuteChatMessage = toSingleString(mData.unmuteChatMessage);
+        this.pardonChatMessage = toSingleString(mData.pardonChatMessage);
 
         this.defaultDurationLimit = Helpers.parseDuration(data.defaultTempPunishmentDurationLimit);
 
@@ -58,6 +58,14 @@ public class Config {
 
         this.messageConfigData = mData;
         this.configData = data;
+    }
+
+    private String toSingleString(List<String> text) {
+        if (text.size() == 1) {
+            return text.get(0);
+        } else {
+            return String.join("\n", text);
+        }
     }
 
     public long getDurationLimit(CommandSource source) {

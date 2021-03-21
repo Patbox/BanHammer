@@ -1,15 +1,21 @@
 package eu.pb4.banhammer.commands;
 
+import com.mojang.brigadier.arguments.BoolArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import eu.pb4.banhammer.BanHammerMod;
 import eu.pb4.banhammer.Helpers;
 import eu.pb4.banhammer.config.ConfigManager;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
+import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.LiteralText;
 import net.minecraft.util.Formatting;
 
+
+import java.util.Locale;
 
 import static net.minecraft.server.command.CommandManager.literal;
 
@@ -23,6 +29,15 @@ public class GeneralCommands {
                             .then(literal("reload")
                                     .requires(Permissions.require("banhammer.reload", 3))
                                     .executes(GeneralCommands::reloadConfig)
+                            )
+                            .then(literal("import")
+                                    .requires(Permissions.require("banhammer.import", 3))
+                                    .then(importArgument("source")
+                                            .executes(GeneralCommands::importer)
+                                            .then(CommandManager.argument("remove", BoolArgumentType.bool())
+                                                    .executes(GeneralCommands::importer)
+                                            )
+                                    )
                             )
                 );
             });
@@ -38,7 +53,52 @@ public class GeneralCommands {
     }
 
     private static int about(CommandContext<ServerCommandSource> context) {
-        context.getSource().sendFeedback(Helpers.parseMessage("<red>Ban Hammer</red> - " + BanHammerMod.VERSION), false);
+        context.getSource().sendFeedback(Helpers.parseMessage("<red>BanHammer</red> - " + BanHammerMod.VERSION), false);
         return 1;
+    }
+
+    private static int importer(CommandContext<ServerCommandSource> context) {
+        String type = context.getArgument("source", String.class);
+        boolean remove;
+        try {
+            remove = context.getArgument("remove", Boolean.class);
+        } catch (Exception e) {
+            remove = false;
+        }
+
+        BanHammerMod.PunishmentImporter importer = BanHammerMod.IMPORTERS.get(type);
+
+        if (importer != null) {
+            boolean result = importer.importPunishments(remove);
+
+            if (result) {
+                context.getSource().sendFeedback(new LiteralText("Successfully imported punishments!").formatted(Formatting.GREEN), false);
+                return 1;
+            } else {
+                context.getSource().sendError(new LiteralText("Couldn't import punishments!"));
+                return 0;
+            }
+        } else {
+            context.getSource().sendError(new LiteralText("Invalid importer type!"));
+            return 0;
+        }
+
+    }
+
+
+
+    public static RequiredArgumentBuilder<ServerCommandSource, String> importArgument(String name) {
+        return CommandManager.argument(name, StringArgumentType.word())
+                .suggests((ctx, builder) -> {
+                    String remaining = builder.getRemaining().toLowerCase(Locale.ROOT);
+
+                    for (String type : BanHammerMod.IMPORTERS.keySet()) {
+                        if (type.contains(remaining)) {
+                            builder.suggest(type);
+                        }
+                    }
+
+                    return builder.buildFuture();
+                });
     }
 }

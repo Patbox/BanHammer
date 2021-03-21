@@ -20,6 +20,7 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
 
 import java.util.ArrayList;
@@ -40,7 +41,7 @@ public class UnpunishCommands {
                     ));
 
             dispatcher.register(literal("unban-ip")
-                    .requires(Permissions.require("banhammer.unban", 1))
+                    .requires(Permissions.require("banhammer.unbanip", 1))
                     .then(playerArgument("player")
                             .executes(ctx -> removePunishmentCommand(ctx, PunishmentTypes.IPBAN))
                     ));
@@ -107,50 +108,60 @@ public class UnpunishCommands {
             }
 
             String message = null;
+            String altMessage = "";
+            int n = 0;
 
             if (type != null) {
                 switch (type) {
                     case BAN:
-                        BanHammerMod.removePunishment(playerUUID.toString(), PunishmentTypes.BAN);
+                        n =+ BanHammerMod.removePunishment(playerUUID.toString(), PunishmentTypes.BAN);
                         message = config.unbanChatMessage;
+                        altMessage = "This player wasn't banned!";
                         break;
                     case IPBAN:
-                        BanHammerMod.removePunishment(playerIP, PunishmentTypes.IPBAN);
+                        n =+ BanHammerMod.removePunishment(playerIP, PunishmentTypes.IPBAN);
                         message = config.ipUnbanChatMessage;
+                        altMessage = "This player wasn't ipbanned!";
                         break;
                     case MUTE:
-                        BanHammerMod.removePunishment(playerUUID.toString(), PunishmentTypes.MUTE);
+                        n =+ BanHammerMod.removePunishment(playerUUID.toString(), PunishmentTypes.MUTE);
                         message = config.unmuteChatMessage;
+                        altMessage = "This player wasn't muted!";
                         break;
                 }
             } else {
-                BanHammerMod.removePunishment(playerUUID.toString(), PunishmentTypes.BAN);
-                BanHammerMod.removePunishment(playerIP, PunishmentTypes.IPBAN);
-                BanHammerMod.removePunishment(playerUUID.toString(), PunishmentTypes.MUTE);
+                n =+ BanHammerMod.removePunishment(playerUUID.toString(), PunishmentTypes.BAN);
+                n =+ BanHammerMod.removePunishment(playerIP, PunishmentTypes.IPBAN);
+                n =+ BanHammerMod.removePunishment(playerUUID.toString(), PunishmentTypes.MUTE);
                 message = config.pardonChatMessage;
+                altMessage = "This player didn't have any punishments!";
             }
 
-            ArrayList<Template> list = new ArrayList<>();
+            if (n > 0) {
+                ArrayList<Template> list = new ArrayList<>();
 
-            list.add(Template.of("operator", BanHammerMod.getAdventure().toAdventure(ctx.getSource().getDisplayName())));
-            list.add(Template.of("banned", playerName));
+                list.add(Template.of("operator", BanHammerMod.getAdventure().toAdventure(ctx.getSource().getDisplayName())));
+                list.add(Template.of("banned", playerName));
 
-            Text textMessage = Helpers.parseMessage(message, list);
+                Text textMessage = Helpers.parseMessage(message, list);
 
-            if (config.configData.punishmentsAreSilent) {
-                if (player != null) {
-                    player.sendMessage(textMessage, false);
-                }
+                if (config.configData.punishmentsAreSilent) {
+                    if (player != null) {
+                        player.sendMessage(textMessage, false);
+                    }
 
-                ctx.getSource().sendFeedback(textMessage, false);
-            } else {
-                ctx.getSource().sendFeedback(textMessage, false);
+                    ctx.getSource().sendFeedback(textMessage, false);
+                } else {
+                    ctx.getSource().sendFeedback(textMessage, false);
 
-                for (ServerPlayerEntity player2 : server.getPlayerManager().getPlayerList()) {
-                    if (player2 != executor) {
-                        player2.sendMessage(textMessage, MessageType.SYSTEM, Util.NIL_UUID);
+                    for (ServerPlayerEntity player2 : server.getPlayerManager().getPlayerList()) {
+                        if (player2 != executor) {
+                            player2.sendMessage(textMessage, MessageType.SYSTEM, Util.NIL_UUID);
+                        }
                     }
                 }
+            } else {
+                ctx.getSource().sendFeedback(new LiteralText(altMessage).formatted(Formatting.RED), false);
             }
         });
 

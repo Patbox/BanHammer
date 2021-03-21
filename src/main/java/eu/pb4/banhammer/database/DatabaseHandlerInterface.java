@@ -10,8 +10,8 @@ public interface DatabaseHandlerInterface {
     boolean insertPunishment(BasicPunishment punishment);
     List<SyncedPunishment> getPunishments(String id, PunishmentTypes type);
     List<SyncedPunishment> getAllPunishments(PunishmentTypes type);
-    void removePunishment(long id, PunishmentTypes type);
-    void removePunishment(String id, PunishmentTypes type);
+    int removePunishment(long id, PunishmentTypes type);
+    int removePunishment(String id, PunishmentTypes type);
 
     void closeConnection();
 

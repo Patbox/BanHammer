@@ -131,11 +131,23 @@ public class PunishCommands {
 
 
             String reason;
+            boolean isSilent;
 
             try {
-                reason = ctx.getArgument("reason", String.class);
+                String temp = ctx.getArgument("reason", String.class);
+                if (temp.startsWith("-")) {
+                    String[] parts = temp.split(" ", 2);
+
+                    isSilent = parts[0].contains("s");
+                    reason = parts.length == 2 ? parts[1] : config.defaultReason;
+                } else {
+                    reason = temp;
+                    isSilent = false;
+                }
+
             } catch (Exception e) {
                 reason = config.defaultReason;
+                isSilent = false;
             }
 
             ServerPlayerEntity player = server.getPlayerManager().getPlayer(playerName);
@@ -196,7 +208,7 @@ public class PunishCommands {
 
             BasicPunishment punishment = new BasicPunishment(playerUUID, playerIP, playerNameText, playerNameRaw, executorUUID, ctx.getSource().getDisplayName(), System.currentTimeMillis() / 1000, duration, reason, type);
 
-            BanHammerMod.punishPlayer(punishment, config.configData.punishmentsAreSilent);
+            BanHammerMod.punishPlayer(punishment, config.configData.punishmentsAreSilent || isSilent);
 
             if (config.configData.punishmentsAreSilent && !Permissions.check(ctx.getSource(), "banhammer.seesilent", 1)) {
                 ctx.getSource().sendFeedback(punishment.getChatMessage(), false);

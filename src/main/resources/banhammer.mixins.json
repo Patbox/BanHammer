@@ -6,6 +6,8 @@
   "mixins": [
     "PlayerManagerMixin",
     "ServerPlayNetworkHandlerMixin",
+    "accessor.ServerConfigEntryAccessor",
+    "accessor.BanEntryAccessor",
     "vanilla.BanCommandMixin",
     "vanilla.BanIpCommandMixin",
     "vanilla.KickCommandMixin",

@@ -152,20 +152,22 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
     }
 
     @Override
-    public void removePunishment(long id, PunishmentTypes type) {
+    public int removePunishment(long id, PunishmentTypes type) {
         try {
-            stat.execute("DELETE FROM " + type.databaseName + " WHERE id=" + id + ";");
+            return stat.executeUpdate("DELETE FROM " + type.databaseName + " WHERE id=" + id + ";");
         } catch (Exception x) {
             x.printStackTrace();
+            return 0;
         }
     }
 
     @Override
-    public void removePunishment(String id, PunishmentTypes type) {
+    public int removePunishment(String id, PunishmentTypes type) {
         try {
-            stat.execute("DELETE FROM " + type.databaseName + " WHERE " + (type.ipBased ? "bannedIP" : "bannedUUID") + "='" + id + "';");
+            return stat.executeUpdate("DELETE FROM " + type.databaseName + " WHERE " + (type.ipBased ? "bannedIP" : "bannedUUID") + "='" + id + "';");
         } catch (Exception x) {
             x.printStackTrace();
+            return 0;
         }
     }
 
