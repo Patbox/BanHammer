@@ -9,5 +9,5 @@ import java.util.Date;
 @Mixin(BanEntry.class)
 public interface BanEntryAccessor {
     @Accessor("creationDate")
-    public Date getCreationDate();
+    Date getCreationDate();
 }

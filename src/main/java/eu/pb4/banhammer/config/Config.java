@@ -50,7 +50,9 @@ public class Config {
         this.unmuteChatMessage = toSingleString(mData.unmuteChatMessage);
         this.pardonChatMessage = toSingleString(mData.pardonChatMessage);
 
-        this.defaultDurationLimit = Helpers.parseDuration(data.defaultTempPunishmentDurationLimit);
+        long dur = Helpers.parseDuration(data.defaultTempPunishmentDurationLimit);
+
+        this.defaultDurationLimit = dur == -1 ? Long.MAX_VALUE : dur;
 
         for (Map.Entry<String, String> x : data.permissionTempLimit.entrySet() ) {
             this.tempDurationLimit.put(x.getKey(), Helpers.parseDuration(x.getValue()));
@@ -73,7 +75,7 @@ public class Config {
         boolean custom = false;
 
         for (Map.Entry<String, Long> x : this.tempDurationLimit.entrySet()) {
-            if (Permissions.check(source, x.getKey()) && out < x.getValue()) {
+            if (Permissions.check(source, "banhammer.duration." + x.getKey()) && out < x.getValue()) {
                 out = x.getValue();
                 custom = true;
             }

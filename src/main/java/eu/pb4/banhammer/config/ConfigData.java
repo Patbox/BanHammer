@@ -11,7 +11,7 @@ public class ConfigData {
     public boolean storeAllPunishmentsInHistory = true;
     public List<String> muteBlockedCommands = Arrays.asList("msg", "me");
     public String defaultTempPunishmentDurationLimit = "-1";
-    public HashMap<String, String> permissionTempLimit = new HashMap<>();
+    public HashMap<String, String> permissionTempLimit = exampleTempLimit();
 
     public String databaseType = "sqlite";
 
@@ -20,4 +20,11 @@ public class ConfigData {
     public String mysqlDatabaseName = "";
     public String mysqlDatabaseUsername = "";
     public String mysqlDatabasePassword = "";
+
+
+    static private HashMap<String, String> exampleTempLimit() {
+        HashMap<String, String> map = new HashMap<>();
+        map.put("example", "31d");
+        return map;
+    }
 }

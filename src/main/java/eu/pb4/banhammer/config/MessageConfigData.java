@@ -47,7 +47,6 @@ public class MessageConfigData {
 
     public String dateFormat = "dd.MM.YYYY HH:mm";
     public String neverExpiresText = "Never";
-    public String foreverText = "Forever";
 
     public String yearsText = " year(s) ";
     public String daysText = " day(s) ";

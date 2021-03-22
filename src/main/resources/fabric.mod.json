@@ -3,8 +3,8 @@
   "id": "banhammer",
   "version": "${version}",
 
-  "name": "Ban Hammer",
-  "description": "This is an example description! Tell everyone what your mod is about!",
+  "name": "BanHammer",
+  "description": "Simple, customisable punishment utility mod for Fabric",
   "authors": [
     "Patbox"
   ],
@@ -15,7 +15,7 @@
 
   "license": "LGPLv3",
 
-  "environment": "*",
+  "environment": "server",
   "entrypoints": {
     "main": [
       "eu.pb4.banhammer.BanHammerMod"

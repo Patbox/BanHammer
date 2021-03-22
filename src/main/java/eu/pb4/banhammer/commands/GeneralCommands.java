@@ -13,8 +13,6 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.LiteralText;
 import net.minecraft.util.Formatting;
-
-
 import java.util.Locale;
 
 import static net.minecraft.server.command.CommandManager.literal;

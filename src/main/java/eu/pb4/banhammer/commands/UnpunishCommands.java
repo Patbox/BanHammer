@@ -114,25 +114,26 @@ public class UnpunishCommands {
             if (type != null) {
                 switch (type) {
                     case BAN:
-                        n =+ BanHammerMod.removePunishment(playerUUID.toString(), PunishmentTypes.BAN);
+                        n += BanHammerMod.removePunishment(playerUUID.toString(), PunishmentTypes.BAN);
                         message = config.unbanChatMessage;
                         altMessage = "This player wasn't banned!";
                         break;
                     case IPBAN:
-                        n =+ BanHammerMod.removePunishment(playerIP, PunishmentTypes.IPBAN);
+                        n += BanHammerMod.removePunishment(playerIP, PunishmentTypes.IPBAN);
                         message = config.ipUnbanChatMessage;
                         altMessage = "This player wasn't ipbanned!";
                         break;
                     case MUTE:
-                        n =+ BanHammerMod.removePunishment(playerUUID.toString(), PunishmentTypes.MUTE);
+                        n += BanHammerMod.removePunishment(playerUUID.toString(), PunishmentTypes.MUTE);
                         message = config.unmuteChatMessage;
                         altMessage = "This player wasn't muted!";
                         break;
                 }
             } else {
-                n =+ BanHammerMod.removePunishment(playerUUID.toString(), PunishmentTypes.BAN);
-                n =+ BanHammerMod.removePunishment(playerIP, PunishmentTypes.IPBAN);
-                n =+ BanHammerMod.removePunishment(playerUUID.toString(), PunishmentTypes.MUTE);
+                n += BanHammerMod.removePunishment(playerUUID.toString(), PunishmentTypes.BAN);
+                n += BanHammerMod.removePunishment(playerIP, PunishmentTypes.IPBAN);
+                n += BanHammerMod.removePunishment(playerUUID.toString(), PunishmentTypes.MUTE);
+
                 message = config.pardonChatMessage;
                 altMessage = "This player didn't have any punishments!";
             }
