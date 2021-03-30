@@ -1,5 +1,6 @@
 package eu.pb4.banhammer.database;
 
+import com.google.common.net.InetAddresses;
 import eu.pb4.banhammer.types.BasicPunishment;
 import eu.pb4.banhammer.types.PunishmentTypes;
 import eu.pb4.banhammer.types.SyncedPunishment;
@@ -33,16 +34,16 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
         try {
             PreparedStatement prepStmt = conn.prepareStatement(
                     "insert into history values (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
-            prepStmt.setString(1, punishment.getUUIDofPlayer().toString());
-            prepStmt.setString(2, punishment.getIPofPlayer());
-            prepStmt.setString(3, punishment.getRawNameOfPlayer());
-            prepStmt.setString(4, Text.Serializer.toJson(punishment.getNameOfPlayer()));
-            prepStmt.setString(5, punishment.getUUIDOfAdmin().toString());
-            prepStmt.setString(6, Text.Serializer.toJson(punishment.getNameOfAdmin()));
-            prepStmt.setString(7, String.valueOf(punishment.getTime()));
-            prepStmt.setString(8, String.valueOf(punishment.getDuration()));
-            prepStmt.setString(9, punishment.getReason());
-            prepStmt.setString(10, punishment.getType().name);
+            prepStmt.setString(1, punishment.bannedUUID.toString());
+            prepStmt.setString(2, punishment.bannedIP);
+            prepStmt.setString(3, punishment.bannedName);
+            prepStmt.setString(4, Text.Serializer.toJson(punishment.bannedDisplayName));
+            prepStmt.setString(5, punishment.adminUUID.toString());
+            prepStmt.setString(6, Text.Serializer.toJson(punishment.adminDisplayName));
+            prepStmt.setString(7, String.valueOf(punishment.time));
+            prepStmt.setString(8, String.valueOf(punishment.duration));
+            prepStmt.setString(9, punishment.reason);
+            prepStmt.setString(10, punishment.type.name);
 
             prepStmt.execute();
         } catch (SQLException e) {
@@ -56,16 +57,16 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
     public boolean insertPunishment(BasicPunishment punishment) {
         try {
             PreparedStatement prepStmt = conn.prepareStatement(
-                    "insert into " + punishment.getType().databaseName + " values (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
-            prepStmt.setString(1, punishment.getUUIDofPlayer().toString());
-            prepStmt.setString(2, punishment.getIPofPlayer());
-            prepStmt.setString(3, punishment.getRawNameOfPlayer());
-            prepStmt.setString(4, Text.Serializer.toJson(punishment.getNameOfPlayer()));
-            prepStmt.setString(5, punishment.getUUIDOfAdmin().toString());
-            prepStmt.setString(6, Text.Serializer.toJson(punishment.getNameOfAdmin()));
-            prepStmt.setString(7, String.valueOf(punishment.getTime()));
-            prepStmt.setString(8, String.valueOf(punishment.getDuration()));
-            prepStmt.setString(9, punishment.getReason());
+                    "insert into " + punishment.type.databaseName + " values (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+            prepStmt.setString(1, punishment.bannedUUID.toString());
+            prepStmt.setString(2, punishment.bannedIP);
+            prepStmt.setString(3, punishment.bannedName);
+            prepStmt.setString(4, Text.Serializer.toJson(punishment.bannedDisplayName));
+            prepStmt.setString(5, punishment.adminUUID.toString());
+            prepStmt.setString(6, Text.Serializer.toJson(punishment.adminDisplayName));
+            prepStmt.setString(7, String.valueOf(punishment.time));
+            prepStmt.setString(8, String.valueOf(punishment.duration));
+            prepStmt.setString(9, punishment.reason);
 
             prepStmt.execute();
         } catch (SQLException e) {
@@ -79,7 +80,7 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
     public List<SyncedPunishment> getPunishments(String id, PunishmentTypes type) {
         List<SyncedPunishment> list = new LinkedList<>();
         try {
-            String query = "SELECT * FROM " + type.databaseName + " WHERE " + (type.ipBased ? "bannedIP" : "bannedUUID") + "='" + id + "';";
+            String query = "SELECT * FROM " + type.databaseName + " WHERE " + (InetAddresses.isInetAddress(id) ? "bannedIP" : "bannedUUID") + "='" + id + "';";
             ResultSet result = stat.executeQuery(query);
             UUID bannedUUID;
             String bannedIP;

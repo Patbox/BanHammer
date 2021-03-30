@@ -22,14 +22,14 @@ public class GeneralCommands {
         CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
             dispatcher.register(
                     literal("banhammer")
-                            .requires(Permissions.require("banhammer.main", true))
+                            .requires(Permissions.require("banhammer.commands.main", true))
                             .executes(GeneralCommands::about)
                             .then(literal("reload")
-                                    .requires(Permissions.require("banhammer.reload", 3))
+                                    .requires(Permissions.require("banhammer.commands.reload", 3))
                                     .executes(GeneralCommands::reloadConfig)
                             )
                             .then(literal("import")
-                                    .requires(Permissions.require("banhammer.import", 3))
+                                    .requires(Permissions.require("banhammer.commands.import", 3))
                                     .then(importArgument("source")
                                             .executes(GeneralCommands::importer)
                                             .then(CommandManager.argument("remove", BoolArgumentType.bool())

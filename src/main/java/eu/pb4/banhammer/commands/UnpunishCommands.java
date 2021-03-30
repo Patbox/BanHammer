@@ -1,7 +1,6 @@
 package eu.pb4.banhammer.commands;
 
-import com.google.common.net.InetAddresses;
-import com.mojang.authlib.GameProfile;
+
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
@@ -9,6 +8,7 @@ import eu.pb4.banhammer.BanHammerMod;
 import eu.pb4.banhammer.Helpers;
 import eu.pb4.banhammer.config.Config;
 import eu.pb4.banhammer.config.ConfigManager;
+import eu.pb4.banhammer.types.BHPlayerData;
 import eu.pb4.banhammer.types.PunishmentTypes;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
@@ -25,7 +25,6 @@ import net.minecraft.util.Util;
 
 import java.util.ArrayList;
 import java.util.Locale;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -35,25 +34,25 @@ public class UnpunishCommands {
     public static void register() {
         CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
             dispatcher.register(literal("unban")
-                    .requires(Permissions.require("banhammer.unban", 1))
+                    .requires(Permissions.require("banhammer.unpunish.unban", 1))
                     .then(playerArgument("player")
                             .executes(ctx -> removePunishmentCommand(ctx, PunishmentTypes.BAN))
                     ));
 
             dispatcher.register(literal("unban-ip")
-                    .requires(Permissions.require("banhammer.unbanip", 1))
+                    .requires(Permissions.require("banhammer.unpunish.unbanip", 1))
                     .then(playerArgument("player")
                             .executes(ctx -> removePunishmentCommand(ctx, PunishmentTypes.IPBAN))
                     ));
 
             dispatcher.register(literal("unmute")
-                    .requires(Permissions.require("banhammer.unmute", 1))
+                    .requires(Permissions.require("banhammer.unpunish.unmute", 1))
                     .then(playerArgument("player")
                             .executes(ctx -> removePunishmentCommand(ctx, PunishmentTypes.MUTE))
                     ));
 
             dispatcher.register(literal("pardon")
-                    .requires(Permissions.require("banhammer.pardon", 1))
+                    .requires(Permissions.require("banhammer.unpunish.pardon", 1))
                     .then(playerArgument("player")
                             .executes(ctx -> removePunishmentCommand(ctx, null))
                     ));
@@ -64,41 +63,20 @@ public class UnpunishCommands {
         CompletableFuture.runAsync(() -> {
 
             MinecraftServer server = ctx.getSource().getMinecraftServer();
-            String playerName = ctx.getArgument("player", String.class);
-            ServerPlayerEntity player = server.getPlayerManager().getPlayer(playerName);
+            String playerNameOrIp = ctx.getArgument("player", String.class);
 
             Config config = ConfigManager.getConfig();
 
-            UUID playerUUID = null;
-            String playerIP = null;
+            BHPlayerData player = Helpers.lookupPlayerData(playerNameOrIp, type);
 
-            if (player != null) {
-                playerUUID = player.getUuid();
-                playerIP = player.getIp();
-            } else if (type != null && type.ipBased && InetAddresses.isInetAddress(playerName)) {
-                GameProfile profile = null;
-                for (Map.Entry<String, String> entry : BanHammerMod.IP_CACHE.entrySet()) {
-                    if (entry.getValue().equals(playerName)) {
-                        playerUUID = UUID.fromString(entry.getKey());
-                        playerIP = entry.getKey();
-                        profile = server.getUserCache().getByUuid(playerUUID);
-                        break;
-                    }
-                }
-                if (profile == null) {
-                    playerIP = playerName;
-                    playerUUID = UUID.fromString("00000000-0000-4000-0000-000000000000");
-                }
-            } else {
-                GameProfile profile = server.getUserCache().findByName(playerName);
-                if (profile != null) {
-                    playerUUID = profile.getId();
-                    playerIP = BanHammerMod.IP_CACHE.get(playerUUID.toString());
-                } else {
-                    ctx.getSource().sendError(new LiteralText("Couldn't find player!"));
-                    return;
-                }
+            if (player == null) {
+                ctx.getSource().sendFeedback(new LiteralText("Couldn't find player " + playerNameOrIp + "!").formatted(Formatting.RED), false);
             }
+
+            UUID playerUUID = player.uuid;
+            Text playerDisplay = player.displayName;
+            String playerName = player.name;
+            String playerIP = player.ip;
 
             ServerPlayerEntity executor;
             try {
@@ -147,8 +125,8 @@ public class UnpunishCommands {
                 Text textMessage = Helpers.parseMessage(message, list);
 
                 if (config.configData.punishmentsAreSilent) {
-                    if (player != null) {
-                        player.sendMessage(textMessage, false);
+                    if (player.player != null) {
+                        player.player.sendMessage(textMessage, false);
                     }
 
                     ctx.getSource().sendFeedback(textMessage, false);

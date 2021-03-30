@@ -13,6 +13,9 @@ public class ConfigData {
     public String defaultTempPunishmentDurationLimit = "-1";
     public HashMap<String, String> permissionTempLimit = exampleTempLimit();
 
+    public boolean standardBanPlayersWithBannedIps = false;
+    public boolean autoBansFromIpBansAreSilent = true;
+
     public String databaseType = "sqlite";
 
     public String sqliteDatabaseLocation = "banhammer.db";

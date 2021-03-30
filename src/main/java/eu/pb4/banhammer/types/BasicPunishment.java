@@ -9,67 +9,29 @@ import java.util.Date;
 import java.util.UUID;
 
 public class BasicPunishment {
-    private final PunishmentTypes type;
-    private final long time;
-    private final long duration;
-    private final UUID bannedUUID;
-    private final String bannedIP;
-    private final UUID adminUUID;
-    private final Text adminDisplay;
-    private final String reason;
-    private final Text bannedName;
-    private final String bannedNameRaw;
+    public final PunishmentTypes type;
+    public final long time;
+    public final long duration;
+    public final UUID bannedUUID;
+    public final String bannedIP;
+    public final UUID adminUUID;
+    public final Text adminDisplayName;
+    public final String reason;
+    public final Text bannedDisplayName;
+    public final String bannedName;
 
     public BasicPunishment(UUID playerUUID, String playerIP, Text playerName, String playerNameRaw, UUID adminUUID, Text adminDisplay, long time, long duration, String reason, PunishmentTypes type) {
         this.time = time;
         this.bannedUUID = playerUUID;
         this.bannedIP = playerIP;
-        this.bannedNameRaw = playerNameRaw;
-        this.bannedName = playerName;
+        this.bannedName = playerNameRaw;
+        this.bannedDisplayName = playerName;
         this.duration = duration;
-        this.adminDisplay = adminDisplay;
+        this.adminDisplayName = adminDisplay;
         this.adminUUID = adminUUID;
         this.reason = reason;
         this.type = type;
     }
-
-    public PunishmentTypes getType() {
-        return this.type;
-    }
-
-    public long getTime() {
-        return this.time;
-    }
-
-    public long getDuration() {
-        return this.duration;
-    }
-
-    public UUID getUUIDOfAdmin() {
-        return this.adminUUID;
-    }
-
-    public Text getNameOfAdmin() {
-        return this.adminDisplay;
-    }
-
-    public UUID getUUIDofPlayer() {
-        return this.bannedUUID;
-    }
-
-    public String getIPofPlayer() {
-        return this.bannedIP;
-    }
-
-    public Text getNameOfPlayer() {
-        return this.bannedName;
-    }
-
-    public String getRawNameOfPlayer() {
-        return this.bannedNameRaw;
-    }
-
-    public String getReason() { return this.reason; }
 
     public boolean isExpired() {
         return this.duration > -1 && this.time + this.duration < System.currentTimeMillis() / 1000;

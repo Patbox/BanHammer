@@ -137,7 +137,7 @@ public class BanHammerMod implements ModInitializer {
 
 	public static void punishPlayer(BasicPunishment punishment, boolean silent, boolean invisible) {
 		CompletableFuture.runAsync(() -> {
-			if (punishment.getType().databaseName != null) {
+			if (punishment.type.databaseName != null) {
 				DATABASE.insertPunishment(punishment);
 			}
 
@@ -146,14 +146,43 @@ public class BanHammerMod implements ModInitializer {
 			}
 		});
 
-		if (punishment.getType().kick && punishment.getType().ipBased) {
+		if (punishment.type.kick && punishment.type.ipBased) {
+			boolean alreadyStandardBanned = false;
+
 			for (ServerPlayerEntity player : SERVER.getPlayerManager().getPlayerList()) {
-				if (player.getIp().equals(punishment.getIPofPlayer())) {
+				if (player.getIp().equals(punishment.bannedIP)) {
 					player.networkHandler.disconnect(punishment.getDisconnectMessage());
+					if (ConfigManager.getConfig().configData.standardBanPlayersWithBannedIps && punishment.type == PunishmentTypes.IPBAN) {
+						BasicPunishment punishment1 = new BasicPunishment(player.getUuid(), player.getIp(), player.getDisplayName(), player.getGameProfile().getName(),
+								punishment.adminUUID,
+								punishment.adminDisplayName,
+								punishment.time,
+								punishment.duration,
+								punishment.reason,
+								PunishmentTypes.BAN);
+
+						if (player.getUuid() == punishment.bannedUUID) {
+							alreadyStandardBanned = true;
+						}
+
+						punishPlayer(punishment1, true, true);
+					}
 				}
 			}
-		} else if (punishment.getType().kick) {
-			ServerPlayerEntity player = SERVER.getPlayerManager().getPlayer(punishment.getUUIDofPlayer());
+
+			if (ConfigManager.getConfig().configData.standardBanPlayersWithBannedIps && punishment.type == PunishmentTypes.IPBAN && !alreadyStandardBanned) {
+				BasicPunishment punishment1 = new BasicPunishment(punishment.bannedUUID, punishment.bannedIP, punishment.bannedDisplayName, punishment.bannedName,
+						punishment.adminUUID,
+						punishment.adminDisplayName,
+						punishment.time,
+						punishment.duration,
+						punishment.reason,
+						PunishmentTypes.BAN);
+
+				punishPlayer(punishment1, true, true);
+			}
+		} else if (punishment.type.kick) {
+			ServerPlayerEntity player = SERVER.getPlayerManager().getPlayer(punishment.bannedUUID);
 
 			if (player != null) {
 				player.networkHandler.disconnect(punishment.getDisconnectMessage());
@@ -175,7 +204,8 @@ public class BanHammerMod implements ModInitializer {
 				}
 			}
 		}
-		PUNISHMENT_EVENT.invoker().onPunishment(punishment);
+		
+		PUNISHMENT_EVENT.invoker().onPunishment(punishment, silent, invisible);
 	}
 
 	public static int removePunishment(String id, PunishmentTypes type) {
@@ -210,15 +240,15 @@ public class BanHammerMod implements ModInitializer {
 		return false;
 	}
 
-	public static final Event<BanHammerMod.PunishmentEvent> PUNISHMENT_EVENT = EventFactory.createArrayBacked(PunishmentEvent.class, (callbacks) -> (punishment) -> {
+	public static final Event<BanHammerMod.PunishmentEvent> PUNISHMENT_EVENT = EventFactory.createArrayBacked(PunishmentEvent.class, (callbacks) -> (punishment, s, i) -> {
 		for(PunishmentEvent callback : callbacks ) {
-			callback.onPunishment(punishment);
+			callback.onPunishment(punishment, s, i);
 		}
 	});
 
 	@FunctionalInterface
 	public interface PunishmentEvent {
-		void onPunishment(BasicPunishment punishment);
+		void onPunishment(BasicPunishment punishment, boolean silent, boolean invisible);
 	}
 
 	@FunctionalInterface

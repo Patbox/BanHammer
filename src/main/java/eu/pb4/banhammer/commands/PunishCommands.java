@@ -9,6 +9,7 @@ import eu.pb4.banhammer.BanHammerMod;
 import eu.pb4.banhammer.Helpers;
 import eu.pb4.banhammer.config.Config;
 import eu.pb4.banhammer.config.ConfigManager;
+import eu.pb4.banhammer.types.BHPlayerData;
 import eu.pb4.banhammer.types.BasicPunishment;
 import eu.pb4.banhammer.types.PunishmentTypes;
 import me.lucko.fabric.api.permissions.v0.Permissions;
@@ -34,7 +35,7 @@ public class PunishCommands {
     public static void register() {
         CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
             dispatcher.register(literal("kick")
-                    .requires(Permissions.require("banhammer.kick", 1))
+                    .requires(Permissions.require("banhammer.punish.kick", 1))
                     .then(playerArgument("player")
                             .executes(ctx -> punishCommand(ctx, false, PunishmentTypes.KICK))
                             .then(argument("reason", StringArgumentType.greedyString())
@@ -43,7 +44,7 @@ public class PunishCommands {
                     ));
 
             dispatcher.register(literal("mute")
-                    .requires(Permissions.require("banhammer.mute", 1))
+                    .requires(Permissions.require("banhammer.punish.mute", 1))
                     .then(playerArgument("player")
                             .executes(ctx -> punishCommand(ctx, false, PunishmentTypes.MUTE))
                             .then(argument("reason", StringArgumentType.greedyString())
@@ -52,7 +53,7 @@ public class PunishCommands {
             ));
 
             dispatcher.register(literal("ban")
-                    .requires(Permissions.require("banhammer.ban", 1))
+                    .requires(Permissions.require("banhammer.punish.ban", 1))
                     .then(playerArgument("player")
                             .executes(ctx -> punishCommand(ctx, false, PunishmentTypes.BAN))
                             .then(argument("reason", StringArgumentType.greedyString())
@@ -61,7 +62,7 @@ public class PunishCommands {
             ));
 
             dispatcher.register(literal("ban-ip")
-                    .requires(Permissions.require("banhammer.banip", 1))
+                    .requires(Permissions.require("banhammer.punish.ban-ip", 1))
                     .then(playerArgument("player")
                             .executes(ctx -> punishCommand(ctx, false, PunishmentTypes.IPBAN))
                             .then(argument("reason", StringArgumentType.greedyString())
@@ -70,7 +71,7 @@ public class PunishCommands {
             ));
 
             dispatcher.register(literal("tempmute")
-                    .requires(Permissions.require("banhammer.tempmute", 1))
+                    .requires(Permissions.require("banhammer.punish.mutetemp", 1))
                     .then(playerArgument("player")
                             .then(argument("duration", StringArgumentType.word())
                                     .executes(ctx -> punishCommand(ctx, true, PunishmentTypes.MUTE))
@@ -80,7 +81,7 @@ public class PunishCommands {
                     ));
 
             dispatcher.register(literal("tempban")
-                    .requires(Permissions.require("banhammer.tempban", 1))
+                    .requires(Permissions.require("banhammer.punish.tempban", 1))
                     .then(playerArgument("player")
                             .then(argument("duration", StringArgumentType.word())
                                     .executes(ctx -> punishCommand(ctx,true, PunishmentTypes.BAN))
@@ -91,7 +92,7 @@ public class PunishCommands {
                     ));
 
             dispatcher.register(literal("tempban-ip")
-                    .requires(Permissions.require("banhammer.tempbanip", 1))
+                    .requires(Permissions.require("banhammer.punish.tempban-ip", 1))
                     .then(playerArgument("player")
                             .then(argument("duration", StringArgumentType.word())
                                     .executes(ctx -> punishCommand(ctx, true, PunishmentTypes.IPBAN))
@@ -106,7 +107,7 @@ public class PunishCommands {
         CompletableFuture.runAsync(() -> {
             MinecraftServer server = ctx.getSource().getMinecraftServer();
             Config config = ConfigManager.getConfig();
-            String playerName = ctx.getArgument("player", String.class);
+            String playerNameOrIp = ctx.getArgument("player", String.class);
 
             long duration = -1;
 
@@ -150,52 +151,17 @@ public class PunishCommands {
                 isSilent = false;
             }
 
-            ServerPlayerEntity player = server.getPlayerManager().getPlayer(playerName);
+            BHPlayerData player = Helpers.lookupPlayerData(playerNameOrIp, type);
 
-            UUID playerUUID = null;
-            Text playerNameText;
-            String playerNameRaw;
-            String playerIP = null;
-
-            if (player != null) {
-                playerUUID = player.getUuid();
-                playerIP = player.getIp();
-                playerNameText = player.getDisplayName();
-                playerNameRaw = player.getGameProfile().getName();
-            } else if (type.ipBased && InetAddresses.isInetAddress(playerName)) {
-                GameProfile profile = null;
-
-                for (Map.Entry<String, String> entry : BanHammerMod.IP_CACHE.entrySet()) {
-                    if (entry.getValue().equals(playerName)) {
-                        playerUUID = UUID.fromString(entry.getKey());
-                        playerIP = entry.getKey();
-                        profile = server.getUserCache().getByUuid(playerUUID);
-                        break;
-                    }
-                }
-
-                if (profile == null) {
-                    playerIP = playerName;
-                    playerNameRaw = "Unknown player";
-                    playerNameText = new LiteralText("Unknown player").formatted(Formatting.ITALIC);
-                    playerUUID = UUID.fromString("00000000-0000-4000-0000-000000000000");
-                } else {
-                    playerNameText = new LiteralText(profile.getName());
-                    playerNameRaw = profile.getName();
-                }
-            } else {
-                GameProfile profile = server.getUserCache().findByName(playerName);
-
-                if (profile != null) {
-                    playerUUID = profile.getId();
-                    playerIP = BanHammerMod.IP_CACHE.get(playerUUID.toString());
-                    playerNameText = new LiteralText(profile.getName());
-                    playerNameRaw = profile.getName();
-                } else {
-                    ctx.getSource().sendError(new LiteralText("Couldn't find player!"));
-                    return;
-                }
+            if (player == null) {
+                ctx.getSource().sendFeedback(new LiteralText("Couldn't find player " + playerNameOrIp + "!").formatted(Formatting.RED), false);
             }
+
+            UUID playerUUID = player.uuid;
+            Text playerDisplay = player.displayName;
+            String playerName = player.name;
+            String playerIP = player.ip;
+
 
             ServerPlayerEntity executor;
             UUID executorUUID;
@@ -206,7 +172,7 @@ public class PunishCommands {
                 executorUUID = null;
             }
 
-            BasicPunishment punishment = new BasicPunishment(playerUUID, playerIP, playerNameText, playerNameRaw, executorUUID, ctx.getSource().getDisplayName(), System.currentTimeMillis() / 1000, duration, reason, type);
+            BasicPunishment punishment = new BasicPunishment(playerUUID, playerIP, playerDisplay, playerName, executorUUID, ctx.getSource().getDisplayName(), System.currentTimeMillis() / 1000, duration, reason, type);
 
             BanHammerMod.punishPlayer(punishment, config.configData.punishmentsAreSilent || isSilent);
 
