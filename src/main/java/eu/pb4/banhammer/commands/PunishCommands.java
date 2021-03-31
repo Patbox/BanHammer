@@ -1,7 +1,5 @@
 package eu.pb4.banhammer.commands;
 
-import com.google.common.net.InetAddresses;
-import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
@@ -14,7 +12,6 @@ import eu.pb4.banhammer.types.BasicPunishment;
 import eu.pb4.banhammer.types.PunishmentTypes;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -71,7 +68,7 @@ public class PunishCommands {
             ));
 
             dispatcher.register(literal("tempmute")
-                    .requires(Permissions.require("banhammer.punish.mutetemp", 1))
+                    .requires(Permissions.require("banhammer.punish.tempmute", 1))
                     .then(playerArgument("player")
                             .then(argument("duration", StringArgumentType.word())
                                     .executes(ctx -> punishCommand(ctx, true, PunishmentTypes.MUTE))
@@ -107,7 +104,6 @@ public class PunishCommands {
         CompletableFuture.runAsync(() -> {
             Config config = ConfigManager.getConfig();
             String playerNameOrIp = ctx.getArgument("player", String.class);
-
             long duration = -1;
 
             if (isTemp) {

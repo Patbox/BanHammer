@@ -98,6 +98,9 @@ public class UnpunishCommands {
                         break;
                     case IPBAN:
                         n += BanHammerMod.removePunishment(playerIP, PunishmentTypes.IPBAN);
+                        if (type == PunishmentTypes.IPBAN && ConfigManager.getConfig().configData.standardBanPlayersWithBannedIps) {
+                            n += BanHammerMod.removePunishment(playerUUID.toString(), PunishmentTypes.BAN);
+                        }
                         message = config.ipUnbanChatMessage;
                         altMessage = "This player wasn't ipbanned!";
                         break;

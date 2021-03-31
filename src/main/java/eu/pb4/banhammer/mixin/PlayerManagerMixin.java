@@ -45,8 +45,9 @@ public class PlayerManagerMixin {
         }
 
         if (punishment != null) {
-            final boolean silent = ConfigManager.getConfig().configData.autoBansFromIpBansAreSilent;
-            if (punishment.type == PunishmentTypes.IPBAN && silent) {
+            if (punishment.type == PunishmentTypes.IPBAN && ConfigManager.getConfig().configData.standardBanPlayersWithBannedIps) {
+                final boolean silent = ConfigManager.getConfig().configData.autoBansFromIpBansAreSilent;
+
                 BasicPunishment punishment1 = new BasicPunishment(profile.getId(), Helpers.stringifyAddress(address), new LiteralText(profile.getName()), profile.getName(),
                         punishment.adminUUID,
                         punishment.adminDisplayName,

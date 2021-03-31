@@ -29,16 +29,16 @@ public class ConfigManager {
             File configFile = new File(configDir, "config.json");
             File messagesFile = new File(configDir, "messages.json");
 
-            ConfigData configData = configFile.exists() ? GSON.fromJson(new FileReader(configFile), ConfigData.class) : new ConfigData();
-            MessageConfigData messageConfigData = messagesFile.exists() ? GSON.fromJson(new FileReader(messagesFile), MessageConfigData.class) : new MessageConfigData();
+            ConfigData configData = configFile.exists() ? GSON.fromJson(new InputStreamReader(new FileInputStream(configFile), "UTF-8"), ConfigData.class) : new ConfigData();
+            MessageConfigData messageConfigData = messagesFile.exists() ? GSON.fromJson(new InputStreamReader(new FileInputStream(messagesFile), "UTF-8"), MessageConfigData.class) : new MessageConfigData();
 
             CONFIG = new Config(configData, messageConfigData);
 
-            BufferedWriter writer = new BufferedWriter(new FileWriter(configFile));
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(configFile), "UTF-8"));
             writer.write(GSON.toJson(configData));
             writer.close();
 
-            BufferedWriter writer2 = new BufferedWriter(new FileWriter(messagesFile));
+            BufferedWriter writer2 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(messagesFile), "UTF-8"));
             writer2.write(GSON.toJson(messageConfigData));
             writer2.close();
 
