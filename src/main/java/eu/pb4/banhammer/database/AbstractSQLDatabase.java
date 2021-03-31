@@ -45,8 +45,10 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
             prepStmt.setString(9, punishment.reason);
             prepStmt.setString(10, punishment.type.name);
 
-            prepStmt.execute();
-        } catch (SQLException e) {
+            prepStmt.setQueryTimeout(10);
+
+            prepStmt.executeUpdate();
+        } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
@@ -68,8 +70,9 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
             prepStmt.setString(8, String.valueOf(punishment.duration));
             prepStmt.setString(9, punishment.reason);
 
-            prepStmt.execute();
-        } catch (SQLException e) {
+            prepStmt.executeUpdate();
+
+        } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
@@ -107,7 +110,7 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
 
                 list.add(new SyncedPunishment(idd, bannedUUID, bannedIP, bannedName, bannedNameRaw, adminUUID, adminName, time, duration, reason, type));
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
@@ -145,7 +148,7 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
 
                 list.add(new SyncedPunishment(idd, bannedUUID, bannedIP, bannedName, bannedNameRaw, adminUUID, adminName, time, duration, reason, type));
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
@@ -165,7 +168,7 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
     @Override
     public int removePunishment(String id, PunishmentTypes type) {
         try {
-            return stat.executeUpdate("DELETE FROM " + type.databaseName + " WHERE " + (type.ipBased ? "bannedIP" : "bannedUUID") + "='" + id + "';");
+            return stat.executeUpdate("DELETE FROM " + type.databaseName + " WHERE " + (InetAddresses.isInetAddress(id) ? "bannedIP" : "bannedUUID") + "='" + id + "';");
         } catch (Exception x) {
             x.printStackTrace();
             return 0;

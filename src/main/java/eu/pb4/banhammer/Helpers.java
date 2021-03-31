@@ -134,7 +134,6 @@ public class Helpers {
                 return null;
             }
         }
-        System.out.println(ip);
         return new BHPlayerData(uuid, name, ip, displayName, player);
     }
 }

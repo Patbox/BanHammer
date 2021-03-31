@@ -21,10 +21,10 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Util;
 
 
 import java.util.Locale;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -105,7 +105,6 @@ public class PunishCommands {
 
     private static int punishCommand(CommandContext<ServerCommandSource> ctx, boolean isTemp, PunishmentTypes type) {
         CompletableFuture.runAsync(() -> {
-            MinecraftServer server = ctx.getSource().getMinecraftServer();
             Config config = ConfigManager.getConfig();
             String playerNameOrIp = ctx.getArgument("player", String.class);
 
@@ -169,7 +168,7 @@ public class PunishCommands {
                 executor = ctx.getSource().getPlayer();
                 executorUUID = executor.getUuid();
             } catch (Exception e) {
-                executorUUID = null;
+                executorUUID = Util.NIL_UUID;
             }
 
             BasicPunishment punishment = new BasicPunishment(playerUUID, playerIP, playerDisplay, playerName, executorUUID, ctx.getSource().getDisplayName(), System.currentTimeMillis() / 1000, duration, reason, type);
