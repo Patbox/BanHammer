@@ -34,25 +34,25 @@ public class UnpunishCommands {
     public static void register() {
         CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
             dispatcher.register(literal("unban")
-                    .requires(Permissions.require("banhammer.unpunish.unban", 1))
+                    .requires(ConfigManager.requirePermissionOrOp("banhammer.unpunish.unban"))
                     .then(playerArgument("player")
                             .executes(ctx -> removePunishmentCommand(ctx, PunishmentTypes.BAN))
                     ));
 
             dispatcher.register(literal("unban-ip")
-                    .requires(Permissions.require("banhammer.unpunish.unbanip", 1))
+                    .requires(ConfigManager.requirePermissionOrOp("banhammer.unpunish.unbanip"))
                     .then(playerArgument("player")
                             .executes(ctx -> removePunishmentCommand(ctx, PunishmentTypes.IPBAN))
                     ));
 
             dispatcher.register(literal("unmute")
-                    .requires(Permissions.require("banhammer.unpunish.unmute", 1))
+                    .requires(ConfigManager.requirePermissionOrOp("banhammer.unpunish.unmute"))
                     .then(playerArgument("player")
                             .executes(ctx -> removePunishmentCommand(ctx, PunishmentTypes.MUTE))
                     ));
 
             dispatcher.register(literal("pardon")
-                    .requires(Permissions.require("banhammer.unpunish.pardon", 1))
+                    .requires(ConfigManager.requirePermissionOrOp("banhammer.unpunish.pardon"))
                     .then(playerArgument("player")
                             .executes(ctx -> removePunishmentCommand(ctx, null))
                     ));

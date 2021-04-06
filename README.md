@@ -8,19 +8,19 @@ Supports [Fabric Permissions API](https://github.com/lucko/fabric-permissions-ap
 | Command            | Permission               | Description                       |
 | ------------------ | ------------------------ | --------------------------------- |
 | /banhammer         | banhammer.commands.main (default) | Sends information about banhammer |
-| /banhammer reload  | banhammer.commands.reload (op 3)  | Reloads mods config               |
-| /banhammer import \<source> \[\<remove>\] | banhammer.commands.import (op 3)      | Imports bans from other sources (and removes them from it, if remove is set to true)
-| /ban \<player> \[\<reason>] | banhammer.punish.ban (op 1) | Bans player |
-| /tempban \<player> \<duration> \[\<reason>] | banhammer.punish.tempban (op 1) | Bans player for provided time |
-| /ban-ip \<player> \[\<reason>] | banhammer.punish.banip (op 1) | Bans player (by ip) |
-| /tempban-ip \<player> \<duration> \[\<reason>] | banhammer.punish.tempbanip (op 1) | Bans player (by ip) for provided time |
-| /mute \<player> \[\<reason>] | banhammer.punish.mute (op 1) | Mutes player |
+| /banhammer reload  | banhammer.commands.reload (op 4)  | Reloads mods config               |
+| /banhammer import \<source> \[\<remove>\] | banhammer.commands.import (op 4)      | Imports bans from other sources (and removes them from it, if remove is set to true)
+| /ban \<player> \[\<reason>] | banhammer.punish.ban (op 3/config) | Bans player |
+| /tempban \<player> \<duration> \[\<reason>] | banhammer.punish.tempban (op 3/config) | Bans player for provided time |
+| /ban-ip \<player> \[\<reason>] | banhammer.punish.banip (op 3/config) | Bans player (by ip) |
+| /tempban-ip \<player> \<duration> \[\<reason>] | banhammer.punish.tempbanip (op 3/config) | Bans player (by ip) for provided time |
+| /mute \<player> \[\<reason>] | banhammer.punish.mute (op 3/config) | Mutes player |
 | /tempmute \<player> \<duration> \[\<reason>] | banhammer.punish.tempmute (op 1) | Mutes player for provided time |
-| /kick \<player> \[\<reason>] | banhammer.punish.kick (op 1) | Kicks player from server |
-| /unban \<player> | banhammer.unpunish.unban (op 1) | Removes player's (temp)bans |
-| /unban-ip \<player> | banhammer.unpunish.unbanip (op 1) | Removes player's (temp)ip bans |
-| /unmutes \<player> | banhammer.unpunish.unmute (op 1) | Removes player's (temp)mute |
-| /pardon \<player> | banhammer.unpunish.pardon (op 1) | Removes all of player's punishments |
+| /kick \<player> \[\<reason>] | banhammer.punish.kick (op 3/config) | Kicks player from server |
+| /unban \<player> | banhammer.unpunish.unban (op 3/config) | Removes player's (temp)bans |
+| /unban-ip \<player> | banhammer.unpunish.unbanip (op 3/config) | Removes player's (temp)ip bans |
+| /unmutes \<player> | banhammer.unpunish.unmute (op 3/config) | Removes player's (temp)mute |
+| /pardon \<player> | banhammer.unpunish.pardon (op 3/config) | Removes all of player's punishments |
 
 Additionally you can add `-s` Before reason, if you want to make that punishment silent.
 

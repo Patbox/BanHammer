@@ -32,7 +32,7 @@ public class PunishCommands {
     public static void register() {
         CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
             dispatcher.register(literal("kick")
-                    .requires(Permissions.require("banhammer.punish.kick", 1))
+                    .requires(ConfigManager.requirePermissionOrOp("banhammer.punish.kick"))
                     .then(playerArgument("player")
                             .executes(ctx -> punishCommand(ctx, false, PunishmentTypes.KICK))
                             .then(argument("reason", StringArgumentType.greedyString())
@@ -41,7 +41,7 @@ public class PunishCommands {
                     ));
 
             dispatcher.register(literal("mute")
-                    .requires(Permissions.require("banhammer.punish.mute", 1))
+                    .requires(ConfigManager.requirePermissionOrOp("banhammer.punish.mute"))
                     .then(playerArgument("player")
                             .executes(ctx -> punishCommand(ctx, false, PunishmentTypes.MUTE))
                             .then(argument("reason", StringArgumentType.greedyString())
@@ -50,7 +50,7 @@ public class PunishCommands {
             ));
 
             dispatcher.register(literal("ban")
-                    .requires(Permissions.require("banhammer.punish.ban", 1))
+                    .requires(ConfigManager.requirePermissionOrOp("banhammer.punish.ban"))
                     .then(playerArgument("player")
                             .executes(ctx -> punishCommand(ctx, false, PunishmentTypes.BAN))
                             .then(argument("reason", StringArgumentType.greedyString())
@@ -59,7 +59,7 @@ public class PunishCommands {
             ));
 
             dispatcher.register(literal("ban-ip")
-                    .requires(Permissions.require("banhammer.punish.ban-ip", 1))
+                    .requires(ConfigManager.requirePermissionOrOp("banhammer.punish.ban-ip"))
                     .then(playerArgument("player")
                             .executes(ctx -> punishCommand(ctx, false, PunishmentTypes.IPBAN))
                             .then(argument("reason", StringArgumentType.greedyString())
@@ -68,7 +68,7 @@ public class PunishCommands {
             ));
 
             dispatcher.register(literal("tempmute")
-                    .requires(Permissions.require("banhammer.punish.tempmute", 1))
+                    .requires(ConfigManager.requirePermissionOrOp("banhammer.punish.tempmute"))
                     .then(playerArgument("player")
                             .then(argument("duration", StringArgumentType.word())
                                     .executes(ctx -> punishCommand(ctx, true, PunishmentTypes.MUTE))
@@ -78,7 +78,7 @@ public class PunishCommands {
                     ));
 
             dispatcher.register(literal("tempban")
-                    .requires(Permissions.require("banhammer.punish.tempban", 1))
+                    .requires(ConfigManager.requirePermissionOrOp("banhammer.punish.tempban"))
                     .then(playerArgument("player")
                             .then(argument("duration", StringArgumentType.word())
                                     .executes(ctx -> punishCommand(ctx,true, PunishmentTypes.BAN))
@@ -89,7 +89,7 @@ public class PunishCommands {
                     ));
 
             dispatcher.register(literal("tempban-ip")
-                    .requires(Permissions.require("banhammer.punish.tempban-ip", 1))
+                    .requires(ConfigManager.requirePermissionOrOp("banhammer.punish.tempban-ip"))
                     .then(playerArgument("player")
                             .then(argument("duration", StringArgumentType.word())
                                     .executes(ctx -> punishCommand(ctx, true, PunishmentTypes.IPBAN))

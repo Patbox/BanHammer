@@ -16,6 +16,8 @@ public class ConfigData {
     public boolean standardBanPlayersWithBannedIps = false;
     public boolean autoBansFromIpBansAreSilent = true;
 
+    public int defaultOpPermissionLevel = 3;
+
     public String databaseType = "sqlite";
 
     public String sqliteDatabaseLocation = "banhammer.db";
