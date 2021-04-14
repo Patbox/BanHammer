@@ -26,12 +26,18 @@ public class PlayerManagerMixin {
 
     @Inject(method = "onPlayerConnect", at = @At("HEAD"))
     private void cachePlayersIP(ClientConnection connection, ServerPlayerEntity player, CallbackInfo ci) {
-        BanHammerMod.IP_CACHE.put(player.getUuid().toString(), Helpers.stringifyAddress(connection.getAddress()));
+        if (connection != null && connection.getAddress() != null) {
+            BanHammerMod.IP_CACHE.put(player.getUuid().toString(), Helpers.stringifyAddress(connection.getAddress()));
+        }
     }
 
     @Inject(method = "checkCanJoin", at = @At("TAIL"), cancellable = true)
     private void checkIfBanned(SocketAddress address, GameProfile profile, CallbackInfoReturnable<Text> cir) {
         BasicPunishment punishment = null;
+
+        if (address == null || profile == null) {
+            return;
+        }
 
         String ip = Helpers.stringifyAddress(address);
 
