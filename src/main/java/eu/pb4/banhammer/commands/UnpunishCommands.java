@@ -10,9 +10,8 @@ import eu.pb4.banhammer.config.Config;
 import eu.pb4.banhammer.config.ConfigManager;
 import eu.pb4.banhammer.types.BHPlayerData;
 import eu.pb4.banhammer.types.PunishmentTypes;
-import me.lucko.fabric.api.permissions.v0.Permissions;
+import eu.pb4.placeholders.PlaceholderAPI;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
-import net.kyori.adventure.text.minimessage.Template;
 import net.minecraft.network.MessageType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandManager;
@@ -24,6 +23,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -85,7 +85,7 @@ public class UnpunishCommands {
                 executor = null;
             }
 
-            String message = null;
+            Text message = null;
             String altMessage = "";
             int n = 0;
 
@@ -120,12 +120,12 @@ public class UnpunishCommands {
             }
 
             if (n > 0) {
-                ArrayList<Template> list = new ArrayList<>();
+                HashMap<String, Text> list = new HashMap<>();
 
-                list.add(Template.of("operator", BanHammerMod.getAdventure().toAdventure(ctx.getSource().getDisplayName())));
-                list.add(Template.of("banned", playerName));
+                list.put("operator", ctx.getSource().getDisplayName());
+                list.put("banned", new LiteralText(playerName));
 
-                Text textMessage = Helpers.parseMessage(message, list);
+                Text textMessage = PlaceholderAPI.parsePredefinedText(message, PlaceholderAPI.PREDEFINED_PLACEHOLDER_PATTERN, list);
 
                 if (config.configData.punishmentsAreSilent) {
                     if (player.player != null) {

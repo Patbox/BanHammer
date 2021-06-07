@@ -21,8 +21,6 @@ import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.loader.api.FabricLoader;
-import net.kyori.adventure.platform.fabric.FabricServerAudiences;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.minecraft.network.MessageType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -45,9 +43,7 @@ public class BanHammerMod implements ModInitializer {
 	public static final Logger LOGGER = LogManager.getLogger("BanHammer");
 	private static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
 
-	public static final MiniMessage miniMessage = MiniMessage.get();
 	public static String VERSION = FabricLoader.getInstance().getModContainer("banhammer").get().getMetadata().getVersion().getFriendlyString();
-	private static FabricServerAudiences AUDIENCE;
 	public static MinecraftServer SERVER;
 
 	public static DatabaseHandlerInterface DATABASE;
@@ -60,7 +56,6 @@ public class BanHammerMod implements ModInitializer {
 	public void onInitialize() {
 
 		ServerLifecycleEvents.SERVER_STARTING.register(server -> {
-			AUDIENCE = FabricServerAudiences.of(server);
 			SERVER = server;
 			boolean loaded = ConfigManager.loadConfig();
 
@@ -107,7 +102,6 @@ public class BanHammerMod implements ModInitializer {
 				DATABASE.closeConnection();
 			}
 			SERVER = null;
-			AUDIENCE = null;
 			DATABASE = null;
 
 			File ipcacheFile = Paths.get("ipcache.json").toFile();
@@ -125,10 +119,6 @@ public class BanHammerMod implements ModInitializer {
 		UnpunishCommands.register();
 		GeneralCommands.register();
 
-	}
-
-	public static FabricServerAudiences getAdventure() {
-		return AUDIENCE;
 	}
 
 	public static void punishPlayer(BasicPunishment punishment, boolean silent) {

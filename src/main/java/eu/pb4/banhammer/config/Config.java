@@ -1,8 +1,10 @@
 package eu.pb4.banhammer.config;
 
 import eu.pb4.banhammer.Helpers;
+import eu.pb4.placeholders.TextParser;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.command.CommandSource;
+import net.minecraft.text.Text;
 
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
@@ -12,37 +14,61 @@ import java.util.Map;
 public class Config {
     public final List<String> mutedCommands;
     public final MessageConfigData messageConfigData;
-    public final String mutedMessage;
-    public final String banScreenMessage;
+
+    public final Text mutedMessage;
+    public final Text tempMutedMessage;
+
     public final SimpleDateFormat dateTimeFormatter;
     public final String defaultReason;
     public final String neverExpires;
-    public final String banChatMessage;
-    public final String muteChatMessage;
-    public final String kickChatMessage;
+
+    public final Text banChatMessage;
+    public final Text tempBanChatMessage;
+    public final Text ipBanChatMessage;
+    public final Text tempIpBanChatMessage;
+    public final Text muteChatMessage;
+    public final Text tempMuteChatMessage;
+
+    public final Text banScreenMessage;
+    public final Text tempBanScreenMessage;
+    public final Text ipBanScreenMessage;
+    public final Text tempIpBanScreenMessage;
+
+    public final Text kickScreenMessage;
+
+    public final Text kickChatMessage;
     public final ConfigData configData;
     private final Map<String, Long> tempDurationLimit = new HashMap<>();
     public final long defaultDurationLimit;
-    public final String kickScreenMessage;
-    public final String pardonChatMessage;
-    public final String unmuteChatMessage;
-    public final String unbanChatMessage;
-    public final String ipUnbanChatMessage;
-    public final String ipBanChatMessage;
-    public final String ipBanScreenMessage;
+    public final Text pardonChatMessage;
+    public final Text unmuteChatMessage;
+    public final Text unbanChatMessage;
+    public final Text ipUnbanChatMessage;
+
 
     public Config(ConfigData data, MessageConfigData mData) {
         this.mutedMessage = toSingleString(mData.mutedText);
+        this.tempMutedMessage = toSingleString(mData.tempMutedText);
+
         this.banScreenMessage = toSingleString(mData.banScreen);
+        this.tempBanScreenMessage = toSingleString(mData.tempBanScreen);
+
         this.ipBanScreenMessage = toSingleString(mData.ipBanScreen);
+        this.tempIpBanScreenMessage = toSingleString(mData.tempIpBanScreen);
+
         this.kickScreenMessage = toSingleString(mData.kickScreen);
         this.mutedCommands = data.muteBlockedCommands;
         this.dateTimeFormatter = new SimpleDateFormat(mData.dateFormat);
         this.defaultReason = mData.defaultReason;
         this.neverExpires = mData.neverExpiresText;
         this.banChatMessage = toSingleString(mData.banChatMessage);
+        this.tempBanChatMessage = toSingleString(mData.tempBanChatMessage);
+
         this.ipBanChatMessage = toSingleString(mData.ipBanChatMessage);
+        this.tempIpBanChatMessage = toSingleString(mData.tempIpBanChatMessage);
+
         this.muteChatMessage = toSingleString(mData.muteChatMessage);
+        this.tempMuteChatMessage = toSingleString(mData.tempMuteChatMessage);
         this.kickChatMessage = toSingleString(mData.kickChatMessage);
 
         this.unbanChatMessage = toSingleString(mData.unbanChatMessage);
@@ -62,11 +88,11 @@ public class Config {
         this.configData = data;
     }
 
-    private String toSingleString(List<String> text) {
+    private Text toSingleString(List<String> text) {
         if (text.size() == 1) {
-            return text.get(0);
+            return TextParser.parse(text.get(0));
         } else {
-            return String.join("\n", text);
+            return TextParser.parse(String.join("\n", text));
         }
     }
 

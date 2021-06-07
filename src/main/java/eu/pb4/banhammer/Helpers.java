@@ -5,7 +5,6 @@ import com.mojang.authlib.GameProfile;
 import eu.pb4.banhammer.types.BHPlayerData;
 import eu.pb4.banhammer.types.BasicPunishment;
 import eu.pb4.banhammer.types.PunishmentTypes;
-import net.kyori.adventure.text.minimessage.Template;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
@@ -29,22 +28,14 @@ public class Helpers {
         return string;
     }
 
-    public static Text parseMessage(String minimessage) {
-        return BanHammerMod.getAdventure().toNative(BanHammerMod.miniMessage.parse(minimessage)).shallowCopy();
-    }
+    public static Map<String, Text> getTemplateFor(BasicPunishment punishment) {
+        HashMap<String, Text> list = new HashMap<>();
 
-    public static Text parseMessage(String minimessage, List<Template> templates) {
-        return BanHammerMod.getAdventure().toNative(BanHammerMod.miniMessage.parse(minimessage, templates)).shallowCopy();
-    }
-
-    public static List<Template> getTemplateFor(BasicPunishment punishment) {
-        ArrayList<Template> list = new ArrayList<>();
-
-        list.add(Template.of("operator", BanHammerMod.getAdventure().toAdventure(punishment.adminDisplayName.shallowCopy())));
-        list.add(Template.of("reason", punishment.reason));
-        list.add(Template.of("expiration_date", punishment.getFormattedExpirationDate()));
-        list.add(Template.of("expiration_time", punishment.getFormattedExpirationTime()));
-        list.add(Template.of("banned", BanHammerMod.getAdventure().toAdventure(punishment.bannedDisplayName.shallowCopy())));
+        list.put("operator", punishment.adminDisplayName.shallowCopy());
+        list.put("reason", new LiteralText(punishment.reason));
+        list.put("expiration_date", new LiteralText(punishment.getFormattedExpirationDate()));
+        list.put("expiration_time", new LiteralText(punishment.getFormattedExpirationTime()));
+        list.put("banned", punishment.bannedDisplayName.shallowCopy());
 
         return list;
     }

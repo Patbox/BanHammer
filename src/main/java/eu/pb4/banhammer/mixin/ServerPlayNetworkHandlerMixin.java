@@ -5,6 +5,8 @@ import eu.pb4.banhammer.Helpers;
 import eu.pb4.banhammer.config.ConfigManager;
 import eu.pb4.banhammer.types.BasicPunishment;
 import eu.pb4.banhammer.types.PunishmentTypes;
+import eu.pb4.placeholders.PlaceholderAPI;
+import net.minecraft.server.filter.TextStream;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,8 +19,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class ServerPlayNetworkHandlerMixin {
     @Shadow public ServerPlayerEntity player;
 
-    @Inject(method = "method_31286", at = @At("HEAD"), cancellable = true)
-    private void checkIfMuted(String string, CallbackInfo ci) {
+    @Inject(method = "handleMessage", at = @At("HEAD"), cancellable = true)
+    private void checkIfMuted(TextStream.Message message, CallbackInfo ci) {
+        String string = message.getRaw();
         if (BanHammerMod.isPlayerPunished(this.player.getUuid().toString(), PunishmentTypes.MUTE)) {
             if (string.startsWith("/") && string.length() > 1) {
                 int x = string.indexOf(" ");
@@ -27,13 +30,13 @@ public class ServerPlayNetworkHandlerMixin {
                     if (rawCommand.startsWith(command)) {
                         ci.cancel();
                         BasicPunishment punishment = BanHammerMod.getPlayersPunishments(this.player.getUuid().toString(), PunishmentTypes.MUTE).get(0);
-                        this.player.sendMessage(Helpers.parseMessage(ConfigManager.getConfig().mutedMessage, Helpers.getTemplateFor(punishment)), false);
+                        this.player.sendMessage(PlaceholderAPI.parsePredefinedText(ConfigManager.getConfig().mutedMessage, PlaceholderAPI.PREDEFINED_PLACEHOLDER_PATTERN, Helpers.getTemplateFor(punishment)), false);
                         return;
                     }
                 }
             } else {
                 BasicPunishment punishment = BanHammerMod.getPlayersPunishments(this.player.getUuid().toString(), PunishmentTypes.MUTE).get(0);
-                this.player.sendMessage(Helpers.parseMessage(ConfigManager.getConfig().mutedMessage, Helpers.getTemplateFor(punishment)), false);
+                this.player.sendMessage(PlaceholderAPI.parsePredefinedText(ConfigManager.getConfig().mutedMessage, PlaceholderAPI.PREDEFINED_PLACEHOLDER_PATTERN, Helpers.getTemplateFor(punishment)), false);
                 ci.cancel();
             }
         }

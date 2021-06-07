@@ -20,7 +20,7 @@ public class ConfigData {
 
     public String databaseType = "sqlite";
 
-    public String sqliteDatabaseLocation = "banhammer.db";
+    public String sqliteDatabaseLocation = "banhammer-sqlite.db";
     public String mysqlDatabaseAddress = "";
     public String mysqlDatabaseName = "";
     public String mysqlDatabaseUsername = "";

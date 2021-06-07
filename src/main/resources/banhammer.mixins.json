@@ -2,12 +2,11 @@
   "required": true,
   "minVersion": "0.8",
   "package": "eu.pb4.banhammer.mixin",
-  "compatibilityLevel": "JAVA_8",
+  "compatibilityLevel": "JAVA_16",
   "mixins": [
     "PlayerManagerMixin",
     "ServerPlayNetworkHandlerMixin",
     "accessor.ServerConfigEntryAccessor",
-    "accessor.BanEntryAccessor",
     "vanilla.BanCommandMixin",
     "vanilla.BanIpCommandMixin",
     "vanilla.KickCommandMixin",

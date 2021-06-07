@@ -1,8 +1,10 @@
 package eu.pb4.banhammer.types;
 
 import eu.pb4.banhammer.Helpers;
-import eu.pb4.banhammer.config.MessageConfigData;
 import eu.pb4.banhammer.config.ConfigManager;
+import eu.pb4.banhammer.config.MessageConfigData;
+import eu.pb4.placeholders.PlaceholderAPI;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 
 import java.util.Date;
@@ -34,15 +36,15 @@ public class BasicPunishment {
     }
 
     public boolean isExpired() {
-        return this.duration > -1 && this.time + this.duration < System.currentTimeMillis() / 1000;
+        return this.isTemporary() && this.time + this.duration < System.currentTimeMillis() / 1000;
     }
 
     public Date getExpirationDate() {
-        return this.duration > -1 ? new Date((this.time + this.duration ) * 1000) : new Date(32503676400000L);
+        return this.isTemporary() ? new Date((this.time + this.duration) * 1000) : new Date(Long.MAX_VALUE - 1);
     }
 
     public String getFormattedExpirationDate() {
-        return this.duration > -1 ? ConfigManager.getConfig().dateTimeFormatter.format(this.getExpirationDate()) : ConfigManager.getConfig().neverExpires;
+        return this.isTemporary() ? ConfigManager.getConfig().dateTimeFormatter.format(this.getExpirationDate()) : ConfigManager.getConfig().neverExpires;
     }
 
     public String getFormattedExpirationTime() {
@@ -57,19 +59,24 @@ public class BasicPunishment {
             long days = x / (60 * 60 * 24) % 365;
             long years = x / (60 * 60 * 24 * 365);
 
+            StringBuilder builder = new StringBuilder();
+
             if (years > 0) {
-                return String.format("%d%s%d%s%d%s%d%s%d%s", years, data.yearsText, days, data.daysText, hours, data.hoursText, minutes, data.minutesText, seconds, data.secondsText);
-            } else if (days > 0) {
-                return String.format("%d%s%d%s%d%s%d%s", days, data.daysText, hours, data.hoursText, minutes, data.minutesText, seconds, data.secondsText);
-            } else if (hours > 0) {
-                return String.format("%d%s%d%s%d%s", hours, data.hoursText, minutes, data.minutesText, seconds, data.secondsText);
-            } else if (minutes > 0) {
-                return String.format("%d%s%d%s", minutes, data.minutesText, seconds, data.secondsText);
-            } else if (seconds > 0) {
-                return String.format("%d%s", seconds, data.secondsText);
-            } else {
-                return String.format("0%s", data.secondsText);
+                builder.append(years + data.yearsText);
             }
+            if (days > 0) {
+                builder.append(days + data.daysText);
+            }
+            if (hours > 0) {
+                builder.append(hours + data.hoursText);
+            }
+            if (minutes > 0) {
+                builder.append(minutes + data.minutesText);
+            }
+            if (seconds > 0) {
+                builder.append(seconds + data.secondsText);
+            }
+            return builder.toString();
         } else {
             return ConfigManager.getConfig().neverExpires;
         }
@@ -77,45 +84,49 @@ public class BasicPunishment {
 
 
     public Text getDisconnectMessage() {
-        String message;
+        Text message;
 
         switch (this.type) {
             case KICK:
                 message = ConfigManager.getConfig().kickScreenMessage;
                 break;
             case BAN:
-                message = ConfigManager.getConfig().banScreenMessage;
+                message = this.isTemporary() ? ConfigManager.getConfig().tempBanScreenMessage : ConfigManager.getConfig().banScreenMessage;
                 break;
             case IPBAN:
-                message = ConfigManager.getConfig().ipBanScreenMessage;
+                message = this.isTemporary() ? ConfigManager.getConfig().tempIpBanScreenMessage : ConfigManager.getConfig().ipBanScreenMessage;
                 break;
             default:
-                message = "";
+                message = LiteralText.EMPTY;
         }
 
-        return Helpers.parseMessage(message, Helpers.getTemplateFor(this));
+        return PlaceholderAPI.parsePredefinedText(message, PlaceholderAPI.PREDEFINED_PLACEHOLDER_PATTERN, Helpers.getTemplateFor(this));
     }
 
     public Text getChatMessage() {
-        String message;
+        Text message;
 
         switch (this.type) {
             case KICK:
                 message = ConfigManager.getConfig().kickChatMessage;
                 break;
             case BAN:
-                message = ConfigManager.getConfig().banChatMessage;
+                message = this.isTemporary() ? ConfigManager.getConfig().tempBanChatMessage : ConfigManager.getConfig().banChatMessage;
                 break;
             case IPBAN:
-                message = ConfigManager.getConfig().ipBanChatMessage;
+                message = this.isTemporary() ? ConfigManager.getConfig().tempIpBanChatMessage : ConfigManager.getConfig().ipBanChatMessage;
                 break;
             case MUTE:
-                message = ConfigManager.getConfig().muteChatMessage;
+                message = this.isTemporary() ? ConfigManager.getConfig().tempMuteChatMessage : ConfigManager.getConfig().muteChatMessage;
                 break;
             default:
-                message = "";
+                message = LiteralText.EMPTY;
         }
 
-        return Helpers.parseMessage(message, Helpers.getTemplateFor(this));
+        return PlaceholderAPI.parsePredefinedText(message, PlaceholderAPI.PREDEFINED_PLACEHOLDER_PATTERN, Helpers.getTemplateFor(this));
+    }
+
+    public boolean isTemporary() {
+        return this.duration > -1;
     }
 }

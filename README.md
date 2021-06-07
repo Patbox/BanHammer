@@ -1,8 +1,13 @@
+![](https://i.imgur.com/0o0rruV.png)
+
 # BanHammer
 
 Simple, customisable punishment utility mod for Fabric. Allows moderators to permanently/temporary ban, mute or kick players.
-Supports [Fabric Permissions API](https://github.com/lucko/fabric-permissions-api) used by LuckPerms and PlayerRoles
+Supports [Fabric Permissions API](https://github.com/lucko/fabric-permissions-api) used by LuckPerms and PlayerRoles.
 
+Every user facing message is configurable with support of [advanced formatting](https://github.com/Patbox/FabricPlaceholderAPI/blob/1.17/TEXT_FORMATTING.md)
+
+It has build in support for SQLite and MySQL databases.
 ## Commands and permissions
 
 | Command            | Permission               | Description                       |
@@ -44,7 +49,7 @@ or any combination of these (`5y3d9h3m8s`).
     "example": "31d"
   },
   "databaseType": "sqlite",                  // Changes database type ("sqlite" or "mysql")
-  "sqliteDatabaseLocation": "banhammer.db",  // sqlite databases location (from server's directory)
+  "sqliteDatabaseLocation": "banhammer-sqlite.db",  // sqlite databases location (from server's directory)
   "mysqlDatabaseAddress": "",                // Address of mysql database
   "mysqlDatabaseName": "",                   // Name of mysql database
   "mysqlDatabaseUsername": "",               // Username of mysql user

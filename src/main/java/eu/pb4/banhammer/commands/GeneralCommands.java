@@ -51,7 +51,8 @@ public class GeneralCommands {
     }
 
     private static int about(CommandContext<ServerCommandSource> context) {
-        context.getSource().sendFeedback(Helpers.parseMessage("<red>BanHammer</red> - " + BanHammerMod.VERSION), false);
+        context.getSource().sendFeedback(new LiteralText("BanHammer").formatted(Formatting.RED)
+                        .append(new LiteralText(" - " + BanHammerMod.VERSION).formatted(Formatting.WHITE)), false);
         return 1;
     }
 

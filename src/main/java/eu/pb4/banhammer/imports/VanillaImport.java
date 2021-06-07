@@ -2,7 +2,6 @@ package eu.pb4.banhammer.imports;
 
 import com.mojang.authlib.GameProfile;
 import eu.pb4.banhammer.BanHammerMod;
-import eu.pb4.banhammer.mixin.accessor.BanEntryAccessor;
 import eu.pb4.banhammer.mixin.accessor.ServerConfigEntryAccessor;
 import eu.pb4.banhammer.types.BasicPunishment;
 import eu.pb4.banhammer.types.PunishmentTypes;
@@ -20,9 +19,9 @@ public class VanillaImport implements BanHammerMod.PunishmentImporter {
             BannedIpList ipBanList = BanHammerMod.SERVER.getPlayerManager().getIpBanList();
 
             for (BannedPlayerEntry data : banList.values()) {
-                GameProfile profile = ((ServerConfigEntryAccessor<GameProfile>) data).getKey();
+                GameProfile profile = ((ServerConfigEntryAccessor<GameProfile>) data).getKeyServer();
 
-                long creation = ((BanEntryAccessor) data).getCreationDate().getTime() / 1000;
+                long creation = data    .getCreationDate().getTime() / 1000;
                 long expiration;
 
                 try {
@@ -51,7 +50,7 @@ public class VanillaImport implements BanHammerMod.PunishmentImporter {
             }
 
             for (BannedIpEntry data : ipBanList.values()) {
-                String ip = ((ServerConfigEntryAccessor<String>) data).getKey();
+                String ip = ((ServerConfigEntryAccessor<String>) data).getKeyServer();
 
                 BasicPunishment punishment = new BasicPunishment(
                         Util.NIL_UUID,
