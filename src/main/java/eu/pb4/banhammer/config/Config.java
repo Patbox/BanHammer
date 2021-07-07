@@ -1,12 +1,23 @@
 package eu.pb4.banhammer.config;
 
+import club.minnced.discord.webhook.WebhookClient;
+import club.minnced.discord.webhook.WebhookClientBuilder;
+import club.minnced.discord.webhook.send.AllowedMentions;
+import eu.pb4.banhammer.BanHammerMod;
 import eu.pb4.banhammer.Helpers;
+import eu.pb4.banhammer.config.data.ConfigData;
+import eu.pb4.banhammer.config.data.DiscordMessageData;
+import eu.pb4.banhammer.config.data.MessageConfigData;
 import eu.pb4.placeholders.TextParser;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.command.CommandSource;
 import net.minecraft.text.Text;
+import net.minecraft.util.Util;
+import okhttp3.OkHttpClient;
+import okhttp3.Protocol;
 
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,9 +55,13 @@ public class Config {
     public final Text unmuteChatMessage;
     public final Text unbanChatMessage;
     public final Text ipUnbanChatMessage;
+    public final DiscordMessageData discordMessages;
+    public final WebhookClient webhook;
 
 
-    public Config(ConfigData data, MessageConfigData mData) {
+    public Config(ConfigData data, MessageConfigData mData, DiscordMessageData discordMessages) {
+        this.discordMessages = discordMessages;
+        
         this.mutedMessage = toSingleString(mData.mutedText);
         this.tempMutedMessage = toSingleString(mData.tempMutedText);
 
@@ -86,6 +101,26 @@ public class Config {
 
         this.messageConfigData = mData;
         this.configData = data;
+
+        if (!configData.discordWebhookUrl.isEmpty()) {
+            WebhookClient client;
+            try {
+                WebhookClientBuilder builder = new WebhookClientBuilder(configData.discordWebhookUrl);
+                builder.setHttpClient(new OkHttpClient.Builder()
+                        .protocols(Collections.singletonList(Protocol.HTTP_1_1))
+                        .build());
+                builder.setDaemon(true);
+                builder.setAllowedMentions(AllowedMentions.none());
+                client = builder.build();
+            } catch (Exception e) {
+                BanHammerMod.LOGGER.error("Could use webhook!");
+                e.printStackTrace();
+                client = null;
+            }
+            this.webhook = client;
+        } else {
+            this.webhook = null;
+        }
     }
 
     private Text toSingleString(List<String> text) {
@@ -109,5 +144,7 @@ public class Config {
 
         return custom ? out : this.defaultDurationLimit;
     }
+
+    public void destroy() {}
 
 }

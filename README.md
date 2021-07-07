@@ -33,6 +33,7 @@ Duration can be expressed in seconds (`15`/`15s`), minutes (`3m`), hours (`24h`)
 or any combination of these (`5y3d9h3m8s`).
 
 ## Configuration
+You can find this config in `config/banhammer/config.json`.
 ```json5
 {
   "CONFIG_VERSION_DONT_TOUCH_THIS": 1,
@@ -48,6 +49,7 @@ or any combination of these (`5y3d9h3m8s`).
   "permissionTempLimit": {                   // Allows to change duration limit of punishment with `banhammer.duration.<entry>` permission
     "example": "31d"
   },
+  "discordWebhookUrl": "",                   // Url for discord webhook, leave empty to disable it
   "databaseType": "sqlite",                  // Changes database type ("sqlite" or "mysql")
   "sqliteDatabaseLocation": "banhammer-sqlite.db",  // sqlite databases location (from server's directory)
   "mysqlDatabaseAddress": "",                // Address of mysql database
@@ -56,3 +58,41 @@ or any combination of these (`5y3d9h3m8s`).
   "mysqlDatabasePassword": ""                // Password of mysql user
 }
 ```
+You can also edit in game messages which are stored in `config/banhammer/messages.json`
+You can also edit discord ones in `config/banhammer/discord-messages.json`
+It's little more tricky as it has many values:
+```json5
+{
+  /*...*/
+  "send[Type]Message": true,     // Enables sending of the message       
+  "temp[Type]Message": {     
+    "embed": true,               // Sends message as embed
+    "message": [
+      /* Message content */
+    ],
+    "avatar": "",               // Url to avatar (or empty to use default one)
+    "name": "",                 // Name (or empty to use default one)
+    "embedTitle": "",           // Embed's title (or empty to disable)
+    "embedTitleUrl": "",        // Embed's title url (or empty to disable)
+    "embedColor": "red",        // Embed color (or empty to disable)
+    "embedImage": "",           // Embed's image (or empty to disable)
+    "embedThumbnail": "",       // Embed's thumbnail (or empty to disable)
+    "embedFields": [            // Embed fields (or empty to disable)
+      /* You can have as many as many of these as you want */
+      {
+        "name": "",             // Field's name
+        "content": "",          // Field's content
+        "inline": false         // Makes field inline
+      }
+    ] 
+  },
+  /*...*/
+}
+```
+
+
+Discord and ingame messages can use predefined variables:
+For punishments: `${operator}`, `${operator_uuid}`, 
+`${banned}`, `${banned_uuid}`, `${reason}`, `${expiration_date}`, `${expiration_time}`
+
+For removing: `${operator}`, `${operator_uuid}`, `${banned}`, `${banned_uuid}`

@@ -30,13 +30,13 @@ public class ServerPlayNetworkHandlerMixin {
                     if (rawCommand.startsWith(command)) {
                         ci.cancel();
                         BasicPunishment punishment = BanHammerMod.getPlayersPunishments(this.player.getUuid().toString(), PunishmentTypes.MUTE).get(0);
-                        this.player.sendMessage(PlaceholderAPI.parsePredefinedText(ConfigManager.getConfig().mutedMessage, PlaceholderAPI.PREDEFINED_PLACEHOLDER_PATTERN, Helpers.getTemplateFor(punishment)), false);
+                        this.player.sendMessage(PlaceholderAPI.parsePredefinedText(ConfigManager.getConfig().mutedMessage, PlaceholderAPI.PREDEFINED_PLACEHOLDER_PATTERN, punishment.getPlaceholders()), false);
                         return;
                     }
                 }
             } else {
                 BasicPunishment punishment = BanHammerMod.getPlayersPunishments(this.player.getUuid().toString(), PunishmentTypes.MUTE).get(0);
-                this.player.sendMessage(PlaceholderAPI.parsePredefinedText(ConfigManager.getConfig().mutedMessage, PlaceholderAPI.PREDEFINED_PLACEHOLDER_PATTERN, Helpers.getTemplateFor(punishment)), false);
+                this.player.sendMessage(PlaceholderAPI.parsePredefinedText(ConfigManager.getConfig().mutedMessage, PlaceholderAPI.PREDEFINED_PLACEHOLDER_PATTERN, punishment.getPlaceholders()), false);
                 ci.cancel();
             }
         }

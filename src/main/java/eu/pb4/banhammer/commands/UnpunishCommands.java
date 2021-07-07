@@ -1,6 +1,8 @@
 package eu.pb4.banhammer.commands;
 
 
+import club.minnced.discord.webhook.send.WebhookEmbed;
+import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
@@ -8,6 +10,7 @@ import eu.pb4.banhammer.BanHammerMod;
 import eu.pb4.banhammer.Helpers;
 import eu.pb4.banhammer.config.Config;
 import eu.pb4.banhammer.config.ConfigManager;
+import eu.pb4.banhammer.config.data.DiscordMessageData;
 import eu.pb4.banhammer.types.BHPlayerData;
 import eu.pb4.banhammer.types.PunishmentTypes;
 import eu.pb4.placeholders.PlaceholderAPI;
@@ -19,12 +22,13 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import net.minecraft.text.TextColor;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -62,7 +66,7 @@ public class UnpunishCommands {
     private static int removePunishmentCommand(CommandContext<ServerCommandSource> ctx, PunishmentTypes type) {
         CompletableFuture.runAsync(() -> {
 
-            MinecraftServer server = ctx.getSource().getMinecraftServer();
+            MinecraftServer server = ctx.getSource().getServer();
             String playerNameOrIp = ctx.getArgument("player", String.class);
 
             Config config = ConfigManager.getConfig();
@@ -124,7 +128,7 @@ public class UnpunishCommands {
 
                 list.put("operator", ctx.getSource().getDisplayName());
                 list.put("banned", new LiteralText(playerName));
-
+                list.put("banned_uuid", new LiteralText(playerUUID.toString()));
                 Text textMessage = PlaceholderAPI.parsePredefinedText(message, PlaceholderAPI.PREDEFINED_PLACEHOLDER_PATTERN, list);
 
                 if (config.configData.punishmentsAreSilent) {
@@ -142,6 +146,33 @@ public class UnpunishCommands {
                         }
                     }
                 }
+
+                if (config.webhook != null) {
+                    DiscordMessageData.Message tempMessage;
+
+                    DiscordMessageData data = config.discordMessages;
+                    if (type != null) {
+                        tempMessage = switch (type) {
+                            case BAN -> data.sendUnbanMessage ? data.unbanMessage : null;
+                            case IPBAN -> data.sendUnbanIpMessage ? data.unBanIpMessage : null;
+                            case MUTE -> data.sendUnmuteMessage ? data.unmuteMessage : null;
+                            case KICK -> null;
+                        };
+                    } else {
+                        tempMessage = data.sendPardonMessage ? data.pardonMessage : null;
+                    }
+
+                    if (tempMessage != null) {
+                        Map<String, String> placeholders = new HashMap<>();
+
+                        placeholders.put("operator", ctx.getSource().getDisplayName().getString());
+                        placeholders.put("banned", playerName);
+                        placeholders.put("banned_uuid", playerUUID.toString());
+
+
+                        config.webhook.send(tempMessage.build(placeholders));
+                    }
+                }
             } else {
                 ctx.getSource().sendFeedback(new LiteralText(altMessage).formatted(Formatting.RED), false);
             }
@@ -151,13 +182,12 @@ public class UnpunishCommands {
     }
 
 
-
     public static RequiredArgumentBuilder<ServerCommandSource, String> playerArgument(String name) {
         return CommandManager.argument(name, StringArgumentType.word())
                 .suggests((ctx, builder) -> {
                     String remaining = builder.getRemaining().toLowerCase(Locale.ROOT);
 
-                    for (String player : ctx.getSource().getMinecraftServer().getPlayerNames()) {
+                    for (String player : ctx.getSource().getServer().getPlayerNames()) {
                         if (player.toLowerCase(Locale.ROOT).contains(remaining)) {
                             builder.suggest(player);
                         }

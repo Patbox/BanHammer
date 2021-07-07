@@ -1,4 +1,4 @@
-package eu.pb4.banhammer.config;
+package eu.pb4.banhammer.config.data;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -17,6 +17,8 @@ public class ConfigData {
     public boolean autoBansFromIpBansAreSilent = true;
 
     public int defaultOpPermissionLevel = 3;
+
+    public String discordWebhookUrl = "";
 
     public String databaseType = "sqlite";
 

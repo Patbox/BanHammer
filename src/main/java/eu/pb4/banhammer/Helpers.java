@@ -28,18 +28,6 @@ public class Helpers {
         return string;
     }
 
-    public static Map<String, Text> getTemplateFor(BasicPunishment punishment) {
-        HashMap<String, Text> list = new HashMap<>();
-
-        list.put("operator", punishment.adminDisplayName.shallowCopy());
-        list.put("reason", new LiteralText(punishment.reason));
-        list.put("expiration_date", new LiteralText(punishment.getFormattedExpirationDate()));
-        list.put("expiration_time", new LiteralText(punishment.getFormattedExpirationTime()));
-        list.put("banned", punishment.bannedDisplayName.shallowCopy());
-
-        return list;
-    }
-
     public static long parseDuration(String text) throws NumberFormatException {
         text = text.toLowerCase(Locale.ROOT);
         try {
@@ -48,8 +36,8 @@ public class Helpers {
             String[] times = text.replaceAll("([a-z]+)", "$1|").split("\\|");
             long time = 0;
             for (String x : times) {
-                String numberOnly = x.replaceAll("([a-z])", "");
-                String suffixOnly = x.replaceAll("([^a-z])", "");
+                String numberOnly = x.replaceAll("[a-z]", "");
+                String suffixOnly = x.replaceAll("[^a-z]", "");
 
                 switch (suffixOnly) {
                     case "c":
@@ -100,7 +88,7 @@ public class Helpers {
                 if (entry.getValue().equals(usernameOrIp)) {
                     uuid = UUID.fromString(entry.getKey());
                     ip = entry.getValue();
-                    profile = BanHammerMod.SERVER.getUserCache().getByUuid(uuid);
+                    profile = BanHammerMod.SERVER.getUserCache().getByUuid(uuid).orElse(null);
                     break;
                 }
             }
@@ -114,7 +102,7 @@ public class Helpers {
                 name = profile.getName();
             }
         } else {
-            GameProfile profile = BanHammerMod.SERVER.getUserCache().findByName(usernameOrIp);
+            GameProfile profile = BanHammerMod.SERVER.getUserCache().findByName(usernameOrIp).orElse(null);;
 
             if (profile != null) {
                 uuid = profile.getId();

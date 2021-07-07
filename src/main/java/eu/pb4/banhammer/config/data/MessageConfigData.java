@@ -1,4 +1,4 @@
-package eu.pb4.banhammer.config;
+package eu.pb4.banhammer.config.data;
 
 
 import java.util.Arrays;

@@ -16,13 +16,13 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
     protected Connection conn;
     protected Statement stat;
 
+
+    protected abstract String getTableCreation();
+    protected abstract String getHistoryTableCreation();
+
     public void createTables() throws SQLException  {
-        String create = "CREATE TABLE IF NOT EXISTS %s (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "bannedUUID varchar(36), bannedIP varchar(15), bannedName varchar(16), bannedDisplay varchar(512), " +
-                "adminUUID varchar(36), adminDisplay TEXT, time BIGINT, duration BIGINT, reason varchar(128))";
-        String createHistory = "CREATE TABLE IF NOT EXISTS history (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "bannedUUID varchar(36), bannedIP varchar(15), bannedName varchar(16), bannedDisplay varchar(512), " +
-                "adminUUID varchar(36), adminDisplay TEXT, time BIGINT, duration BIGINT, reason varchar(128), type varchar(16))";
+        String create = this.getTableCreation();
+        String createHistory = this.getHistoryTableCreation();
 
         stat.execute(String.format(create, PunishmentTypes.BAN.databaseName));
         stat.execute(String.format(create, PunishmentTypes.IPBAN.databaseName));

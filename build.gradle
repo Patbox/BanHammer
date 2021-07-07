@@ -1,6 +1,7 @@
 plugins {
 	id 'fabric-loom' version '0.8-SNAPSHOT'
 	id 'maven-publish'
+	id "com.github.johnrengelman.shadow" version "7.0.0"
 }
 
 sourceCompatibility = JavaVersion.VERSION_16
@@ -19,6 +20,7 @@ repositories {
 	maven { url 'https://maven.nucleoid.xyz' }
 	maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
 	maven { url 'https://jitpack.io' }
+	mavenCentral()
 }
 
 dependencies {
@@ -32,11 +34,12 @@ dependencies {
 
 	modImplementation include("me.lucko:fabric-permissions-api:0.1-SNAPSHOT")
 
-	implementation include('org.xerial:sqlite-jdbc:3.34.0')
-	implementation include('mysql:mysql-connector-java:8.0.25')
+	implementation shadow("org.xerial:sqlite-jdbc:3.36.0")
+	implementation shadow('mysql:mysql-connector-java:8.0.25')
+	implementation shadow('club.minnced:discord-webhooks:0.5.7')
 
 
-	modImplementation include("eu.pb4:placeholder-api:1.0.0-rc1-1.17")
+	modImplementation include("eu.pb4:placeholder-api:1.0.0-1.17")
 	modImplementation "com.github.SuperCoder7979:databreaker:0.2.6"
 
 	// PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
@@ -75,6 +78,42 @@ jar {
 	from("LICENSE") {
 		rename { "${it}_${project.archivesBaseName}"}
 	}
+}
+
+configurations {
+	shadow
+	implementation.extendsFrom shadow
+}
+
+jar {
+	from "LICENSE"
+}
+
+shadowJar {
+	from "LICENSE"
+
+	configurations = [ project.configurations.shadow ]
+	classifier = "dev-all"
+	exclude "com/google/**"
+	exclude("javax/**", "META-INF")
+	exclude "org/checkerframework/**", "org/jetbrains/**", "org/intellij/**"
+	exclude "com/google/gson/**"
+	exclude "net/kyori/**"
+
+	def relocPath = "eu.pb4.banhammer.libs."
+	relocate "club.minnced.discord", relocPath + "club.minnced.discord"
+	relocate "okhttp3", relocPath + "okhttp3"
+	relocate "okio", relocPath + "okio"
+	relocate "org.json", relocPath + "org.json"
+	relocate "com.mysql", relocPath + "com.mysql"
+	relocate "google", relocPath + "google"
+
+}
+
+
+remapJar {
+	dependsOn(shadowJar)
+	input.set(shadowJar.archivePath)
 }
 
 // configure the maven publication

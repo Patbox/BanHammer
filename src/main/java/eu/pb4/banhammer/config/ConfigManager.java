@@ -3,6 +3,9 @@ package eu.pb4.banhammer.config;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import eu.pb4.banhammer.BanHammerMod;
+import eu.pb4.banhammer.config.data.ConfigData;
+import eu.pb4.banhammer.config.data.DiscordMessageData;
+import eu.pb4.banhammer.config.data.MessageConfigData;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.command.CommandSource;
 import net.minecraft.server.command.ServerCommandSource;
@@ -34,20 +37,29 @@ public class ConfigManager {
 
             File configFile = new File(configDir, "config.json");
             File messagesFile = new File(configDir, "messages.json");
+            File discordMessagesFile = new File(configDir, "discord-messages.json");
 
             ConfigData configData = configFile.exists() ? GSON.fromJson(new InputStreamReader(new FileInputStream(configFile), "UTF-8"), ConfigData.class) : new ConfigData();
             MessageConfigData messageConfigData = messagesFile.exists() ? GSON.fromJson(new InputStreamReader(new FileInputStream(messagesFile), "UTF-8"), MessageConfigData.class) : new MessageConfigData();
+            DiscordMessageData discordConfigData = discordMessagesFile.exists() ? GSON.fromJson(new InputStreamReader(new FileInputStream(discordMessagesFile), "UTF-8"), DiscordMessageData.class) : new DiscordMessageData();
 
-            CONFIG = new Config(configData, messageConfigData);
+            CONFIG = new Config(configData, messageConfigData, discordConfigData);
 
-            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(configFile), "UTF-8"));
-            writer.write(GSON.toJson(configData));
-            writer.close();
-
-            BufferedWriter writer2 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(messagesFile), "UTF-8"));
-            writer2.write(GSON.toJson(messageConfigData));
-            writer2.close();
-
+            {
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(configFile), "UTF-8"));
+                writer.write(GSON.toJson(configData));
+                writer.close();
+            }
+            {
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(messagesFile), "UTF-8"));
+                writer.write(GSON.toJson(messageConfigData));
+                writer.close();
+            }
+            {
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(discordMessagesFile), "UTF-8"));
+                writer.write(GSON.toJson(discordConfigData));
+                writer.close();
+            }
             success = true;
         }
         catch(IOException exception) {

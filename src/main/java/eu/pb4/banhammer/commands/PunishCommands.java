@@ -184,7 +184,7 @@ public class PunishCommands {
                 .suggests((ctx, builder) -> {
                     String remaining = builder.getRemaining().toLowerCase(Locale.ROOT);
 
-                    for (String player : ctx.getSource().getMinecraftServer().getPlayerNames()) {
+                    for (String player : ctx.getSource().getServer().getPlayerNames()) {
                         if (player.toLowerCase(Locale.ROOT).contains(remaining)) {
                             builder.suggest(player);
                         }
