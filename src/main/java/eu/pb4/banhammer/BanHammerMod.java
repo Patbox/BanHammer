@@ -86,6 +86,9 @@ public class BanHammerMod implements ModInitializer {
 
 				LOGGER.error("Couldn't connect to database! Stopping server...");
 				server.stop(false);
+			} catch (ClassNotFoundException e) {
+				LOGGER.fatal("Could not load MySQL driver! Stopping server...");
+				server.stop(false);
 			}
 
 			IMPORTERS.put("vanilla", new VanillaImport());

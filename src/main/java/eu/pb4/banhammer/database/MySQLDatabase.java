@@ -4,7 +4,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class MySQLDatabase extends AbstractSQLDatabase {
-    public MySQLDatabase(String address, String database, String username, String password) throws SQLException {
+    public MySQLDatabase(String address, String database, String username, String password) throws SQLException, ClassNotFoundException {
+        Class.forName("com.mysql.cj.jdbc.Driver");
+    
         conn = DriverManager.getConnection("jdbc:mysql://" + address + "/" + database, username, password);
         stat = conn.createStatement();
 
