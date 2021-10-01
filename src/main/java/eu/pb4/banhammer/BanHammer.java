@@ -34,15 +34,11 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.nio.file.Paths;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class BanHammerMod implements ModInitializer {
+public class BanHammer implements ModInitializer {
 	public static final Logger LOGGER = LogManager.getLogger("BanHammer");
 	private static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
 
@@ -51,7 +47,8 @@ public class BanHammerMod implements ModInitializer {
 
 	public static DatabaseHandlerInterface DATABASE;
 
-	public static ConcurrentHashMap<String, String> IP_CACHE = null;
+	public static ConcurrentHashMap<UUID, String> UUID_TO_IP_CACHE = new ConcurrentHashMap<>();
+	public static ConcurrentHashMap<String, UUID> IP_TO_UUID_CACHE = new ConcurrentHashMap<>();
 
 	public static HashMap<String, PunishmentImporter> IMPORTERS = new HashMap<>();
 
@@ -59,14 +56,30 @@ public class BanHammerMod implements ModInitializer {
 		SERVER = server;
 		boolean loaded = ConfigManager.loadConfig();
 
-		File ipcacheFile = Paths.get("ipcache.json").toFile();
+		File ipCacheFile = Paths.get("ipcache.json").toFile();
 
 		try {
-			IP_CACHE = ipcacheFile.exists() ? GSON.fromJson(new FileReader(ipcacheFile), new TypeToken<ConcurrentHashMap<String, String>>() {
-			}.getType()) : new ConcurrentHashMap<>();
+			ConcurrentHashMap<String, String> ipCache = ipCacheFile.exists() ? GSON.fromJson(new FileReader(ipCacheFile), new TypeToken<ConcurrentHashMap<String, String>>() {
+			}.getType()) : null;
+
+
+			if (ipCache != null) {
+				for (var entry : ipCache.entrySet()) {
+					try {
+						var uuid = UUID.fromString(entry.getKey());
+						var ip = entry.getValue();
+
+						if (uuid != null && ip != null) {
+							UUID_TO_IP_CACHE.put(uuid, ip);
+							IP_TO_UUID_CACHE.put(ip, uuid);
+						}
+					} catch (Exception e) {
+						// Silence!
+					}
+				}
+			}
 		} catch (FileNotFoundException e) {
 			LOGGER.warn("Couldn't load ipcache.json! Creating new one...");
-			IP_CACHE = new ConcurrentHashMap<>();
 		}
 
 		if (loaded) {
@@ -81,11 +94,11 @@ public class BanHammerMod implements ModInitializer {
 						server.stop(true);
 					}
 				}
-			} catch (SQLException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 
 				LOGGER.error("Couldn't connect to database! Stopping server...");
-				server.stop(false);
+				server.stop(true);
 			}
 
 			IMPORTERS.put("vanilla", new VanillaImport());
@@ -99,7 +112,7 @@ public class BanHammerMod implements ModInitializer {
 	@Override
 	public void onInitialize() {
 
-		ServerLifecycleEvents.SERVER_STARTING.register(BanHammerMod::onServerStarting);
+		ServerLifecycleEvents.SERVER_STARTING.register(BanHammer::onServerStarting);
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
 			if (DATABASE != null) {
 				DATABASE.closeConnection();
@@ -111,7 +124,14 @@ public class BanHammerMod implements ModInitializer {
 
 			try {
 				BufferedWriter writer = new BufferedWriter(new FileWriter(ipcacheFile));
-				writer.write(GSON.toJson(IP_CACHE));
+
+				var ipCache = new HashMap<String, String>();
+
+				for (var entry : UUID_TO_IP_CACHE.entrySet()) {
+					ipCache.put(entry.getKey().toString(), entry.getValue());
+				}
+
+				writer.write(GSON.toJson(ipCache));
 				writer.close();
 			} catch (IOException exception) {
 				exception.printStackTrace();
@@ -242,7 +262,7 @@ public class BanHammerMod implements ModInitializer {
 		return false;
 	}
 
-	public static final Event<BanHammerMod.PunishmentEvent> PUNISHMENT_EVENT = EventFactory.createArrayBacked(PunishmentEvent.class, (callbacks) -> (punishment, s, i) -> {
+	public static final Event<BanHammer.PunishmentEvent> PUNISHMENT_EVENT = EventFactory.createArrayBacked(PunishmentEvent.class, (callbacks) -> (punishment, s, i) -> {
 		for(PunishmentEvent callback : callbacks ) {
 			callback.onPunishment(punishment, s, i);
 		}

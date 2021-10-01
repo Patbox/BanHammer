@@ -33,8 +33,7 @@ public class MessageConfigData {
 
     public List<String> unmuteChatMessage = Collections.singletonList("Player <red>${banned}</red> has been unmuted by <gold>${operator}</gold>!");
 
-    public List<String> pardonChatMessage = Arrays.asList("Punishments of player <red>${banned}</red> has been redeemed by <gold>${operator}</gold>!",
-            "Reason: <yellow>${reason}</yellow>");
+    public List<String> pardonChatMessage = Collections.singletonList("Punishments of player <red>${banned}</red> has been redeemed by <gold>${operator}</gold>!");
 
     public List<String> banScreen = Arrays.asList("<red><bold>You are banned</bold></red>",
             "<gray>Reason: </gray><yellow>${reason}</yellow>",

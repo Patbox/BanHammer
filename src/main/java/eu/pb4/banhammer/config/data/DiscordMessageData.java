@@ -142,6 +142,7 @@ public class DiscordMessageData {
         public String embedColor = "";
         public String embedImage = "";
         public String embedThumbnail = "";
+        public List<String> embedMessage = Collections.emptyList();
         public List<Table> embedFields = Collections.emptyList();
 
         public Message() {
@@ -149,7 +150,7 @@ public class DiscordMessageData {
 
         public Message(String color, List<String> message) {
             this.embedColor = color;
-            this.message = message;
+            this.embedMessage = message;
         }
 
         public WebhookMessage build(Map<String, String> placeholders) {
@@ -157,6 +158,7 @@ public class DiscordMessageData {
             String name = this.name;
             String avatar = this.avatar;
             String content = String.join("\n", this.message);
+
             for (Map.Entry<String, String> entry : placeholders.entrySet()) {
                 String key = "${" + entry.getKey() + "}";
                 name = name.replace(key, entry.getValue());
@@ -178,6 +180,7 @@ public class DiscordMessageData {
                 String titleUrl = this.embedTitleUrl;
                 String image = this.embedImage;
                 String thumbnail = this.embedThumbnail;
+                String contentEmbed = String.join("\n", this.embedMessage);
 
                 TextColor color = TextColor.parse(this.embedColor);
 
@@ -192,6 +195,7 @@ public class DiscordMessageData {
                     titleUrl = titleUrl.replace(key, entry.getValue());
                     image = image.replace(key, entry.getValue());
                     thumbnail = thumbnail.replace(key, entry.getValue());
+                    contentEmbed = contentEmbed.replace(key, entry.getValue());
 
                     for (Table table : tables) {
                         table.name = table.name.replace(key, entry.getValue());
@@ -214,8 +218,8 @@ public class DiscordMessageData {
                 if (color != null) {
                     embed.setColor(color.getRgb());
                 }
-                if (!content.isEmpty()) {
-                    embed.setDescription(content);
+                if (!contentEmbed.isEmpty()) {
+                    embed.setDescription(contentEmbed);
                 }
 
                 for (Table table : tables) {
@@ -223,8 +227,6 @@ public class DiscordMessageData {
                 }
 
                 builder.addEmbeds(embed.build());
-            } else {
-                builder.setContent(content);
             }
 
             return builder.build();

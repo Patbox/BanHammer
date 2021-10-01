@@ -4,8 +4,7 @@ import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import eu.pb4.banhammer.BanHammerMod;
-import eu.pb4.banhammer.Helpers;
+import eu.pb4.banhammer.BanHammer;
 import eu.pb4.banhammer.config.ConfigManager;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
@@ -52,7 +51,7 @@ public class GeneralCommands {
 
     private static int about(CommandContext<ServerCommandSource> context) {
         context.getSource().sendFeedback(new LiteralText("BanHammer").formatted(Formatting.RED)
-                        .append(new LiteralText(" - " + BanHammerMod.VERSION).formatted(Formatting.WHITE)), false);
+                        .append(new LiteralText(" - " + BanHammer.VERSION).formatted(Formatting.WHITE)), false);
         return 1;
     }
 
@@ -65,7 +64,7 @@ public class GeneralCommands {
             remove = false;
         }
 
-        BanHammerMod.PunishmentImporter importer = BanHammerMod.IMPORTERS.get(type);
+        BanHammer.PunishmentImporter importer = BanHammer.IMPORTERS.get(type);
 
         if (importer != null) {
             boolean result = importer.importPunishments(remove);
@@ -91,7 +90,7 @@ public class GeneralCommands {
                 .suggests((ctx, builder) -> {
                     String remaining = builder.getRemaining().toLowerCase(Locale.ROOT);
 
-                    for (String type : BanHammerMod.IMPORTERS.keySet()) {
+                    for (String type : BanHammer.IMPORTERS.keySet()) {
                         if (type.contains(remaining)) {
                             builder.suggest(type);
                         }

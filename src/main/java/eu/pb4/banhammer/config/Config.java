@@ -3,7 +3,7 @@ package eu.pb4.banhammer.config;
 import club.minnced.discord.webhook.WebhookClient;
 import club.minnced.discord.webhook.WebhookClientBuilder;
 import club.minnced.discord.webhook.send.AllowedMentions;
-import eu.pb4.banhammer.BanHammerMod;
+import eu.pb4.banhammer.BanHammer;
 import eu.pb4.banhammer.Helpers;
 import eu.pb4.banhammer.config.data.ConfigData;
 import eu.pb4.banhammer.config.data.DiscordMessageData;
@@ -12,7 +12,6 @@ import eu.pb4.placeholders.TextParser;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.command.CommandSource;
 import net.minecraft.text.Text;
-import net.minecraft.util.Util;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
 
@@ -113,7 +112,7 @@ public class Config {
                 builder.setAllowedMentions(AllowedMentions.none());
                 client = builder.build();
             } catch (Exception e) {
-                BanHammerMod.LOGGER.error("Could use webhook!");
+                BanHammer.LOGGER.error("Could use webhook!");
                 e.printStackTrace();
                 client = null;
             }

@@ -1,7 +1,6 @@
 package eu.pb4.banhammer.mixin;
 
-import eu.pb4.banhammer.BanHammerMod;
-import eu.pb4.banhammer.Helpers;
+import eu.pb4.banhammer.BanHammer;
 import eu.pb4.banhammer.config.ConfigManager;
 import eu.pb4.banhammer.types.BasicPunishment;
 import eu.pb4.banhammer.types.PunishmentTypes;
@@ -20,22 +19,22 @@ public class ServerPlayNetworkHandlerMixin {
     @Shadow public ServerPlayerEntity player;
 
     @Inject(method = "handleMessage", at = @At("HEAD"), cancellable = true)
-    private void checkIfMuted(TextStream.Message message, CallbackInfo ci) {
+    private void banHammer_checkIfMuted(TextStream.Message message, CallbackInfo ci) {
         String string = message.getRaw();
-        if (BanHammerMod.isPlayerPunished(this.player.getUuid().toString(), PunishmentTypes.MUTE)) {
+        if (BanHammer.isPlayerPunished(this.player.getUuid().toString(), PunishmentTypes.MUTE)) {
             if (string.startsWith("/") && string.length() > 1) {
                 int x = string.indexOf(" ");
                 String rawCommand = string.substring(1, x != -1 ? x : string.length());
                 for (String command : ConfigManager.getConfig().mutedCommands) {
                     if (rawCommand.startsWith(command)) {
                         ci.cancel();
-                        BasicPunishment punishment = BanHammerMod.getPlayersPunishments(this.player.getUuid().toString(), PunishmentTypes.MUTE).get(0);
+                        BasicPunishment punishment = BanHammer.getPlayersPunishments(this.player.getUuid().toString(), PunishmentTypes.MUTE).get(0);
                         this.player.sendMessage(PlaceholderAPI.parsePredefinedText(ConfigManager.getConfig().mutedMessage, PlaceholderAPI.PREDEFINED_PLACEHOLDER_PATTERN, punishment.getPlaceholders()), false);
                         return;
                     }
                 }
             } else {
-                BasicPunishment punishment = BanHammerMod.getPlayersPunishments(this.player.getUuid().toString(), PunishmentTypes.MUTE).get(0);
+                BasicPunishment punishment = BanHammer.getPlayersPunishments(this.player.getUuid().toString(), PunishmentTypes.MUTE).get(0);
                 this.player.sendMessage(PlaceholderAPI.parsePredefinedText(ConfigManager.getConfig().mutedMessage, PlaceholderAPI.PREDEFINED_PLACEHOLDER_PATTERN, punishment.getPlaceholders()), false);
                 ci.cancel();
             }

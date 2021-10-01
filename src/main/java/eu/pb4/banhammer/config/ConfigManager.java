@@ -2,7 +2,7 @@ package eu.pb4.banhammer.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import eu.pb4.banhammer.BanHammerMod;
+import eu.pb4.banhammer.BanHammer;
 import eu.pb4.banhammer.config.data.ConfigData;
 import eu.pb4.banhammer.config.data.DiscordMessageData;
 import eu.pb4.banhammer.config.data.MessageConfigData;
@@ -65,7 +65,7 @@ public class ConfigManager {
         catch(IOException exception) {
             success = false;
             CONFIG = oldConfig;
-            BanHammerMod.LOGGER.error("Something went wrong while reading config!");
+            BanHammer.LOGGER.error("Something went wrong while reading config!");
             exception.printStackTrace();
         }
 

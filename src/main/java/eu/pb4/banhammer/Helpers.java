@@ -3,13 +3,13 @@ package eu.pb4.banhammer;
 import com.google.common.net.InetAddresses;
 import com.mojang.authlib.GameProfile;
 import eu.pb4.banhammer.types.BHPlayerData;
-import eu.pb4.banhammer.types.BasicPunishment;
 import eu.pb4.banhammer.types.PunishmentTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
+import org.jetbrains.annotations.Nullable;
 
 import java.net.SocketAddress;
 import java.util.*;
@@ -67,13 +67,29 @@ public class Helpers {
         }
     }
 
-    public static BHPlayerData lookupPlayerData(String usernameOrIp, PunishmentTypes type) {
-        ServerPlayerEntity player = BanHammerMod.SERVER.getPlayerManager().getPlayer(usernameOrIp);
+    public static @Nullable BHPlayerData lookupPlayerData(String usernameOrIp) {
+        boolean isUuid;
+        boolean isIpLike = InetAddresses.isInetAddress(usernameOrIp);
 
         String name;
         Text displayName;
         UUID uuid = null;
         String ip = null;
+
+        try {
+            uuid = UUID.fromString(usernameOrIp);
+            isUuid = true;
+        } catch (Exception e) {
+            isUuid = false;
+        }
+
+
+
+        ServerPlayerEntity player = isUuid
+                ? BanHammer.SERVER.getPlayerManager().getPlayer(uuid)
+                : isIpLike
+                ? null
+                : BanHammer.SERVER.getPlayerManager().getPlayer(usernameOrIp);
 
 
         if (player != null) {
@@ -81,16 +97,25 @@ public class Helpers {
             ip = player.getIp();
             displayName = player.getDisplayName();
             name = player.getGameProfile().getName();
-        } else if (type.ipBased && InetAddresses.isInetAddress(usernameOrIp)) {
+        } else {
             GameProfile profile = null;
 
-            for (Map.Entry<String, String> entry : BanHammerMod.IP_CACHE.entrySet()) {
-                if (entry.getValue().equals(usernameOrIp)) {
-                    uuid = UUID.fromString(entry.getKey());
-                    ip = entry.getValue();
-                    profile = BanHammerMod.SERVER.getUserCache().getByUuid(uuid).orElse(null);
-                    break;
+            if (isUuid) {
+                ip = BanHammer.UUID_TO_IP_CACHE.get(uuid);
+            } else if (isIpLike) {
+                uuid = BanHammer.IP_TO_UUID_CACHE.get(usernameOrIp);
+                ip = usernameOrIp;
+            } else {
+                var possibleProfile = BanHammer.SERVER.getUserCache().findByName(usernameOrIp);
+
+                if (possibleProfile.isPresent()) {
+                    profile = possibleProfile.get();
+                    uuid = profile.getId();
                 }
+            }
+
+            if (uuid != null && profile == null) {
+                profile = BanHammer.SERVER.getUserCache().getByUuid(uuid).orElse(null);
             }
 
             if (profile == null) {
@@ -100,19 +125,10 @@ public class Helpers {
             } else {
                 displayName = new LiteralText(profile.getName());
                 name = profile.getName();
-            }
-        } else {
-            GameProfile profile = BanHammerMod.SERVER.getUserCache().findByName(usernameOrIp).orElse(null);;
-
-            if (profile != null) {
-                uuid = profile.getId();
-                ip = BanHammerMod.IP_CACHE.get(uuid.toString());
-                displayName = new LiteralText(profile.getName());
-                name = profile.getName();
-            } else {
-                return null;
+                ip = BanHammer.UUID_TO_IP_CACHE.get(uuid);
             }
         }
+
         return new BHPlayerData(uuid, name, ip, displayName, player);
     }
 }

@@ -1,12 +1,10 @@
 package eu.pb4.banhammer.commands;
 
 
-import club.minnced.discord.webhook.send.WebhookEmbed;
-import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import eu.pb4.banhammer.BanHammerMod;
+import eu.pb4.banhammer.BanHammer;
 import eu.pb4.banhammer.Helpers;
 import eu.pb4.banhammer.config.Config;
 import eu.pb4.banhammer.config.ConfigManager;
@@ -22,7 +20,6 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
-import net.minecraft.text.TextColor;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
 
@@ -71,16 +68,15 @@ public class UnpunishCommands {
 
             Config config = ConfigManager.getConfig();
 
-            BHPlayerData player = Helpers.lookupPlayerData(playerNameOrIp, type);
+            BHPlayerData player = Helpers.lookupPlayerData(playerNameOrIp);
 
             if (player == null) {
                 ctx.getSource().sendFeedback(new LiteralText("Couldn't find player " + playerNameOrIp + "!").formatted(Formatting.RED), false);
             }
 
-            UUID playerUUID = player.uuid;
-            Text playerDisplay = player.displayName;
-            String playerName = player.name;
-            String playerIP = player.ip;
+            UUID playerUUID = player.uuid();
+            String playerName = player.name();
+            String playerIP = player.ip();
 
             ServerPlayerEntity executor;
             try {
@@ -96,28 +92,34 @@ public class UnpunishCommands {
             if (type != null) {
                 switch (type) {
                     case BAN:
-                        n += BanHammerMod.removePunishment(playerUUID.toString(), PunishmentTypes.BAN);
+                        n += BanHammer.removePunishment(playerUUID.toString(), PunishmentTypes.BAN);
                         message = config.unbanChatMessage;
                         altMessage = "This player wasn't banned!";
                         break;
                     case IPBAN:
-                        n += BanHammerMod.removePunishment(playerIP, PunishmentTypes.IPBAN);
+                        if (playerIP != null) {
+                            n += BanHammer.removePunishment(playerIP, PunishmentTypes.IPBAN);
+                        }
                         if (type == PunishmentTypes.IPBAN && ConfigManager.getConfig().configData.standardBanPlayersWithBannedIps) {
-                            n += BanHammerMod.removePunishment(playerUUID.toString(), PunishmentTypes.BAN);
+                            n += BanHammer.removePunishment(playerUUID.toString(), PunishmentTypes.BAN);
                         }
                         message = config.ipUnbanChatMessage;
                         altMessage = "This player wasn't ipbanned!";
                         break;
                     case MUTE:
-                        n += BanHammerMod.removePunishment(playerUUID.toString(), PunishmentTypes.MUTE);
+                        n += BanHammer.removePunishment(playerUUID.toString(), PunishmentTypes.MUTE);
                         message = config.unmuteChatMessage;
                         altMessage = "This player wasn't muted!";
                         break;
                 }
             } else {
-                n += BanHammerMod.removePunishment(playerUUID.toString(), PunishmentTypes.BAN);
-                n += BanHammerMod.removePunishment(playerIP, PunishmentTypes.IPBAN);
-                n += BanHammerMod.removePunishment(playerUUID.toString(), PunishmentTypes.MUTE);
+                if (playerUUID != null) {
+                    n += BanHammer.removePunishment(playerUUID.toString(), PunishmentTypes.BAN);
+                    n += BanHammer.removePunishment(playerUUID.toString(), PunishmentTypes.MUTE);
+                }
+                if (playerIP != null) {
+                    n += BanHammer.removePunishment(playerIP, PunishmentTypes.IPBAN);
+                }
 
                 message = config.pardonChatMessage;
                 altMessage = "This player didn't have any punishments!";
@@ -132,8 +134,8 @@ public class UnpunishCommands {
                 Text textMessage = PlaceholderAPI.parsePredefinedText(message, PlaceholderAPI.PREDEFINED_PLACEHOLDER_PATTERN, list);
 
                 if (config.configData.punishmentsAreSilent) {
-                    if (player.player != null) {
-                        player.player.sendMessage(textMessage, false);
+                    if (player.player() != null) {
+                        player.player().sendMessage(textMessage, false);
                     }
 
                     ctx.getSource().sendFeedback(textMessage, false);

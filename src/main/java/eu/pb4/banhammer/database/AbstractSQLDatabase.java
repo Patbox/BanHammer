@@ -169,8 +169,8 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
     public int removePunishment(String id, PunishmentTypes type) {
         try {
             return stat.executeUpdate("DELETE FROM " + type.databaseName + " WHERE " + (InetAddresses.isInetAddress(id) ? "bannedIP" : "bannedUUID") + "='" + id + "';");
-        } catch (Exception x) {
-            x.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
             return 0;
         }
     }

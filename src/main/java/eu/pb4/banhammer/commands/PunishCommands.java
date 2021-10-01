@@ -3,7 +3,7 @@ package eu.pb4.banhammer.commands;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import eu.pb4.banhammer.BanHammerMod;
+import eu.pb4.banhammer.BanHammer;
 import eu.pb4.banhammer.Helpers;
 import eu.pb4.banhammer.config.Config;
 import eu.pb4.banhammer.config.ConfigManager;
@@ -146,17 +146,16 @@ public class PunishCommands {
                 isSilent = false;
             }
 
-            BHPlayerData player = Helpers.lookupPlayerData(playerNameOrIp, type);
+            BHPlayerData player = Helpers.lookupPlayerData(playerNameOrIp);
 
             if (player == null) {
                 ctx.getSource().sendFeedback(new LiteralText("Couldn't find player " + playerNameOrIp + "!").formatted(Formatting.RED), false);
             }
 
-            UUID playerUUID = player.uuid;
-            Text playerDisplay = player.displayName;
-            String playerName = player.name;
-            String playerIP = player.ip;
-
+            UUID playerUUID = player.uuid();
+            Text playerDisplay = player.displayName();
+            String playerName = player.name();
+            String playerIP = player.ip();
 
             ServerPlayerEntity executor;
             UUID executorUUID;
@@ -169,7 +168,7 @@ public class PunishCommands {
 
             BasicPunishment punishment = new BasicPunishment(playerUUID, playerIP, playerDisplay, playerName, executorUUID, ctx.getSource().getDisplayName(), System.currentTimeMillis() / 1000, duration, reason, type);
 
-            BanHammerMod.punishPlayer(punishment, config.configData.punishmentsAreSilent || isSilent);
+            BanHammer.punishPlayer(punishment, config.configData.punishmentsAreSilent || isSilent);
 
             if (config.configData.punishmentsAreSilent && !Permissions.check(ctx.getSource(), "banhammer.seesilent", 1)) {
                 ctx.getSource().sendFeedback(punishment.getChatMessage(), false);
