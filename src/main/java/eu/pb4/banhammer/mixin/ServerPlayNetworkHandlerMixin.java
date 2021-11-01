@@ -36,7 +36,11 @@ public class ServerPlayNetworkHandlerMixin {
                 }
             } else {
                 BasicPunishment punishment = BanHammerMod.getPlayersPunishments(this.player.getUuid().toString(), PunishmentTypes.MUTE).get(0);
-                this.player.sendMessage(PlaceholderAPI.parsePredefinedText(ConfigManager.getConfig().mutedMessage, PlaceholderAPI.PREDEFINED_PLACEHOLDER_PATTERN, punishment.getPlaceholders()), false);
+                if (punishment.duration == -1) {
+                    this.player.sendMessage(PlaceholderAPI.parsePredefinedText(ConfigManager.getConfig().mutedMessage, PlaceholderAPI.PREDEFINED_PLACEHOLDER_PATTERN, punishment.getPlaceholders()), false);
+                } else {
+                    this.player.sendMessage(PlaceholderAPI.parsePredefinedText(ConfigManager.getConfig().tempMutedMessage, PlaceholderAPI.PREDEFINED_PLACEHOLDER_PATTERN, punishment.getPlaceholders()), false);
+                }
                 ci.cancel();
             }
         }
