@@ -19,8 +19,8 @@ public class SQLiteDatabase extends AbstractSQLDatabase {
     }
 
     @Override
-    protected String getHistoryTableCreation() {
-        return "CREATE TABLE IF NOT EXISTS history (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+    protected String getHistoryTableCreation(String prefix) {
+        return "CREATE TABLE IF NOT EXISTS " + prefix + "history (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "bannedUUID varchar(36), bannedIP varchar(40), bannedName varchar(64), bannedDisplay varchar(512), " +
                 "adminUUID varchar(36), adminDisplay TEXT, time BIGINT, duration BIGINT, reason varchar(512), type varchar(16))";
     }

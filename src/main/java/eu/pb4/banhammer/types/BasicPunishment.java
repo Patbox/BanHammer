@@ -91,6 +91,7 @@ public class BasicPunishment {
             case KICK -> ConfigManager.getConfig().kickScreenMessage;
             case BAN -> this.isTemporary() ? ConfigManager.getConfig().tempBanScreenMessage : ConfigManager.getConfig().banScreenMessage;
             case IPBAN -> this.isTemporary() ? ConfigManager.getConfig().tempIpBanScreenMessage : ConfigManager.getConfig().ipBanScreenMessage;
+            case MUTE -> this.isTemporary() ? ConfigManager.getConfig().tempMutedMessage : ConfigManager.getConfig().mutedMessage;
             default -> LiteralText.EMPTY;
         };
 

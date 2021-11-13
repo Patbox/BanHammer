@@ -52,7 +52,8 @@ public class BanHammer implements ModInitializer {
 
 	public static HashMap<String, PunishmentImporter> IMPORTERS = new HashMap<>();
 
-	private static void onServerStarting(MinecraftServer server) {
+	private void onServerStarting(MinecraftServer server) {
+		this.crabboardDetection();
 		SERVER = server;
 		boolean loaded = ConfigManager.loadConfig();
 
@@ -88,7 +89,7 @@ public class BanHammer implements ModInitializer {
 			try {
 				switch (configData.databaseType.toLowerCase(Locale.ROOT)) {
 					case "sqlite" -> DATABASE = new SQLiteDatabase(configData.sqliteDatabaseLocation);
-					case "mysql" -> DATABASE = new MySQLDatabase(configData.mysqlDatabaseAddress, configData.mysqlDatabaseName, configData.mysqlDatabaseUsername, configData.mysqlDatabasePassword);
+					case "mysql" -> DATABASE = new MySQLDatabase(configData.mysqlDatabaseAddress, configData.mysqlDatabaseName, configData.mysqlDatabaseUsername, configData.mysqlDatabasePassword, configData.mysqlDatabaseArgs);
 					default -> {
 						LOGGER.error("Config file is invalid (database)! Stopping server...");
 						server.stop(true);
@@ -111,8 +112,8 @@ public class BanHammer implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-
-		ServerLifecycleEvents.SERVER_STARTING.register(BanHammer::onServerStarting);
+		this.crabboardDetection();
+		ServerLifecycleEvents.SERVER_STARTING.register(this::onServerStarting);
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
 			if (DATABASE != null) {
 				DATABASE.closeConnection();
@@ -276,5 +277,16 @@ public class BanHammer implements ModInitializer {
 	@FunctionalInterface
 	public interface PunishmentImporter {
 		boolean importPunishments(boolean remove);
+	}
+
+	private void crabboardDetection() {
+		if (FabricLoader.getInstance().isModLoaded("cardboard")) {
+			LOGGER.error("");
+			LOGGER.error("Cardboard detected! This mod doesn't work with it!");
+			LOGGER.error("You won't get any support as long as it's present!");
+			LOGGER.error("");
+			LOGGER.error("Read more: https://gist.github.com/Patbox/e44844294c358b614d347d369b0fc3bf");
+			LOGGER.error("");
+		}
 	}
 }

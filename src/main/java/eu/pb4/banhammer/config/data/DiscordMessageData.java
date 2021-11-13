@@ -98,6 +98,7 @@ public class DiscordMessageData {
             List.of(
                     "${banned} has been unbanned!",
                     "",
+                    "**Reason**: ${reason}",
                     "**By**: ${operator}"
             )
     );
@@ -108,6 +109,7 @@ public class DiscordMessageData {
             List.of(
                     "${banned} has been unbanned!",
                     "",
+                    "**Reason**: ${reason}",
                     "**By**: ${operator}"
             )
     );
@@ -118,6 +120,7 @@ public class DiscordMessageData {
             List.of(
                     "${banned} has been unmuted!",
                     "",
+                    "**Reason**: ${reason}",
                     "**By**: ${operator}"
             )
     );
@@ -128,6 +131,7 @@ public class DiscordMessageData {
             List.of(
                     "Punishments of player ${banned} has been redeemed!",
                     "",
+                    "**Reason**: ${reason}",
                     "**By**: ${operator}"
             )
     );

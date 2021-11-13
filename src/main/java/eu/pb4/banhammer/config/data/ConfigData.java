@@ -27,11 +27,20 @@ public class ConfigData {
     public String mysqlDatabaseName = "";
     public String mysqlDatabaseUsername = "";
     public String mysqlDatabasePassword = "";
+    public HashMap<String, String> mysqlDatabaseArgs = getMysqlArgs();
+    public String databasePrefix = "";
 
 
     static private HashMap<String, String> exampleTempLimit() {
         HashMap<String, String> map = new HashMap<>();
         map.put("example", "31d");
+        return map;
+    }
+
+    public HashMap<String, String> getMysqlArgs() {
+        var map = new HashMap<String, String>();
+        map.put("autoReconnect", "true");
+        map.put("useUnicode", "true");
         return map;
     }
 }

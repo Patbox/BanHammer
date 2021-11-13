@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
 
 public class UnpunishCommands {
@@ -38,24 +39,36 @@ public class UnpunishCommands {
                     .requires(ConfigManager.requirePermissionOrOp("banhammer.unpunish.unban"))
                     .then(playerArgument("player")
                             .executes(ctx -> removePunishmentCommand(ctx, PunishmentTypes.BAN))
+                            .then(argument("reason", StringArgumentType.greedyString())
+                                    .executes(ctx -> removePunishmentCommand(ctx, PunishmentTypes.BAN))
+                            )
                     ));
 
             dispatcher.register(literal("unban-ip")
                     .requires(ConfigManager.requirePermissionOrOp("banhammer.unpunish.unbanip"))
                     .then(playerArgument("player")
                             .executes(ctx -> removePunishmentCommand(ctx, PunishmentTypes.IPBAN))
+                            .then(argument("reason", StringArgumentType.greedyString())
+                                    .executes(ctx -> removePunishmentCommand(ctx, PunishmentTypes.IPBAN))
+                            )
                     ));
 
             dispatcher.register(literal("unmute")
                     .requires(ConfigManager.requirePermissionOrOp("banhammer.unpunish.unmute"))
                     .then(playerArgument("player")
                             .executes(ctx -> removePunishmentCommand(ctx, PunishmentTypes.MUTE))
+                            .then(argument("reason", StringArgumentType.greedyString())
+                                    .executes(ctx -> removePunishmentCommand(ctx, PunishmentTypes.MUTE))
+                            )
                     ));
 
             dispatcher.register(literal("pardon")
                     .requires(ConfigManager.requirePermissionOrOp("banhammer.unpunish.pardon"))
                     .then(playerArgument("player")
                             .executes(ctx -> removePunishmentCommand(ctx, null))
+                            .then(argument("reason", StringArgumentType.greedyString())
+                                    .executes(ctx -> removePunishmentCommand(ctx, null))
+                            )
                     ));
         });
     }
@@ -65,6 +78,7 @@ public class UnpunishCommands {
 
             MinecraftServer server = ctx.getSource().getServer();
             String playerNameOrIp = ctx.getArgument("player", String.class);
+
 
             Config config = ConfigManager.getConfig();
 
@@ -88,6 +102,26 @@ public class UnpunishCommands {
             Text message = null;
             String altMessage = "";
             int n = 0;
+
+
+            String reason;
+            boolean isSilent;
+            try {
+                String temp = ctx.getArgument("reason", String.class);
+                if (temp.startsWith("-")) {
+                    String[] parts = temp.split(" ", 2);
+
+                    isSilent = parts[0].contains("s");
+                    reason = parts.length == 2 ? parts[1] : config.defaultReason;
+                } else {
+                    reason = temp;
+                    isSilent = false;
+                }
+
+            } catch (Exception e) {
+                reason = config.defaultReason;
+                isSilent = false;
+            }
 
             if (type != null) {
                 switch (type) {
@@ -131,9 +165,10 @@ public class UnpunishCommands {
                 list.put("operator", ctx.getSource().getDisplayName());
                 list.put("banned", new LiteralText(playerName));
                 list.put("banned_uuid", new LiteralText(playerUUID.toString()));
+                list.put("reason", new LiteralText(reason));
                 Text textMessage = PlaceholderAPI.parsePredefinedText(message, PlaceholderAPI.PREDEFINED_PLACEHOLDER_PATTERN, list);
 
-                if (config.configData.punishmentsAreSilent) {
+                if (config.configData.punishmentsAreSilent || isSilent) {
                     if (player.player() != null) {
                         player.player().sendMessage(textMessage, false);
                     }
@@ -170,6 +205,7 @@ public class UnpunishCommands {
                         placeholders.put("operator", ctx.getSource().getDisplayName().getString());
                         placeholders.put("banned", playerName);
                         placeholders.put("banned_uuid", playerUUID.toString());
+                        placeholders.put("reason", reason);
 
 
                         config.webhook.send(tempMessage.build(placeholders));

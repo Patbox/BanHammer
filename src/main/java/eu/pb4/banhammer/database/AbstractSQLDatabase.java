@@ -1,6 +1,7 @@
 package eu.pb4.banhammer.database;
 
 import com.google.common.net.InetAddresses;
+import eu.pb4.banhammer.config.ConfigManager;
 import eu.pb4.banhammer.types.BasicPunishment;
 import eu.pb4.banhammer.types.PunishmentTypes;
 import eu.pb4.banhammer.types.SyncedPunishment;
@@ -18,22 +19,23 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
 
 
     protected abstract String getTableCreation();
-    protected abstract String getHistoryTableCreation();
+    protected abstract String getHistoryTableCreation(String prefix);
 
     public void createTables() throws SQLException  {
         String create = this.getTableCreation();
-        String createHistory = this.getHistoryTableCreation();
+        String prefix = ConfigManager.getConfig().configData.databasePrefix;
+        String createHistory = this.getHistoryTableCreation(prefix);
 
-        stat.execute(String.format(create, PunishmentTypes.BAN.databaseName));
-        stat.execute(String.format(create, PunishmentTypes.IPBAN.databaseName));
-        stat.execute(String.format(create, PunishmentTypes.MUTE.databaseName));
+        stat.execute(String.format(create, prefix + PunishmentTypes.BAN.databaseName));
+        stat.execute(String.format(create, prefix + PunishmentTypes.IPBAN.databaseName));
+        stat.execute(String.format(create, prefix + PunishmentTypes.MUTE.databaseName));
         stat.execute(createHistory);
     }
 
     public boolean insertPunishmentIntoHistory(BasicPunishment punishment) {
         try {
             PreparedStatement prepStmt = conn.prepareStatement(
-                    "insert into history values (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+                    "insert into " + ConfigManager.getConfig().configData.databasePrefix + "history values (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
             prepStmt.setString(1, punishment.bannedUUID.toString());
             prepStmt.setString(2, punishment.bannedIP);
             prepStmt.setString(3, punishment.bannedName);
@@ -59,7 +61,7 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
     public boolean insertPunishment(BasicPunishment punishment) {
         try {
             PreparedStatement prepStmt = conn.prepareStatement(
-                    "insert into " + punishment.type.databaseName + " values (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+                    "insert into " + ConfigManager.getConfig().configData.databasePrefix + punishment.type.databaseName + " values (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
             prepStmt.setString(1, punishment.bannedUUID.toString());
             prepStmt.setString(2, punishment.bannedIP);
             prepStmt.setString(3, punishment.bannedName);
@@ -83,7 +85,7 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
     public List<SyncedPunishment> getPunishments(String id, PunishmentTypes type) {
         List<SyncedPunishment> list = new LinkedList<>();
         try {
-            String query = "SELECT * FROM " + type.databaseName + " WHERE " + (InetAddresses.isInetAddress(id) ? "bannedIP" : "bannedUUID") + "='" + id + "';";
+            String query = "SELECT * FROM " + ConfigManager.getConfig().configData.databasePrefix + type.databaseName + " WHERE " + (InetAddresses.isInetAddress(id) ? "bannedIP" : "bannedUUID") + "='" + id + "';";
             ResultSet result = stat.executeQuery(query);
             UUID bannedUUID;
             String bannedIP;
@@ -121,7 +123,7 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
     public List<SyncedPunishment> getAllPunishments(PunishmentTypes type) {
         List<SyncedPunishment> list = new LinkedList<>();
         try {
-            String query = "SELECT * FROM " + type.databaseName + ";";
+            String query = "SELECT * FROM " + ConfigManager.getConfig().configData.databasePrefix + type.databaseName + ";";
             ResultSet result = stat.executeQuery(query);
             UUID bannedUUID;
             String bannedIP;
@@ -158,7 +160,7 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
     @Override
     public int removePunishment(long id, PunishmentTypes type) {
         try {
-            return stat.executeUpdate("DELETE FROM " + type.databaseName + " WHERE id=" + id + ";");
+            return stat.executeUpdate("DELETE FROM " + ConfigManager.getConfig().configData.databasePrefix + type.databaseName + " WHERE id=" + id + ";");
         } catch (Exception x) {
             x.printStackTrace();
             return 0;
@@ -168,7 +170,7 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
     @Override
     public int removePunishment(String id, PunishmentTypes type) {
         try {
-            return stat.executeUpdate("DELETE FROM " + type.databaseName + " WHERE " + (InetAddresses.isInetAddress(id) ? "bannedIP" : "bannedUUID") + "='" + id + "';");
+            return stat.executeUpdate("DELETE FROM " + ConfigManager.getConfig().configData.databasePrefix + type.databaseName + " WHERE " + (InetAddresses.isInetAddress(id) ? "bannedIP" : "bannedUUID") + "='" + id + "';");
         } catch (Exception e) {
             e.printStackTrace();
             return 0;
