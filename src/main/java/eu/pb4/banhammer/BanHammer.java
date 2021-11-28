@@ -214,7 +214,7 @@ public class BanHammer implements ModInitializer {
 
 		if (!invisible) {
 			if (!silent) {
-				SERVER.getPlayerManager().broadcastChatMessage(punishment.getChatMessage(), MessageType.SYSTEM, Util.NIL_UUID);
+				SERVER.getPlayerManager().broadcast(punishment.getChatMessage(), MessageType.SYSTEM, Util.NIL_UUID);
 			} else {
 				Text message = punishment.getChatMessage();
 
