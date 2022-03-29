@@ -1,4 +1,4 @@
-package eu.pb4.banhammer.config.data;
+package eu.pb4.banhammer.impl.config.data;
 
 
 import java.util.Arrays;
@@ -27,11 +27,19 @@ public class MessageConfigData {
     public List<String> kickChatMessage = Arrays.asList("Player <red>${banned}</red> has been kicked by <gold>${operator}</gold>!",
             "Reason: <yellow>${reason}</yellow>");
 
+    public List<String> warnChatMessage = Arrays.asList("Player <red>${banned}</red> has been warned by <gold>${operator}</gold>!",
+            "Reason: <yellow>${reason}</yellow>");
+
+    public List<String> tempWarnChatMessage = Arrays.asList("Player <red>${banned}</red> has been warned by <gold>${operator}</gold>!",
+            "Reason: <yellow>${reason}</yellow>. Expires in: <yellow>${expiration_time}</yellow>");
+
     public List<String> unbanChatMessage = Arrays.asList("Player <red>${banned}</red> has been unbanned by <gold>${operator}</gold>!", "Reason: <yellow>${reason}</yellow>");
 
     public List<String> ipUnbanChatMessage = Arrays.asList("Player <red>${banned}</red> has been unbanned by <gold>${operator}</gold>!", "Reason: <yellow>${reason}</yellow>");
 
     public List<String> unmuteChatMessage = Arrays.asList("Player <red>${banned}</red> has been unmuted by <gold>${operator}</gold>!", "Reason: <yellow>${reason}</yellow>");
+
+    public List<String> unwarnChatMessage = Arrays.asList("Player <red>${banned}</red>'s warnings has been removed by <gold>${operator}</gold>!", "Reason: <yellow>${reason}</yellow>");
 
     public List<String> pardonChatMessage = Arrays.asList("Punishments of player <red>${banned}</red> has been redeemed by <gold>${operator}</gold>!", "Reason: <yellow>${reason}</yellow>");
 

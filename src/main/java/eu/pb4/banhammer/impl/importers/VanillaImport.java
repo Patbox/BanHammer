@@ -1,22 +1,22 @@
-package eu.pb4.banhammer.imports;
+package eu.pb4.banhammer.impl.importers;
 
 import com.mojang.authlib.GameProfile;
-import eu.pb4.banhammer.BanHammer;
+import eu.pb4.banhammer.api.BanHammer;
+import eu.pb4.banhammer.impl.BanHammerImpl;
 import eu.pb4.banhammer.mixin.accessor.ServerConfigEntryAccessor;
-import eu.pb4.banhammer.types.BasicPunishment;
-import eu.pb4.banhammer.types.PunishmentTypes;
-import net.minecraft.server.BannedIpEntry;
-import net.minecraft.server.BannedIpList;
-import net.minecraft.server.BannedPlayerEntry;
-import net.minecraft.server.BannedPlayerList;
+import eu.pb4.banhammer.api.PunishmentData;
+import eu.pb4.banhammer.api.PunishmentType;
+import net.minecraft.server.*;
 import net.minecraft.text.LiteralText;
 import net.minecraft.util.Util;
 
-public class VanillaImport implements BanHammer.PunishmentImporter {
-    public boolean importPunishments(boolean remove) {
+import java.util.function.Consumer;
+
+public final class VanillaImport implements BanHammer.PunishmentImporter {
+    public boolean importPunishments(MinecraftServer server, Consumer<PunishmentData> consumer, boolean remove) {
         try {
-            BannedPlayerList banList = BanHammer.SERVER.getPlayerManager().getUserBanList();
-            BannedIpList ipBanList = BanHammer.SERVER.getPlayerManager().getIpBanList();
+            BannedPlayerList banList = BanHammerImpl.SERVER.getPlayerManager().getUserBanList();
+            BannedIpList ipBanList = BanHammerImpl.SERVER.getPlayerManager().getIpBanList();
 
             for (BannedPlayerEntry data : banList.values()) {
                 try {
@@ -31,7 +31,7 @@ public class VanillaImport implements BanHammer.PunishmentImporter {
                         expiration = -1;
                     }
 
-                    BasicPunishment punishment = new BasicPunishment(
+                    PunishmentData punishment = new PunishmentData(
                             profile.getId(),
                             "undefined",
                             new LiteralText(profile.getName()),
@@ -41,9 +41,9 @@ public class VanillaImport implements BanHammer.PunishmentImporter {
                             creation,
                             expiration,
                             data.getReason(),
-                            PunishmentTypes.BAN);
+                            PunishmentType.BAN);
 
-                    BanHammer.punishPlayer(punishment, true, true);
+                    consumer.accept(punishment);
 
                     if (remove) {
                         banList.remove(data);
@@ -66,7 +66,7 @@ public class VanillaImport implements BanHammer.PunishmentImporter {
                         expiration = -1;
                     }
 
-                    BasicPunishment punishment = new BasicPunishment(
+                    PunishmentData punishment = new PunishmentData(
                             Util.NIL_UUID,
                             ip,
                             new LiteralText("Unknown player"),
@@ -76,9 +76,9 @@ public class VanillaImport implements BanHammer.PunishmentImporter {
                             creation,
                             expiration,
                             data.getReason(),
-                            PunishmentTypes.IPBAN);
+                            PunishmentType.IP_BAN);
 
-                    BanHammer.punishPlayer(punishment, true, true);
+                    consumer.accept(punishment);
 
                     if (remove) {
                         ipBanList.remove(data);

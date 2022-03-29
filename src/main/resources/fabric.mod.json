@@ -13,21 +13,23 @@
     "sources": "https://github.com/Patbox/BanHammer"
   },
 
+  "icon": "assets/banhammer/icon.png",
   "license": "LGPLv3",
 
   "environment": "server",
   "entrypoints": {
     "main": [
-      "eu.pb4.banhammer.BanHammer"
-    ]
+      "eu.pb4.banhammer.impl.BanHammerImpl"
+    ],
+    "preLaunch": ["eu.pb4.banhammer.impl.CardboardWarning"]
   },
   "mixins": [
     "banhammer.mixins.json"
   ],
 
   "depends": {
-    "fabricloader": ">=0.12.0",
+    "fabricloader": ">=0.13.0",
     "fabric": "*",
-    "minecraft": ">=1.18-rc.1"
+    "minecraft": ">=1.18.2"
   }
 }

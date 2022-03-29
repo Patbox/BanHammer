@@ -1,13 +1,13 @@
-package eu.pb4.banhammer.config;
+package eu.pb4.banhammer.impl.config;
 
 import club.minnced.discord.webhook.WebhookClient;
 import club.minnced.discord.webhook.WebhookClientBuilder;
 import club.minnced.discord.webhook.send.AllowedMentions;
-import eu.pb4.banhammer.BanHammer;
-import eu.pb4.banhammer.Helpers;
-import eu.pb4.banhammer.config.data.ConfigData;
-import eu.pb4.banhammer.config.data.DiscordMessageData;
-import eu.pb4.banhammer.config.data.MessageConfigData;
+import eu.pb4.banhammer.impl.BanHammerImpl;
+import eu.pb4.banhammer.impl.BHUtils;
+import eu.pb4.banhammer.impl.config.data.ConfigData;
+import eu.pb4.banhammer.impl.config.data.DiscordMessageData;
+import eu.pb4.banhammer.impl.config.data.MessageConfigData;
 import eu.pb4.placeholders.TextParser;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.command.CommandSource;
@@ -16,10 +16,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
 
 import java.text.SimpleDateFormat;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Config {
     public final List<String> mutedCommands;
@@ -38,6 +35,8 @@ public class Config {
     public final Text tempIpBanChatMessage;
     public final Text muteChatMessage;
     public final Text tempMuteChatMessage;
+    public final Text warnChatMessage;
+    public final Text tempWarnChatMessage;
 
     public final Text banScreenMessage;
     public final Text tempBanScreenMessage;
@@ -56,7 +55,7 @@ public class Config {
     public final Text ipUnbanChatMessage;
     public final DiscordMessageData discordMessages;
     public final WebhookClient webhook;
-
+    public final Text unwarnChatMessage;
 
     public Config(ConfigData data, MessageConfigData mData, DiscordMessageData discordMessages) {
         this.discordMessages = discordMessages;
@@ -90,12 +89,16 @@ public class Config {
         this.unmuteChatMessage = toSingleString(mData.unmuteChatMessage);
         this.pardonChatMessage = toSingleString(mData.pardonChatMessage);
 
-        long dur = Helpers.parseDuration(data.defaultTempPunishmentDurationLimit);
+        this.warnChatMessage = toSingleString(mData.warnChatMessage);
+        this.tempWarnChatMessage = toSingleString(mData.tempWarnChatMessage);
+        this.unwarnChatMessage = toSingleString(mData.unwarnChatMessage);
+
+        long dur = BHUtils.parseDuration(data.defaultTempPunishmentDurationLimit);
 
         this.defaultDurationLimit = dur == -1 ? Long.MAX_VALUE : dur;
 
         for (Map.Entry<String, String> x : data.permissionTempLimit.entrySet() ) {
-            this.tempDurationLimit.put(x.getKey(), Helpers.parseDuration(x.getValue()));
+            this.tempDurationLimit.put(x.getKey(), BHUtils.parseDuration(x.getValue()));
         }
 
         this.messageConfigData = mData;
@@ -112,7 +115,7 @@ public class Config {
                 builder.setAllowedMentions(AllowedMentions.none());
                 client = builder.build();
             } catch (Exception e) {
-                BanHammer.LOGGER.error("Could use webhook!");
+                BanHammerImpl.LOGGER.error("Could use webhook!");
                 e.printStackTrace();
                 client = null;
             }
@@ -143,7 +146,4 @@ public class Config {
 
         return custom ? out : this.defaultDurationLimit;
     }
-
-    public void destroy() {}
-
 }

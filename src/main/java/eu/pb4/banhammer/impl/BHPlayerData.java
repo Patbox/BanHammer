@@ -1,4 +1,4 @@
-package eu.pb4.banhammer.types;
+package eu.pb4.banhammer.impl;
 
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;

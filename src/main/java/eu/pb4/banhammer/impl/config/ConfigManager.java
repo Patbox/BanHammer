@@ -1,13 +1,12 @@
-package eu.pb4.banhammer.config;
+package eu.pb4.banhammer.impl.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import eu.pb4.banhammer.BanHammer;
-import eu.pb4.banhammer.config.data.ConfigData;
-import eu.pb4.banhammer.config.data.DiscordMessageData;
-import eu.pb4.banhammer.config.data.MessageConfigData;
+import eu.pb4.banhammer.impl.BanHammerImpl;
+import eu.pb4.banhammer.impl.config.data.ConfigData;
+import eu.pb4.banhammer.impl.config.data.DiscordMessageData;
+import eu.pb4.banhammer.impl.config.data.MessageConfigData;
 import me.lucko.fabric.api.permissions.v0.Permissions;
-import net.minecraft.command.CommandSource;
 import net.minecraft.server.command.ServerCommandSource;
 import org.jetbrains.annotations.NotNull;
 
@@ -65,7 +64,7 @@ public class ConfigManager {
         catch(IOException exception) {
             success = false;
             CONFIG = oldConfig;
-            BanHammer.LOGGER.error("Something went wrong while reading config!");
+            BanHammerImpl.LOGGER.error("Something went wrong while reading config!");
             exception.printStackTrace();
         }
 
@@ -76,6 +75,6 @@ public class ConfigManager {
     @NotNull
     public static Predicate<ServerCommandSource> requirePermissionOrOp(@NotNull String permission) {
         Objects.requireNonNull(permission, "permission");
-        return (player) -> Permissions.check((CommandSource)player, permission, CONFIG.configData.defaultOpPermissionLevel);
+        return (player) -> Permissions.check(player, permission, CONFIG.configData.defaultOpPermissionLevel);
     }
 }

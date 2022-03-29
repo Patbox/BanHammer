@@ -1,9 +1,8 @@
 package eu.pb4.banhammer.mixin;
 
-import eu.pb4.banhammer.BanHammer;
-import eu.pb4.banhammer.config.ConfigManager;
-import eu.pb4.banhammer.types.BasicPunishment;
-import eu.pb4.banhammer.types.PunishmentTypes;
+import eu.pb4.banhammer.impl.BanHammerImpl;
+import eu.pb4.banhammer.impl.config.ConfigManager;
+import eu.pb4.banhammer.api.PunishmentType;
 import eu.pb4.placeholders.PlaceholderAPI;
 import net.minecraft.server.filter.TextStream;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
@@ -22,7 +21,7 @@ public class ServerPlayNetworkHandlerMixin {
     private void banHammer_checkIfMuted(TextStream.Message message, CallbackInfo ci) {
         String string = message.getRaw();
 
-        var punishments = BanHammer.getPlayersPunishments(this.player.getUuid().toString(), PunishmentTypes.MUTE);
+        var punishments = BanHammerImpl.getPlayersPunishments(this.player.getUuid().toString(), PunishmentType.MUTE);
 
         if (punishments.size() > 0) {
             var punishment = punishments.get(0);

@@ -1,4 +1,4 @@
-package eu.pb4.banhammer.config.data;
+package eu.pb4.banhammer.impl.config.data;
 
 import club.minnced.discord.webhook.send.WebhookEmbed;
 import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
@@ -92,6 +92,29 @@ public class DiscordMessageData {
             )
     );
 
+    public boolean sendWarnMessage = true;
+    public Message warnMessage = new Message(
+            "red",
+            List.of(
+                    "${banned} has been warned!",
+                    "",
+                    "**Reason**: ${reason}",
+                    "**By**: ${operator}"
+            )
+    );
+
+    public boolean sendTempWarnMessage = true;
+    public Message tempWarnMessage = new Message(
+            "red",
+            List.of(
+                    "${banned} has been warned!",
+                    "",
+                    "**Reason**: ${reason}",
+                    "**Expires in**: ${expiration_time}",
+                    "**By**: ${operator}"
+            )
+    );
+
     public boolean sendUnbanMessage = true;
     public Message unbanMessage = new Message(
             "green",
@@ -119,6 +142,17 @@ public class DiscordMessageData {
             "green",
             List.of(
                     "${banned} has been unmuted!",
+                    "",
+                    "**Reason**: ${reason}",
+                    "**By**: ${operator}"
+            )
+    );
+
+    public boolean sendUnwarnMessage = true;
+    public Message unwarnMessage = new Message(
+            "green",
+            List.of(
+                    "${banned}'s warnings has been removed!",
                     "",
                     "**Reason**: ${reason}",
                     "**By**: ${operator}"

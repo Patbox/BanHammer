@@ -1,10 +1,11 @@
-package eu.pb4.banhammer.config.data;
+package eu.pb4.banhammer.impl.config.data;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-public class ConfigData {
+public final class ConfigData {
     public int CONFIG_VERSION_DONT_TOUCH_THIS = 1;
 
     public boolean punishmentsAreSilent = false;
@@ -12,6 +13,8 @@ public class ConfigData {
     public List<String> muteBlockedCommands = Arrays.asList("msg", "me");
     public String defaultTempPunishmentDurationLimit = "-1";
     public HashMap<String, String> permissionTempLimit = exampleTempLimit();
+
+    public List<WarnAction> warnActions = Arrays.asList(WarnAction.of(5, "tempban ${uuid} ${count}h -s You have received too many warns! ${reason}"));
 
     public boolean standardBanPlayersWithBannedIps = false;
     public boolean autoBansFromIpBansAreSilent = true;
@@ -42,5 +45,17 @@ public class ConfigData {
         map.put("autoReconnect", "true");
         map.put("useUnicode", "true");
         return map;
+    }
+
+    public static final class WarnAction {
+        public int count = -1;
+        public List<String> execute = List.of();
+
+        public static WarnAction of(int i, String s) {
+            var action = new WarnAction();
+            action.count = i;
+            action.execute = List.of(s);
+            return action;
+        }
     }
 }

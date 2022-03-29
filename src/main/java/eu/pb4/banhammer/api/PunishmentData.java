@@ -1,36 +1,42 @@
-package eu.pb4.banhammer.types;
+package eu.pb4.banhammer.api;
 
-import eu.pb4.banhammer.config.Config;
-import eu.pb4.banhammer.config.ConfigManager;
-import eu.pb4.banhammer.config.data.DiscordMessageData;
-import eu.pb4.banhammer.config.data.MessageConfigData;
+import eu.pb4.banhammer.impl.BHUtils;
+import eu.pb4.banhammer.impl.config.Config;
+import eu.pb4.banhammer.impl.config.ConfigManager;
+import eu.pb4.banhammer.impl.config.data.DiscordMessageData;
+import eu.pb4.banhammer.impl.config.data.MessageConfigData;
 import eu.pb4.placeholders.PlaceholderAPI;
+import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import net.minecraft.util.Util;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class BasicPunishment {
-    public final PunishmentTypes type;
+public sealed class PunishmentData permits PunishmentData.Synced {
+    public final PunishmentType type;
     public final long time;
     public final long duration;
-    public final UUID bannedUUID;
-    public final String bannedIP;
+    public final UUID playerUUID;
+    public final String playerIP;
     public final UUID adminUUID;
     public final Text adminDisplayName;
     public final String reason;
-    public final Text bannedDisplayName;
-    public final String bannedName;
+    public final Text playerDisplayName;
+    public final String playerName;
 
-    public BasicPunishment(UUID playerUUID, String playerIP, Text playerName, String playerNameRaw, UUID adminUUID, Text adminDisplay, long time, long duration, String reason, PunishmentTypes type) {
+    @ApiStatus.Internal
+    public PunishmentData(UUID playerUUID, String playerIP, Text playerName, String playerNameRaw, UUID adminUUID, Text adminDisplay, long time, long duration, String reason, PunishmentType type) {
         this.time = time;
-        this.bannedUUID = playerUUID;
-        this.bannedIP = playerIP;
-        this.bannedName = playerNameRaw;
-        this.bannedDisplayName = playerName;
+        this.playerUUID = playerUUID;
+        this.playerIP = playerIP;
+        this.playerName = playerNameRaw;
+        this.playerDisplayName = playerName;
         this.duration = duration;
         this.adminDisplayName = adminDisplay;
         this.adminUUID = adminUUID;
@@ -38,19 +44,35 @@ public class BasicPunishment {
         this.type = type;
     }
 
-    public boolean isExpired() {
+    public static PunishmentData create(ServerPlayerEntity punished, ServerCommandSource admin, String reason, long duration, PunishmentType type) {
+        return create(punished.getUuid(), punished.getIp(), punished.getDisplayName(), punished.getGameProfile().getName(), admin, reason, duration, type);
+    }
+
+    public static PunishmentData create(UUID uuid, String ip, Text displayName, String playerName, ServerCommandSource admin, String reason, long duration, PunishmentType type) {
+        return new PunishmentData(uuid, ip, displayName, playerName, admin.getEntity() != null ? admin.getEntity().getUuid() : Util.NIL_UUID, admin.getDisplayName(), BHUtils.getNow(), duration, reason, type);
+    }
+
+    public final boolean isExpired() {
         return this.isTemporary() && this.time + this.duration < System.currentTimeMillis() / 1000;
     }
 
-    public Date getExpirationDate() {
+    public final Date getExpirationDate() {
         return this.isTemporary() ? new Date((this.time + this.duration) * 1000) : new Date(Long.MAX_VALUE - 1);
     }
 
-    public String getFormattedExpirationDate() {
+    public final Date getDate() {
+        return new Date(this.time * 1000);
+    }
+
+    public final String getFormattedDate() {
+        return ConfigManager.getConfig().dateTimeFormatter.format(this.getDate());
+    }
+
+    public final String getFormattedExpirationDate() {
         return this.isTemporary() ? ConfigManager.getConfig().dateTimeFormatter.format(this.getExpirationDate()) : ConfigManager.getConfig().neverExpires;
     }
 
-    public String getFormattedExpirationTime() {
+    public final String getFormattedExpirationTime() {
         if (this.duration > -1) {
             long x = this.duration + this.time - System.currentTimeMillis() / 1000;
 
@@ -86,11 +108,11 @@ public class BasicPunishment {
     }
 
 
-    public Text getDisconnectMessage() {
+    public final Text getDisconnectMessage() {
         Text message = switch (this.type) {
             case KICK -> ConfigManager.getConfig().kickScreenMessage;
             case BAN -> this.isTemporary() ? ConfigManager.getConfig().tempBanScreenMessage : ConfigManager.getConfig().banScreenMessage;
-            case IPBAN -> this.isTemporary() ? ConfigManager.getConfig().tempIpBanScreenMessage : ConfigManager.getConfig().ipBanScreenMessage;
+            case IP_BAN -> this.isTemporary() ? ConfigManager.getConfig().tempIpBanScreenMessage : ConfigManager.getConfig().ipBanScreenMessage;
             case MUTE -> this.isTemporary() ? ConfigManager.getConfig().tempMutedMessage : ConfigManager.getConfig().mutedMessage;
             default -> LiteralText.EMPTY;
         };
@@ -98,22 +120,23 @@ public class BasicPunishment {
         return PlaceholderAPI.parsePredefinedText(message, PlaceholderAPI.PREDEFINED_PLACEHOLDER_PATTERN, this.getPlaceholders());
     }
 
-    public Text getChatMessage() {
+    public final Text getChatMessage() {
         Text message = switch (this.type) {
             case KICK -> ConfigManager.getConfig().kickChatMessage;
             case BAN -> this.isTemporary() ? ConfigManager.getConfig().tempBanChatMessage : ConfigManager.getConfig().banChatMessage;
-            case IPBAN -> this.isTemporary() ? ConfigManager.getConfig().tempIpBanChatMessage : ConfigManager.getConfig().ipBanChatMessage;
+            case IP_BAN -> this.isTemporary() ? ConfigManager.getConfig().tempIpBanChatMessage : ConfigManager.getConfig().ipBanChatMessage;
             case MUTE -> this.isTemporary() ? ConfigManager.getConfig().tempMuteChatMessage : ConfigManager.getConfig().muteChatMessage;
+            case WARN -> this.isTemporary() ? ConfigManager.getConfig().tempWarnChatMessage : ConfigManager.getConfig().warnChatMessage;
         };
 
         return PlaceholderAPI.parsePredefinedText(message, PlaceholderAPI.PREDEFINED_PLACEHOLDER_PATTERN, this.getPlaceholders());
     }
 
-    public DiscordMessageData.Message getRawDiscordMessage() {
+    public final DiscordMessageData.Message getRawDiscordMessage() {
         DiscordMessageData.Message message = null;
 
         Config config = ConfigManager.getConfig();
-        DiscordMessageData data = config.discordMessages;
+        var data = config.discordMessages;
 
         switch (this.type) {
             case KICK:
@@ -128,7 +151,7 @@ public class BasicPunishment {
                     message = data.banMessage;
                 }
                 break;
-            case IPBAN:
+            case IP_BAN:
                 if (this.isTemporary() && data.sendTempBanIpMessage) {
                     message = data.tempBanIpMessage;
                 } else if (data.sendBanIpMessage) {
@@ -142,12 +165,19 @@ public class BasicPunishment {
                     message = data.muteMessage;
                 }
                 break;
+            case WARN:
+                if (this.isTemporary() && data.sendTempWarnMessage) {
+                    message = data.tempWarnMessage;
+                } else if (data.sendWarnMessage) {
+                    message = data.warnMessage;
+                }
+                break;
         }
 
         return message;
     }
 
-    public Map<String, Text> getPlaceholders() {
+    public final Map<String, Text> getPlaceholders() {
         HashMap<String, Text> list = new HashMap<>();
 
         list.put("operator", this.adminDisplayName.shallowCopy());
@@ -155,13 +185,13 @@ public class BasicPunishment {
         list.put("reason", new LiteralText(this.reason));
         list.put("expiration_date", new LiteralText(this.getFormattedExpirationDate()));
         list.put("expiration_time", new LiteralText(this.getFormattedExpirationTime()));
-        list.put("banned", this.bannedDisplayName.shallowCopy());
-        list.put("banned_uuid", new LiteralText(this.bannedUUID.toString()));
+        list.put("banned", this.playerDisplayName.shallowCopy());
+        list.put("banned_uuid", new LiteralText(this.playerUUID.toString()));
 
         return list;
     }
 
-    public Map<String, String> getStringPlaceholders() {
+    public final Map<String, String> getStringPlaceholders() {
         HashMap<String, String> list = new HashMap<>();
 
         list.put("operator", this.adminDisplayName.getString());
@@ -169,13 +199,27 @@ public class BasicPunishment {
         list.put("reason", this.reason);
         list.put("expiration_date", this.getFormattedExpirationDate());
         list.put("expiration_time", this.getFormattedExpirationTime());
-        list.put("banned", this.bannedDisplayName.getString());
-        list.put("banned_uuid", this.bannedUUID.toString());
+        list.put("banned", this.playerDisplayName.getString());
+        list.put("banned_uuid", this.playerUUID.toString());
 
         return list;
     }
 
-    public boolean isTemporary() {
+    public final boolean isTemporary() {
         return this.duration > -1;
+    }
+
+    public static final class Synced extends PunishmentData {
+        private final long id;
+
+        @ApiStatus.Internal
+        public Synced(long id, UUID playerUUID, String playerIP, Text playerName, String playerNameRaw, UUID adminUUID, Text adminDisplay, long time, long duration, String reason, PunishmentType type) {
+            super(playerUUID, playerIP, playerName, playerNameRaw, adminUUID, adminDisplay, time, duration, reason, type);
+            this.id = id;
+        }
+
+        public final long getId() {
+            return this.id;
+        }
     }
 }
