@@ -23,7 +23,7 @@ import static net.minecraft.server.command.CommandManager.literal;
 public class PunishCommands {
     public static void register() {
         CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
-            dispatcher.register(create("mute", PunishmentType.KICK, false));
+            dispatcher.register(create("kick", PunishmentType.KICK, false));
 
             dispatcher.register(create("mute", PunishmentType.MUTE, false));
             dispatcher.register(create("tempmute", PunishmentType.MUTE, true));
