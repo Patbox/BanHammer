@@ -107,12 +107,17 @@ public class PunishCommands {
                 ctx.getSource().sendFeedback(new LiteralText("Couldn't find player " + playerNameOrIp + "!").formatted(Formatting.RED), false);
             } else {
                 for (var player : players) {
-                    var punishment = PunishmentData.create(player.uuid(), player.ip(), player.displayName(), player.name(), ctx.getSource(), reason, duration, type);
 
-                    BanHammerImpl.punishPlayer(punishment, config.configData.punishmentsAreSilent || isSilent);
+                    if (BHUtils.isPunishableBy(player.gameProfile(), ctx.getSource())) {
+                        var punishment = PunishmentData.create(player.uuid(), player.ip(), player.displayName(), player.name(), ctx.getSource(), reason, duration, type);
 
-                    if (config.configData.punishmentsAreSilent && !Permissions.check(ctx.getSource(), "banhammer.seesilent", 1)) {
-                        ctx.getSource().sendFeedback(punishment.getChatMessage(), false);
+                        BanHammerImpl.punishPlayer(punishment, config.configData.punishmentsAreSilent || isSilent);
+
+                        if (config.configData.punishmentsAreSilent && !Permissions.check(ctx.getSource(), "banhammer.seesilent", 1)) {
+                            ctx.getSource().sendFeedback(punishment.getChatMessage(), false);
+                        }
+                    } else {
+                        ctx.getSource().sendFeedback(new LiteralText("You can't punish ").append(player.displayName()).append("!").formatted(Formatting.RED), false);
                     }
                 }
             }

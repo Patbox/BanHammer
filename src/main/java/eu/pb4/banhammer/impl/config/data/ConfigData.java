@@ -1,9 +1,6 @@
 package eu.pb4.banhammer.impl.config.data;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public final class ConfigData {
     public int CONFIG_VERSION_DONT_TOUCH_THIS = 1;
@@ -32,6 +29,8 @@ public final class ConfigData {
     public String mysqlDatabasePassword = "";
     public HashMap<String, String> mysqlDatabaseArgs = getMysqlArgs();
     public String databasePrefix = "";
+
+    public Set<String> blockPunishments = new HashSet<>();
 
 
     static private HashMap<String, String> exampleTempLimit() {

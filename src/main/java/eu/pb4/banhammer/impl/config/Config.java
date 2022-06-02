@@ -3,6 +3,7 @@ package eu.pb4.banhammer.impl.config;
 import club.minnced.discord.webhook.WebhookClient;
 import club.minnced.discord.webhook.WebhookClientBuilder;
 import club.minnced.discord.webhook.send.AllowedMentions;
+import com.mojang.authlib.GameProfile;
 import eu.pb4.banhammer.impl.BanHammerImpl;
 import eu.pb4.banhammer.impl.BHUtils;
 import eu.pb4.banhammer.impl.config.data.ConfigData;
@@ -145,5 +146,9 @@ public class Config {
         }
 
         return custom ? out : this.defaultDurationLimit;
+    }
+
+    public boolean canPunish(GameProfile profile) {
+        return !(this.configData.blockPunishments.contains(profile.getName()) || this.configData.blockPunishments.contains(profile.getId().toString()));
     }
 }

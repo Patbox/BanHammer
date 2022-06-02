@@ -7,6 +7,7 @@ import com.google.gson.reflect.TypeToken;
 import eu.pb4.banhammer.api.BanHammer;
 import eu.pb4.banhammer.api.PunishmentData;
 import eu.pb4.banhammer.api.PunishmentType;
+import eu.pb4.banhammer.api.TriState;
 import eu.pb4.banhammer.impl.commands.GeneralCommands;
 import eu.pb4.banhammer.impl.commands.PunishCommands;
 import eu.pb4.banhammer.impl.commands.UnpunishCommands;
@@ -31,7 +32,6 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.nio.file.Paths;
@@ -46,6 +46,18 @@ public final class BanHammerImpl implements ModInitializer {
         for (var callback : callbacks) {
             callback.onPunishment(punishment, s, i);
         }
+    });
+
+    public static final Event<BanHammer.PunishmentCheckEvent> CAN_PUNISH_CHECK_EVENT = EventFactory.createArrayBacked(BanHammer.PunishmentCheckEvent.class, (callbacks) -> (gameProfile, source) -> {
+        for (var callback : callbacks) {
+            var state = callback.canSourcePunish(gameProfile, source);
+
+            if (state != TriState.DEFAULT) {
+                return state;
+            }
+        }
+
+        return TriState.TRUE;
     });
     private static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
     public static MinecraftServer SERVER;
