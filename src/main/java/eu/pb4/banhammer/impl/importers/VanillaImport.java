@@ -7,7 +7,7 @@ import eu.pb4.banhammer.mixin.accessor.ServerConfigEntryAccessor;
 import eu.pb4.banhammer.api.PunishmentData;
 import eu.pb4.banhammer.api.PunishmentType;
 import net.minecraft.server.*;
-import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 
 import java.util.function.Consumer;
@@ -34,10 +34,10 @@ public final class VanillaImport implements BanHammer.PunishmentImporter {
                     PunishmentData punishment = new PunishmentData(
                             profile.getId(),
                             "undefined",
-                            new LiteralText(profile.getName()),
+                            Text.literal(profile.getName()),
                             profile.getName(),
                             Util.NIL_UUID,
-                            new LiteralText(data.getSource()),
+                            Text.literal(data.getSource()),
                             creation,
                             expiration,
                             data.getReason(),
@@ -69,10 +69,10 @@ public final class VanillaImport implements BanHammer.PunishmentImporter {
                     PunishmentData punishment = new PunishmentData(
                             Util.NIL_UUID,
                             ip,
-                            new LiteralText("Unknown player"),
+                            Text.literal("Unknown player"),
                             "Unknown player",
                             Util.NIL_UUID,
-                            new LiteralText(data.getSource()),
+                            Text.literal(data.getSource()),
                             creation,
                             expiration,
                             data.getReason(),

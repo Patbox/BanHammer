@@ -12,12 +12,11 @@ import eu.pb4.banhammer.impl.config.ConfigManager;
 import eu.pb4.sgui.api.elements.BookElementBuilder;
 import eu.pb4.sgui.api.gui.BookGui;
 import me.lucko.fabric.api.permissions.v0.Permissions;
-import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -31,7 +30,7 @@ import static net.minecraft.server.command.CommandManager.literal;
 
 public class GeneralCommands {
     public static void register() {
-        CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             dispatcher.register(
                     literal("banhammer")
                             .requires(Permissions.require("banhammer.commands.main", true))
@@ -69,7 +68,7 @@ public class GeneralCommands {
             var players = BHUtils.lookupPlayerData(playerNameOrIp, ctx.getSource().getServer());
 
             if (players.isEmpty()) {
-                ctx.getSource().sendFeedback(new LiteralText("Player not found!").formatted(Formatting.RED), false);
+                ctx.getSource().sendFeedback(Text.literal("Player not found!").formatted(Formatting.RED), false);
                 return;
             }
 
@@ -87,12 +86,12 @@ public class GeneralCommands {
 
             for (var p : punishments) {
                 book.addPage(
-                        new LiteralText("User: ").setStyle(Style.EMPTY.withBold(true)).append(new LiteralText(p.playerName).setStyle(Style.EMPTY.withBold(false))),
-                        new LiteralText("Type: ").setStyle(Style.EMPTY.withBold(true)).append(new LiteralText(p.type.name).setStyle(Style.EMPTY.withBold(false))),
-                        new LiteralText("Date: ").setStyle(Style.EMPTY.withBold(true)).append(new LiteralText(p.getFormattedDate()).setStyle(Style.EMPTY.withBold(false))),
-                        new LiteralText("Expires: ").setStyle(Style.EMPTY.withBold(true)).append(new LiteralText(p.getFormattedExpirationDate()).setStyle(Style.EMPTY.withBold(false))),
-                        new LiteralText("By: ").setStyle(Style.EMPTY.withBold(true)).append(p.adminDisplayName.shallowCopy().setStyle(Style.EMPTY.withBold(p.adminDisplayName.getStyle().isBold() == true))),
-                        new LiteralText("Reason: ").setStyle(Style.EMPTY.withBold(true)).append(new LiteralText(p.reason).setStyle(Style.EMPTY.withBold(false)))
+                        Text.literal("User: ").setStyle(Style.EMPTY.withBold(true)).append(Text.literal(p.playerName).setStyle(Style.EMPTY.withBold(false))),
+                        Text.literal("Type: ").setStyle(Style.EMPTY.withBold(true)).append(Text.literal(p.type.name).setStyle(Style.EMPTY.withBold(false))),
+                        Text.literal("Date: ").setStyle(Style.EMPTY.withBold(true)).append(Text.literal(p.getFormattedDate()).setStyle(Style.EMPTY.withBold(false))),
+                        Text.literal("Expires: ").setStyle(Style.EMPTY.withBold(true)).append(Text.literal(p.getFormattedExpirationDate()).setStyle(Style.EMPTY.withBold(false))),
+                        Text.literal("By: ").setStyle(Style.EMPTY.withBold(true)).append(p.adminDisplayName.copy().setStyle(Style.EMPTY.withBold(p.adminDisplayName.getStyle().isBold() == true))),
+                        Text.literal("Reason: ").setStyle(Style.EMPTY.withBold(true)).append(Text.literal(p.reason).setStyle(Style.EMPTY.withBold(false)))
                 );
             }
 
@@ -110,9 +109,9 @@ public class GeneralCommands {
 
     private static int reloadConfig(CommandContext<ServerCommandSource> context) {
         if (ConfigManager.loadConfig()) {
-            context.getSource().sendFeedback(new LiteralText("Reloaded config!"), false);
+            context.getSource().sendFeedback(Text.literal("Reloaded config!"), false);
         } else {
-            context.getSource().sendError(new LiteralText("Error accrued while reloading config!").formatted(Formatting.RED));
+            context.getSource().sendError(Text.literal("Error accrued while reloading config!").formatted(Formatting.RED));
         }
         return 1;
     }
@@ -137,14 +136,14 @@ public class GeneralCommands {
             boolean result = importer.importPunishments(context.getSource().getServer(), (punishment) -> BanHammerImpl.punishPlayer(punishment, true, true), remove);
 
             if (result) {
-                context.getSource().sendFeedback(new LiteralText("Successfully imported punishments!").formatted(Formatting.GREEN), false);
+                context.getSource().sendFeedback(Text.literal("Successfully imported punishments!").formatted(Formatting.GREEN), false);
                 return 1;
             } else {
-                context.getSource().sendError(new LiteralText("Couldn't import punishments!"));
+                context.getSource().sendError(Text.literal("Couldn't import punishments!"));
                 return 0;
             }
         } else {
-            context.getSource().sendError(new LiteralText("Invalid importer type!"));
+            context.getSource().sendError(Text.literal("Invalid importer type!"));
             return 0;
         }
 

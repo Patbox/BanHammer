@@ -7,7 +7,6 @@ import eu.pb4.banhammer.impl.config.ConfigManager;
 import eu.pb4.banhammer.api.PunishmentData;
 import eu.pb4.banhammer.api.PunishmentType;
 import net.minecraft.server.PlayerManager;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -53,7 +52,7 @@ public class PlayerManagerMixin {
             if (punishment.type == PunishmentType.IP_BAN && ConfigManager.getConfig().configData.standardBanPlayersWithBannedIps) {
                 final boolean silent = ConfigManager.getConfig().configData.autoBansFromIpBansAreSilent;
 
-                PunishmentData punishment1 = new PunishmentData(profile.getId(), BHUtils.stringifyAddress(address), new LiteralText(profile.getName()), profile.getName(),
+                PunishmentData punishment1 = new PunishmentData(profile.getId(), BHUtils.stringifyAddress(address), Text.literal(profile.getName()), profile.getName(),
                         punishment.adminUUID,
                         punishment.adminDisplayName,
                         punishment.time,

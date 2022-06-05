@@ -5,10 +5,11 @@ import eu.pb4.banhammer.impl.config.Config;
 import eu.pb4.banhammer.impl.config.ConfigManager;
 import eu.pb4.banhammer.impl.config.data.DiscordMessageData;
 import eu.pb4.banhammer.impl.config.data.MessageConfigData;
-import eu.pb4.placeholders.PlaceholderAPI;
+import eu.pb4.placeholders.api.Placeholders;
+import eu.pb4.placeholders.api.node.EmptyNode;
+import eu.pb4.placeholders.api.node.TextNode;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 import org.jetbrains.annotations.ApiStatus;
@@ -109,19 +110,19 @@ public sealed class PunishmentData permits PunishmentData.Synced {
 
 
     public final Text getDisconnectMessage() {
-        Text message = switch (this.type) {
+        var message = switch (this.type) {
             case KICK -> ConfigManager.getConfig().kickScreenMessage;
             case BAN -> this.isTemporary() ? ConfigManager.getConfig().tempBanScreenMessage : ConfigManager.getConfig().banScreenMessage;
             case IP_BAN -> this.isTemporary() ? ConfigManager.getConfig().tempIpBanScreenMessage : ConfigManager.getConfig().ipBanScreenMessage;
             case MUTE -> this.isTemporary() ? ConfigManager.getConfig().tempMutedMessage : ConfigManager.getConfig().mutedMessage;
-            default -> LiteralText.EMPTY;
+            default -> EmptyNode.INSTANCE;
         };
 
-        return PlaceholderAPI.parsePredefinedText(message, PlaceholderAPI.PREDEFINED_PLACEHOLDER_PATTERN, this.getPlaceholders());
+        return Placeholders.parseText(message, Placeholders.PREDEFINED_PLACEHOLDER_PATTERN, this.getPlaceholders());
     }
 
     public final Text getChatMessage() {
-        Text message = switch (this.type) {
+        var message = switch (this.type) {
             case KICK -> ConfigManager.getConfig().kickChatMessage;
             case BAN -> this.isTemporary() ? ConfigManager.getConfig().tempBanChatMessage : ConfigManager.getConfig().banChatMessage;
             case IP_BAN -> this.isTemporary() ? ConfigManager.getConfig().tempIpBanChatMessage : ConfigManager.getConfig().ipBanChatMessage;
@@ -129,7 +130,7 @@ public sealed class PunishmentData permits PunishmentData.Synced {
             case WARN -> this.isTemporary() ? ConfigManager.getConfig().tempWarnChatMessage : ConfigManager.getConfig().warnChatMessage;
         };
 
-        return PlaceholderAPI.parsePredefinedText(message, PlaceholderAPI.PREDEFINED_PLACEHOLDER_PATTERN, this.getPlaceholders());
+        return Placeholders.parseText(message, Placeholders.PREDEFINED_PLACEHOLDER_PATTERN, this.getPlaceholders());
     }
 
     public final DiscordMessageData.Message getRawDiscordMessage() {
@@ -180,13 +181,13 @@ public sealed class PunishmentData permits PunishmentData.Synced {
     public final Map<String, Text> getPlaceholders() {
         HashMap<String, Text> list = new HashMap<>();
 
-        list.put("operator", this.adminDisplayName.shallowCopy());
-        list.put("operator_uuid", new LiteralText(this.adminUUID.toString()));
-        list.put("reason", new LiteralText(this.reason));
-        list.put("expiration_date", new LiteralText(this.getFormattedExpirationDate()));
-        list.put("expiration_time", new LiteralText(this.getFormattedExpirationTime()));
-        list.put("banned", this.playerDisplayName.shallowCopy());
-        list.put("banned_uuid", new LiteralText(this.playerUUID.toString()));
+        list.put("operator", this.adminDisplayName.copy());
+        list.put("operator_uuid", Text.literal(this.adminUUID.toString()));
+        list.put("reason", Text.literal(this.reason));
+        list.put("expiration_date", Text.literal(this.getFormattedExpirationDate()));
+        list.put("expiration_time", Text.literal(this.getFormattedExpirationTime()));
+        list.put("banned", this.playerDisplayName.copy());
+        list.put("banned_uuid", Text.literal(this.playerUUID.toString()));
 
         return list;
     }

@@ -10,9 +10,9 @@ import eu.pb4.banhammer.impl.BanHammerImpl;
 import eu.pb4.banhammer.impl.config.Config;
 import eu.pb4.banhammer.impl.config.ConfigManager;
 import me.lucko.fabric.api.permissions.v0.Permissions;
-import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
 import java.util.concurrent.CompletableFuture;
@@ -22,7 +22,7 @@ import static net.minecraft.server.command.CommandManager.literal;
 
 public class PunishCommands {
     public static void register() {
-        CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             dispatcher.register(create("kick", PunishmentType.KICK, false));
 
             dispatcher.register(create("mute", PunishmentType.MUTE, false));
@@ -75,7 +75,7 @@ public class PunishCommands {
                     }
 
                 } catch (Exception e) {
-                    ctx.getSource().sendError(new LiteralText("Invalid duration!"));
+                    ctx.getSource().sendError(Text.literal("Invalid duration!"));
                     return;
                 }
             }
@@ -104,7 +104,7 @@ public class PunishCommands {
             var players = BHUtils.lookupPlayerData(playerNameOrIp, ctx.getSource().getServer());
 
             if (players.isEmpty()) {
-                ctx.getSource().sendFeedback(new LiteralText("Couldn't find player " + playerNameOrIp + "!").formatted(Formatting.RED), false);
+                ctx.getSource().sendFeedback(Text.literal("Couldn't find player " + playerNameOrIp + "!").formatted(Formatting.RED), false);
             } else {
                 for (var player : players) {
 
@@ -117,7 +117,7 @@ public class PunishCommands {
                             ctx.getSource().sendFeedback(punishment.getChatMessage(), false);
                         }
                     } else {
-                        ctx.getSource().sendFeedback(new LiteralText("You can't punish ").append(player.displayName()).append("!").formatted(Formatting.RED), false);
+                        ctx.getSource().sendFeedback(Text.literal("You can't punish ").append(player.displayName()).append("!").formatted(Formatting.RED), false);
                     }
                 }
             }

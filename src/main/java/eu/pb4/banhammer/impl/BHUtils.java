@@ -6,7 +6,6 @@ import eu.pb4.banhammer.impl.config.ConfigManager;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
@@ -14,7 +13,7 @@ import java.net.SocketAddress;
 import java.util.*;
 
 public final class BHUtils {
-    private static final Text UNKNOWN_PLAYER = new LiteralText("Unknown player").formatted(Formatting.ITALIC);
+    private static final Text UNKNOWN_PLAYER = Text.literal("Unknown player").formatted(Formatting.ITALIC);
 
     public static String stringifyAddress(SocketAddress socketAddress) {
         String string = socketAddress.toString();
@@ -71,9 +70,9 @@ public final class BHUtils {
     public static boolean isPunishableBy(GameProfile profile, ServerCommandSource source) {
         var server = source.getServer();
         var entry = server.getPlayerManager().getOpList().get(profile);
-        return (entry == null || source.hasPermissionLevel(entry.getPermissionLevel() + 1))
+        return (server.getName().equals("Server") && source.getEntity() == null) || ((entry == null || source.hasPermissionLevel(entry.getPermissionLevel()))
                 && ConfigManager.getConfig().canPunish(profile)
-                && BanHammerImpl.CAN_PUNISH_CHECK_EVENT.invoker().canSourcePunish(profile, source).get();
+                && BanHammerImpl.CAN_PUNISH_CHECK_EVENT.invoker().canSourcePunish(profile, source).get());
     }
 
     public static Collection<BHPlayerData> lookupPlayerData(String usernameOrIp, MinecraftServer server) {
@@ -113,9 +112,9 @@ public final class BHUtils {
 
                         if (optional.isPresent()) {
                             var profile = optional.get();
-                            list.add(new BHPlayerData(profile, usernameOrIp, new LiteralText(profile.getName()), server.getPlayerManager().getPlayer(profile.getId())));
+                            list.add(new BHPlayerData(profile, usernameOrIp, Text.literal(profile.getName()), server.getPlayerManager().getPlayer(profile.getId())));
                         } else {
-                            list.add(new BHPlayerData(new GameProfile(uuid2, null), usernameOrIp, new LiteralText("??: " + uuid2).formatted(Formatting.ITALIC), null));
+                            list.add(new BHPlayerData(new GameProfile(uuid2, null), usernameOrIp, Text.literal("??: " + uuid2).formatted(Formatting.ITALIC), null));
                         }
                     }
 
@@ -141,7 +140,7 @@ public final class BHUtils {
             if (profile == null) {
                 return List.of(new BHPlayerData(new GameProfile(uuid, null), ip, UNKNOWN_PLAYER, null));
             } else {
-                return List.of(new BHPlayerData(profile, ip, new LiteralText(profile.getName()), null));
+                return List.of(new BHPlayerData(profile, ip, Text.literal(profile.getName()), null));
             }
         } catch (Exception e) {
             e.printStackTrace();

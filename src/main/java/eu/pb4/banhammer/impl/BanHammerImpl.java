@@ -25,7 +25,7 @@ import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.network.MessageType;
+import net.minecraft.network.message.MessageType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
@@ -165,15 +165,15 @@ public final class BanHammerImpl implements ModInitializer {
 
         if (!invisible) {
             if (!silent) {
-                SERVER.getPlayerManager().broadcast(punishment.getChatMessage(), MessageType.SYSTEM, Util.NIL_UUID);
+                SERVER.getPlayerManager().broadcast(punishment.getChatMessage(), MessageType.SYSTEM);
             } else {
                 Text message = punishment.getChatMessage();
 
-                SERVER.sendSystemMessage(message, Util.NIL_UUID);
+                SERVER.sendMessage(message);
 
                 for (ServerPlayerEntity player : SERVER.getPlayerManager().getPlayerList()) {
                     if (Permissions.check(player, "banhammer.seesilent", 1)) {
-                        player.sendMessage(message, MessageType.SYSTEM, Util.NIL_UUID);
+                        player.sendMessage(message, MessageType.SYSTEM);
                     }
                 }
             }

@@ -9,15 +9,14 @@ import eu.pb4.banhammer.impl.BHUtils;
 import eu.pb4.banhammer.impl.BanHammerImpl;
 import eu.pb4.banhammer.impl.config.ConfigManager;
 import eu.pb4.banhammer.impl.config.data.DiscordMessageData;
-import eu.pb4.placeholders.PlaceholderAPI;
-import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
-import net.minecraft.network.MessageType;
+import eu.pb4.placeholders.api.Placeholders;
+import eu.pb4.placeholders.api.node.TextNode;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.minecraft.network.message.MessageType;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.Util;
 
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
@@ -27,7 +26,7 @@ import static net.minecraft.server.command.CommandManager.literal;
 
 public class UnpunishCommands {
     public static void register() {
-        CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             dispatcher.register(create("unban", PunishmentType.BAN));
             dispatcher.register(create("unban-ip", PunishmentType.IP_BAN));
             dispatcher.register(create("unmute", PunishmentType.MUTE));
@@ -56,7 +55,7 @@ public class UnpunishCommands {
             var players = BHUtils.lookupPlayerData(playerNameOrIp, ctx.getSource().getServer());
 
             if (players.isEmpty()) {
-                ctx.getSource().sendFeedback(new LiteralText("Couldn't find player " + playerNameOrIp + "!").formatted(Formatting.RED), false);
+                ctx.getSource().sendFeedback(Text.literal("Couldn't find player " + playerNameOrIp + "!").formatted(Formatting.RED), false);
             }
 
             ServerPlayerEntity executor;
@@ -86,7 +85,7 @@ public class UnpunishCommands {
             }
 
             for (var player : players) {
-                Text message = null;
+                TextNode message = null;
                 String altMessage = "";
                 int n = 0;
 
@@ -137,10 +136,10 @@ public class UnpunishCommands {
                     HashMap<String, Text> list = new HashMap<>();
 
                     list.put("operator", ctx.getSource().getDisplayName());
-                    list.put("banned", new LiteralText(player.name()));
-                    list.put("banned_uuid", new LiteralText(player.uuid().toString()));
-                    list.put("reason", new LiteralText(reason));
-                    Text textMessage = PlaceholderAPI.parsePredefinedText(message, PlaceholderAPI.PREDEFINED_PLACEHOLDER_PATTERN, list);
+                    list.put("banned", Text.literal(player.name()));
+                    list.put("banned_uuid", Text.literal(player.uuid().toString()));
+                    list.put("reason", Text.literal(reason));
+                    Text textMessage = Placeholders.parseText(message, Placeholders.PREDEFINED_PLACEHOLDER_PATTERN, list);
 
                     if (config.configData.punishmentsAreSilent || isSilent) {
                         if (player.player() != null) {
@@ -153,7 +152,7 @@ public class UnpunishCommands {
 
                         for (ServerPlayerEntity player2 : ctx.getSource().getServer().getPlayerManager().getPlayerList()) {
                             if (player2 != executor) {
-                                player2.sendMessage(textMessage, MessageType.SYSTEM, Util.NIL_UUID);
+                                player2.sendMessage(textMessage, MessageType.SYSTEM);
                             }
                         }
                     }
@@ -185,7 +184,7 @@ public class UnpunishCommands {
                         }
                     }
                 } else {
-                    ctx.getSource().sendFeedback(new LiteralText(altMessage).formatted(Formatting.RED), false);
+                    ctx.getSource().sendFeedback(Text.literal(altMessage).formatted(Formatting.RED), false);
                 }
             }
         });

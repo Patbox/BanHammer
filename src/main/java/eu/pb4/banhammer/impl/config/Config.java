@@ -9,10 +9,10 @@ import eu.pb4.banhammer.impl.BHUtils;
 import eu.pb4.banhammer.impl.config.data.ConfigData;
 import eu.pb4.banhammer.impl.config.data.DiscordMessageData;
 import eu.pb4.banhammer.impl.config.data.MessageConfigData;
-import eu.pb4.placeholders.TextParser;
+import eu.pb4.placeholders.api.TextParserUtils;
+import eu.pb4.placeholders.api.node.TextNode;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.command.CommandSource;
-import net.minecraft.text.Text;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
 
@@ -23,40 +23,40 @@ public class Config {
     public final List<String> mutedCommands;
     public final MessageConfigData messageConfigData;
 
-    public final Text mutedMessage;
-    public final Text tempMutedMessage;
+    public final TextNode mutedMessage;
+    public final TextNode tempMutedMessage;
 
     public final SimpleDateFormat dateTimeFormatter;
     public final String defaultReason;
     public final String neverExpires;
 
-    public final Text banChatMessage;
-    public final Text tempBanChatMessage;
-    public final Text ipBanChatMessage;
-    public final Text tempIpBanChatMessage;
-    public final Text muteChatMessage;
-    public final Text tempMuteChatMessage;
-    public final Text warnChatMessage;
-    public final Text tempWarnChatMessage;
+    public final TextNode banChatMessage;
+    public final TextNode tempBanChatMessage;
+    public final TextNode ipBanChatMessage;
+    public final TextNode tempIpBanChatMessage;
+    public final TextNode muteChatMessage;
+    public final TextNode tempMuteChatMessage;
+    public final TextNode warnChatMessage;
+    public final TextNode tempWarnChatMessage;
 
-    public final Text banScreenMessage;
-    public final Text tempBanScreenMessage;
-    public final Text ipBanScreenMessage;
-    public final Text tempIpBanScreenMessage;
+    public final TextNode banScreenMessage;
+    public final TextNode tempBanScreenMessage;
+    public final TextNode ipBanScreenMessage;
+    public final TextNode tempIpBanScreenMessage;
 
-    public final Text kickScreenMessage;
+    public final TextNode kickScreenMessage;
 
-    public final Text kickChatMessage;
+    public final TextNode kickChatMessage;
     public final ConfigData configData;
     private final Map<String, Long> tempDurationLimit = new HashMap<>();
     public final long defaultDurationLimit;
-    public final Text pardonChatMessage;
-    public final Text unmuteChatMessage;
-    public final Text unbanChatMessage;
-    public final Text ipUnbanChatMessage;
+    public final TextNode pardonChatMessage;
+    public final TextNode unmuteChatMessage;
+    public final TextNode unbanChatMessage;
+    public final TextNode ipUnbanChatMessage;
     public final DiscordMessageData discordMessages;
     public final WebhookClient webhook;
-    public final Text unwarnChatMessage;
+    public final TextNode unwarnChatMessage;
 
     public Config(ConfigData data, MessageConfigData mData, DiscordMessageData discordMessages) {
         this.discordMessages = discordMessages;
@@ -126,11 +126,11 @@ public class Config {
         }
     }
 
-    private Text toSingleString(List<String> text) {
+    private TextNode toSingleString(List<String> text) {
         if (text.size() == 1) {
-            return TextParser.parse(text.get(0));
+            return TextParserUtils.formatNodes(text.get(0));
         } else {
-            return TextParser.parse(String.join("\n", text));
+            return TextParserUtils.formatNodes(String.join("\n", text));
         }
     }
 
