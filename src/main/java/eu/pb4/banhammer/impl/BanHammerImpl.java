@@ -4,6 +4,7 @@ package eu.pb4.banhammer.impl;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import com.mojang.brigadier.ParseResults;
 import eu.pb4.banhammer.api.BanHammer;
 import eu.pb4.banhammer.api.PunishmentData;
 import eu.pb4.banhammer.api.PunishmentType;
@@ -106,7 +107,7 @@ public final class BanHammerImpl implements ModInitializer {
                     List<String> finalActions = actions;
                     SERVER.execute(() -> {
                         for (var i : finalActions) {
-                            SERVER.getCommandManager().execute(SERVER.getCommandSource(),
+                            SERVER.getCommandManager().executeWithPrefix(SERVER.getCommandSource(),
                                     i
                                             .replace("${uuid}", punishment.playerUUID.toString())
                                             .replace("${name}", punishment.playerName)
@@ -165,7 +166,7 @@ public final class BanHammerImpl implements ModInitializer {
 
         if (!invisible) {
             if (!silent) {
-                SERVER.getPlayerManager().broadcast(punishment.getChatMessage(), MessageType.SYSTEM);
+                SERVER.getPlayerManager().broadcast(punishment.getChatMessage(), false);
             } else {
                 Text message = punishment.getChatMessage();
 
@@ -173,7 +174,7 @@ public final class BanHammerImpl implements ModInitializer {
 
                 for (ServerPlayerEntity player : SERVER.getPlayerManager().getPlayerList()) {
                     if (Permissions.check(player, "banhammer.seesilent", 1)) {
-                        player.sendMessage(message, MessageType.SYSTEM);
+                        player.sendMessage(message);
                     }
                 }
             }

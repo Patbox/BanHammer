@@ -1,7 +1,6 @@
 plugins {
 	id 'fabric-loom' version '0.12-SNAPSHOT'
 	id 'maven-publish'
-	id "com.github.johnrengelman.shadow" version "7.0.0"
 	id "com.modrinth.minotaur" version "2.+"
 	id 'com.matthewprenger.cursegradle' version '1.4.0'
 }
@@ -25,6 +24,10 @@ repositories {
 	mavenCentral()
 }
 
+configurations {
+	transitiveInclude
+}
+
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
@@ -35,12 +38,23 @@ dependencies {
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
 	modImplementation include("me.lucko:fabric-permissions-api:0.1-SNAPSHOT")
-	modImplementation include("eu.pb4:sgui:1.1.0+1.19")
+	modImplementation include("eu.pb4:sgui:1.1.3+1.19.1")
 	//modImplementation include("fr.catcore:server-translations-api:1.4.10+1.18.2")
 
 	implementation include("org.xerial:sqlite-jdbc:3.36.0.3")
 	implementation include('mysql:mysql-connector-java:8.0.29')
-	implementation shadow('club.minnced:discord-webhooks:0.8.0')
+	implementation transitiveInclude('club.minnced:discord-webhooks:0.8.0')
+
+	project.configurations.transitiveInclude {
+		def includer = { self, Set<ResolvedDependency> dependencies ->
+			dependencies.forEach {
+				include("${it.moduleGroup}:${it.moduleName}:${it.moduleVersion}")
+				self(self, it.children)
+			}
+		}
+
+		includer(includer, resolvedConfiguration.firstLevelModuleDependencies)
+	}
 
 
 	modImplementation include("eu.pb4:placeholder-api:2.0.0-beta.2+1.19")
@@ -90,32 +104,6 @@ configurations {
 
 jar {
 	from "LICENSE"
-}
-
-shadowJar {
-	from "LICENSE"
-
-	configurations = [ project.configurations.shadow ]
-	classifier = "dev-all"
-	exclude "com/google/**"
-	exclude("javax/**", "META-INF")
-	exclude "org/checkerframework/**", "org/jetbrains/**", "org/intellij/**"
-	exclude "com/google/gson/**"
-	exclude "net/kyori/**"
-
-	def relocPath = "eu.pb4.banhammer.libs."
-	relocate "club.minnced.discord", relocPath + "club.minnced.discord"
-	relocate "okhttp3", relocPath + "okhttp3"
-	relocate "okio", relocPath + "okio"
-	relocate "org.json", relocPath + "org.json"
-	relocate "google", relocPath + "google"
-
-}
-
-
-remapJar {
-	dependsOn(shadowJar)
-	input.set(shadowJar.archivePath)
 }
 
 // configure the maven publication

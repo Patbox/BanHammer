@@ -152,7 +152,7 @@ public class UnpunishCommands {
 
                         for (ServerPlayerEntity player2 : ctx.getSource().getServer().getPlayerManager().getPlayerList()) {
                             if (player2 != executor) {
-                                player2.sendMessage(textMessage, MessageType.SYSTEM);
+                                player2.sendMessage(textMessage);
                             }
                         }
                     }
