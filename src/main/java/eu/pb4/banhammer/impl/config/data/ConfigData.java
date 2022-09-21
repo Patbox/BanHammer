@@ -7,7 +7,7 @@ public final class ConfigData {
 
     public boolean punishmentsAreSilent = false;
     public boolean storeAllPunishmentsInHistory = true;
-    public List<String> muteBlockedCommands = Arrays.asList("msg", "me");
+    public List<String> muteBlockedCommands = Arrays.asList("me", "msg", "tell", "w", "teammsg");
     public String defaultTempPunishmentDurationLimit = "-1";
     public HashMap<String, String> permissionTempLimit = exampleTempLimit();
 
