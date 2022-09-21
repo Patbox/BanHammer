@@ -187,6 +187,7 @@ public sealed class PunishmentData permits PunishmentData.Synced {
         list.put("expiration_date", Text.literal(this.getFormattedExpirationDate()));
         list.put("expiration_time", Text.literal(this.getFormattedExpirationTime()));
         list.put("banned", this.playerDisplayName.copy());
+        list.put("banned_name", Text.literal(this.playerName));
         list.put("banned_uuid", Text.literal(this.playerUUID.toString()));
 
         return list;
@@ -201,6 +202,7 @@ public sealed class PunishmentData permits PunishmentData.Synced {
         list.put("expiration_date", this.getFormattedExpirationDate());
         list.put("expiration_time", this.getFormattedExpirationTime());
         list.put("banned", this.playerDisplayName.getString());
+        list.put("banned_name", this.playerName);
         list.put("banned_uuid", this.playerUUID.toString());
 
         return list;
