@@ -55,7 +55,7 @@ public abstract class ServerPlayNetworkHandlerMixin {
             var punishment = punishments.get(0);
 
             int x = string.indexOf(" ");
-            String rawCommand = string.substring(1, x != -1 ? x : string.length());
+            String rawCommand = string.substring(0, x != -1 ? x : string.length());
             for (String command : ConfigManager.getConfig().mutedCommands) {
                 if (rawCommand.startsWith(command)) {
                     ci.cancel();

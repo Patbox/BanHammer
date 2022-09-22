@@ -40,8 +40,11 @@ You can find this config in `config/banhammer/config.json`.
   "punishmentsAreSilent": false,             // Makes all punishments silent
   "storeAllPunishmentsInHistory": true,      // Stores all punishments in additional database table
   "muteBlockedCommands": [                   // List of commands blocked to muted players
+    "me",
     "msg",
-    "me"
+    "tell",
+    "w",
+    "teammsg"
   ],
   "standardBanPlayersWithBannedIps": false,  // Gives users standard bans, when they are ip banned
   "autoBansFromIpBansAreSilent": true,       // Makes autobans from ip ban silent
