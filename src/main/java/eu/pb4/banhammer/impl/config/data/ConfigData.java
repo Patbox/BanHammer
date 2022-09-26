@@ -1,5 +1,7 @@
 package eu.pb4.banhammer.impl.config.data;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.*;
 
 public final class ConfigData {
@@ -18,7 +20,7 @@ public final class ConfigData {
 
     public int defaultOpPermissionLevel = 3;
 
-    public String discordWebhookUrl = "";
+    public List<String> discordWebhookUrls = new ArrayList<>();
 
     public String databaseType = "sqlite";
 
@@ -31,6 +33,17 @@ public final class ConfigData {
     public String databasePrefix = "";
 
     public Set<String> blockPunishments = new HashSet<>();
+
+    @Nullable
+    @Deprecated
+    public String discordWebhookUrl = null;
+
+    public void update() {
+        if (this.discordWebhookUrl != null) {
+            this.discordWebhookUrls.add(this.discordWebhookUrl);
+            this.discordWebhookUrl = null;
+        }
+    }
 
 
     static private HashMap<String, String> exampleTempLimit() {

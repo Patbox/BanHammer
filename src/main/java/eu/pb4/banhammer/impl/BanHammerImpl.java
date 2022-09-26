@@ -4,7 +4,6 @@ package eu.pb4.banhammer.impl;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import com.mojang.brigadier.ParseResults;
 import eu.pb4.banhammer.api.BanHammer;
 import eu.pb4.banhammer.api.PunishmentData;
 import eu.pb4.banhammer.api.PunishmentType;
@@ -26,11 +25,9 @@ import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.network.message.MessageType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
-import net.minecraft.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -83,10 +80,12 @@ public final class BanHammerImpl implements ModInitializer {
                 DATABASE.insertPunishmentIntoHistory(punishment);
             }
 
-            if (config.webhook != null) {
+            if (!config.webhooks.isEmpty()) {
                 DiscordMessageData.Message message = punishment.getRawDiscordMessage();
-
-                config.webhook.send(message.build(punishment.getStringPlaceholders()));
+                var out = message.build(punishment.getStringPlaceholders());
+                for (var hook : config.webhooks) {
+                    hook.send(out);
+                }
             }
 
             if (punishment.type == PunishmentType.WARN) {

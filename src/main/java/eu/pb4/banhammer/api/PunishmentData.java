@@ -7,7 +7,6 @@ import eu.pb4.banhammer.impl.config.data.DiscordMessageData;
 import eu.pb4.banhammer.impl.config.data.MessageConfigData;
 import eu.pb4.placeholders.api.Placeholders;
 import eu.pb4.placeholders.api.node.EmptyNode;
-import eu.pb4.placeholders.api.node.TextNode;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;

@@ -55,7 +55,7 @@ public class Config {
     public final TextNode unbanChatMessage;
     public final TextNode ipUnbanChatMessage;
     public final DiscordMessageData discordMessages;
-    public final WebhookClient webhook;
+    public final List<WebhookClient> webhooks;
     public final TextNode unwarnChatMessage;
 
     public Config(ConfigData data, MessageConfigData mData, DiscordMessageData discordMessages) {
@@ -104,25 +104,23 @@ public class Config {
 
         this.messageConfigData = mData;
         this.configData = data;
+        this.webhooks = new ArrayList<>();
 
-        if (!configData.discordWebhookUrl.isEmpty()) {
-            WebhookClient client;
-            try {
-                WebhookClientBuilder builder = new WebhookClientBuilder(configData.discordWebhookUrl);
-                builder.setHttpClient(new OkHttpClient.Builder()
-                        .protocols(Collections.singletonList(Protocol.HTTP_1_1))
-                        .build());
-                builder.setDaemon(true);
-                builder.setAllowedMentions(AllowedMentions.none());
-                client = builder.build();
-            } catch (Exception e) {
-                BanHammerImpl.LOGGER.error("Could use webhook!");
-                e.printStackTrace();
-                client = null;
+        if (!configData.discordWebhookUrls.isEmpty()) {
+            for (var url : configData.discordWebhookUrls) {
+                try {
+                    WebhookClientBuilder builder = new WebhookClientBuilder(url);
+                    builder.setHttpClient(new OkHttpClient.Builder()
+                            .protocols(Collections.singletonList(Protocol.HTTP_1_1))
+                            .build());
+                    builder.setDaemon(true);
+                    builder.setAllowedMentions(AllowedMentions.none());
+                    this.webhooks.add(builder.build());
+                } catch (Exception e) {
+                    BanHammerImpl.LOGGER.error("Could use webhook!");
+                    e.printStackTrace();
+                }
             }
-            this.webhook = client;
-        } else {
-            this.webhook = null;
         }
     }
 

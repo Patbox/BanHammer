@@ -4,7 +4,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class SQLiteDatabase extends AbstractSQLDatabase {
-    public SQLiteDatabase(String database) throws SQLException {
+    public SQLiteDatabase(String database) throws Exception {
+        Class.forName("org.sqlite.JDBC");
+
         conn = DriverManager.getConnection("jdbc:sqlite:" + database);
 
         stat = conn.createStatement();

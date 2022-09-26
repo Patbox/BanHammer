@@ -140,6 +140,7 @@ curseforge {
 			changelogType = "markdown"
 			addGameVersion ((String) project.minecraft_version)
 			addGameVersion "Fabric"
+			addGameVersion "Quilt"
 			mainArtifact(remapJar)
 
 			afterEvaluate {

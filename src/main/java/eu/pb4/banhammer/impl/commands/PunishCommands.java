@@ -42,16 +42,16 @@ public class PunishCommands {
     private static LiteralArgumentBuilder<ServerCommandSource> create(String command, PunishmentType type, boolean temp) {
         return literal(command)
                 .requires(ConfigManager.requirePermissionOrOp("banhammer.punish." + command))
-                .then(GeneralCommands.playerArgument("player")
-                        .then(temp
-                                ? argument("duration", StringArgumentType.word())
-                                .executes(ctx -> punishCommand(ctx, true, type))
-                                .then(argument("reason", StringArgumentType.greedyString())
+                .then(temp ? GeneralCommands.playerArgument("player")
+                                .then(argument("duration", StringArgumentType.word())
                                         .executes(ctx -> punishCommand(ctx, true, type))
-                                )
-                                : argument("reason", StringArgumentType.greedyString())
+                                        .then(argument("reason", StringArgumentType.greedyString())
+                                                .executes(ctx -> punishCommand(ctx, true, type))
+                                        ))
+                                : GeneralCommands.playerArgument("player").then(argument("reason", StringArgumentType.greedyString())
                                 .executes(ctx -> punishCommand(ctx, false, type))
-                        )
+                        ).executes(ctx -> punishCommand(ctx, false, type))
+
                 );
     }
 

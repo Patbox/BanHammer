@@ -1,13 +1,12 @@
 package eu.pb4.banhammer.impl;
 
+import com.mojang.logging.LogUtils;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.entrypoint.PreLaunchEntrypoint;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
 
 public class CardboardWarning implements PreLaunchEntrypoint {
-    public static final String MOD_NAME = "BanHammer";
-    public static final Logger LOGGER = LogManager.getLogger(MOD_NAME);
+    public static final Logger LOGGER = LogUtils.getLogger();
 
     @Override
     public void onPreLaunch() {

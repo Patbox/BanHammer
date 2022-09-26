@@ -26,8 +26,6 @@ public abstract class ServerPlayNetworkHandlerMixin {
 
     @Shadow @Final private MinecraftServer server;
 
-    @Shadow public abstract void addPendingAcknowledgment(SignedMessage message);
-
     @Shadow protected abstract SignedMessage getSignedMessage(ChatMessageC2SPacket packet);
 
     @Inject(method = "onChatMessage", at = @At("HEAD"), cancellable = true)

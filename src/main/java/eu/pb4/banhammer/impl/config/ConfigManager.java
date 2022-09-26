@@ -42,6 +42,8 @@ public class ConfigManager {
             MessageConfigData messageConfigData = messagesFile.exists() ? GSON.fromJson(new InputStreamReader(new FileInputStream(messagesFile), "UTF-8"), MessageConfigData.class) : new MessageConfigData();
             DiscordMessageData discordConfigData = discordMessagesFile.exists() ? GSON.fromJson(new InputStreamReader(new FileInputStream(discordMessagesFile), "UTF-8"), DiscordMessageData.class) : new DiscordMessageData();
 
+            configData.update();
+
             CONFIG = new Config(configData, messageConfigData, discordConfigData);
 
             {

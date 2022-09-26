@@ -12,7 +12,6 @@ import eu.pb4.banhammer.impl.config.data.DiscordMessageData;
 import eu.pb4.placeholders.api.Placeholders;
 import eu.pb4.placeholders.api.node.TextNode;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.minecraft.network.message.MessageType;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
@@ -157,7 +156,7 @@ public class UnpunishCommands {
                         }
                     }
 
-                    if (config.webhook != null) {
+                    if (!config.webhooks.isEmpty()) {
                         DiscordMessageData.Message tempMessage;
                         var data = config.discordMessages;
                         if (type != null) {
@@ -180,7 +179,10 @@ public class UnpunishCommands {
                             placeholders.put("banned_uuid", player.uuid().toString());
                             placeholders.put("reason", reason);
 
-                            config.webhook.send(tempMessage.build(placeholders));
+                            var msg =tempMessage.build(placeholders);
+                            for (var hook : config.webhooks) {
+                                hook.send(msg);
+                            }
                         }
                     }
                 } else {

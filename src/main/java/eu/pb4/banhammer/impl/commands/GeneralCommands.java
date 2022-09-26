@@ -108,8 +108,15 @@ public class GeneralCommands {
     }
 
     private static int reloadConfig(CommandContext<ServerCommandSource> context) {
+        var oldConfig = ConfigManager.getConfig();
         if (ConfigManager.loadConfig()) {
             context.getSource().sendFeedback(Text.literal("Reloaded config!"), false);
+
+            if (oldConfig != null && !oldConfig.webhooks.isEmpty()) {
+                for (var hook : oldConfig.webhooks) {
+                    hook.close();
+                }
+            }
         } else {
             context.getSource().sendError(Text.literal("Error accrued while reloading config!").formatted(Formatting.RED));
         }
