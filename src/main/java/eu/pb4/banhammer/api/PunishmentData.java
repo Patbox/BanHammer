@@ -200,6 +200,7 @@ public sealed class PunishmentData permits PunishmentData.Synced {
         list.put("reason", this.reason);
         list.put("expiration_date", this.getFormattedExpirationDate());
         list.put("expiration_time", this.getFormattedExpirationTime());
+        list.put("expiration_timestamp", String.valueOf(this.getExpirationDate().getTime() / 1000));
         list.put("banned", this.playerDisplayName.getString());
         list.put("banned_name", this.playerName);
         list.put("banned_uuid", this.playerUUID.toString());
