@@ -175,11 +175,16 @@ public class DiscordMessageData {
         public List<String> message = Collections.emptyList();
         public String avatar = "";
         public String name = "";
+        public String embedAuthor = "";
+        public String embedAuthorUrl = "";
+        public String embedAuthorIconUrl = "";
         public String embedTitle = "";
         public String embedTitleUrl = "";
         public String embedColor = "";
         public String embedImage = "";
         public String embedThumbnail = "";
+        public String embedFooter = "";
+        public String embedFooterIconUrl = "";
         public List<String> embedMessage = Collections.emptyList();
         public List<Table> embedFields = Collections.emptyList();
 
@@ -214,10 +219,15 @@ public class DiscordMessageData {
             }
 
             if (this.embed) {
+                String author = this.embedAuthor;
+                String authorUrl = this.embedAuthorUrl;
+                String authorIconUrl = this.embedAuthorIconUrl;
                 String title = this.embedTitle;
                 String titleUrl = this.embedTitleUrl;
                 String image = this.embedImage;
                 String thumbnail = this.embedThumbnail;
+                String footer = this.embedFooter;
+                String footerIconUrl = this.embedFooterIconUrl;
                 String contentEmbed = String.join("\n", this.embedMessage);
 
                 TextColor color = TextColor.parse(this.embedColor);
@@ -229,10 +239,15 @@ public class DiscordMessageData {
 
                 for (Map.Entry<String, String> entry : placeholders.entrySet()) {
                     String key = "${" + entry.getKey() + "}";
+                    author = author.replace(key, entry.getValue());
+                    authorUrl = authorUrl.replace(key, entry.getValue());
+                    authorIconUrl = authorIconUrl.replace(key, entry.getValue());
                     title = title.replace(key, entry.getValue());
                     titleUrl = titleUrl.replace(key, entry.getValue());
                     image = image.replace(key, entry.getValue());
                     thumbnail = thumbnail.replace(key, entry.getValue());
+                    footer = footer.replace(key, entry.getValue());
+                    footerIconUrl = footerIconUrl.replace(key, entry.getValue());
                     contentEmbed = contentEmbed.replace(key, entry.getValue());
 
                     for (Table table : tables) {
@@ -243,6 +258,9 @@ public class DiscordMessageData {
 
                 WebhookEmbedBuilder embed = new WebhookEmbedBuilder();
 
+                if (!author.isEmpty()) {
+                    embed.setAuthor(new WebhookEmbed.EmbedAuthor(author, authorIconUrl.isEmpty() ? null : authorIconUrl, authorUrl.isEmpty() ? null : authorUrl));
+                }
                 if (!title.isEmpty()) {
                     embed.setTitle(new WebhookEmbed.EmbedTitle(title, titleUrl.isEmpty() ? null : titleUrl));
                 }
@@ -251,6 +269,9 @@ public class DiscordMessageData {
                 }
                 if (!thumbnail.isEmpty()) {
                     embed.setThumbnailUrl(thumbnail);
+                }
+                if (!footer.isEmpty()) {
+                    embed.setFooter(new WebhookEmbed.EmbedFooter(footer, footerIconUrl.isEmpty() ? null : footerIconUrl));
                 }
 
                 if (color != null) {
