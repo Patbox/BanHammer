@@ -24,6 +24,7 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -312,6 +313,15 @@ public final class BanHammerImpl implements ModInitializer {
             } catch (IOException exception) {
                 exception.printStackTrace();
             }
+        });
+        ServerMessageEvents.ALLOW_CHAT_MESSAGE.register((message, sender, params) -> {
+            var punishments = getPlayersPunishments(sender.getUuidAsString(), PunishmentType.MUTE);
+            if (punishments.size() > 0) {
+                var punishment = punishments.get(0);
+                sender.sendMessage(punishment.getDisconnectMessage(), false);
+                return false;
+            }
+            return true;
         });
 
         PunishCommands.register();
