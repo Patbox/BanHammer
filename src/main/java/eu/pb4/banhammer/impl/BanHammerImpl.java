@@ -209,6 +209,8 @@ public final class BanHammerImpl implements ModInitializer {
     }
 
     public static int removePunishment(String id, PunishmentType type) {
+        CACHED_PUNISHMENTS.removeIf(x -> (x.type == type) && (x.type.ipBased ? x.playerIP.equals(id) : x.playerUUID.toString().equals(id)));
+
         return DATABASE.removePunishment(id, type);
     }
 
