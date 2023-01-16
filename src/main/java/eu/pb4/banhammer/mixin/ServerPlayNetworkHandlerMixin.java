@@ -18,6 +18,14 @@ public abstract class ServerPlayNetworkHandlerMixin {
 
     @Inject(method = "onCommandExecution", at = @At("HEAD"), cancellable = true)
     private void banHammer_checkIfMutedCommand(CommandExecutionC2SPacket packet, CallbackInfo ci) {
+        for (var punishment : BanHammerImpl.CACHED_PUNISHMENTS) {
+            if (!punishment.isExpired() && punishment.type == PunishmentType.MUTE && punishment.playerUUID.equals(this.player.getUuid())) {
+                this.player.sendMessage(punishment.getDisconnectMessage(), false);
+                ci.cancel();
+                return;
+            }
+        }
+
         var punishments = BanHammerImpl.getPlayersPunishments(this.player.getUuid().toString(), PunishmentType.MUTE);
         var string = packet.command();
         if (punishments.size() > 0) {

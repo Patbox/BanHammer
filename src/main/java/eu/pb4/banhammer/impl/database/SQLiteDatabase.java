@@ -16,14 +16,19 @@ public class SQLiteDatabase extends AbstractSQLDatabase {
     @Override
     protected String getTableCreation() {
         return "CREATE TABLE IF NOT EXISTS %s (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "bannedUUID varchar(36), bannedIP varchar(40), bannedName varchar(64), bannedDisplay varchar(512), " +
-                "adminUUID varchar(36), adminDisplay TEXT, time BIGINT, duration BIGINT, reason varchar(512))";
+                "bannedUUID varchar(36), bannedIP varchar(40), bannedName varchar(64), bannedDisplay TEXT, " +
+                "adminUUID varchar(36), adminDisplay TEXT, time BIGINT, duration BIGINT, reason TEXT)";
     }
 
     @Override
     protected String getHistoryTableCreation(String prefix) {
         return "CREATE TABLE IF NOT EXISTS " + prefix + "history (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "bannedUUID varchar(36), bannedIP varchar(40), bannedName varchar(64), bannedDisplay varchar(512), " +
-                "adminUUID varchar(36), adminDisplay TEXT, time BIGINT, duration BIGINT, reason varchar(512), type varchar(16))";
+                "bannedUUID varchar(36), bannedIP varchar(40), bannedName varchar(64), bannedDisplay TEXT, " +
+                "adminUUID varchar(36), adminDisplay TEXT, time BIGINT, duration BIGINT, reason TEXT, type varchar(16))";
+    }
+
+    @Override
+    public String name() {
+        return "SQLite";
     }
 }

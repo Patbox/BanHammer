@@ -15,6 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.net.SocketAddress;
 import java.util.HashSet;
+import java.util.Set;
 
 @Mixin(PlayerManager.class)
 public class PlayerManagerMixin {
@@ -39,13 +40,24 @@ public class PlayerManagerMixin {
 
         String ip = BHUtils.stringifyAddress(address);
 
-        final var bans = BanHammerImpl.getPlayersPunishments(profile.getId().toString(), PunishmentType.BAN);
-        final var ipBans = BanHammerImpl.getPlayersPunishments(ip, PunishmentType.IP_BAN);
+        for (var pos : BanHammerImpl.CACHED_PUNISHMENTS) {
+            if (!pos.isExpired() && ((pos.type == PunishmentType.IP_BAN && pos.playerIP.equals(ip))
+                    || (pos.type == PunishmentType.BAN && pos.playerUUID.equals(profile.getId())))) {
+                punishment = pos;
+                break;
+            }
+        }
 
-        if (bans.size() > 0) {
-            punishment = bans.get(0);
-        } else if (ipBans.size() > 0) {
-            punishment = ipBans.get(0);
+
+        if (punishment == null) {
+            final var bans = BanHammerImpl.getPlayersPunishments(profile.getId().toString(), PunishmentType.BAN);
+            final var ipBans = BanHammerImpl.getPlayersPunishments(ip, PunishmentType.IP_BAN);
+
+            if (bans.size() > 0) {
+                punishment = bans.get(0);
+            } else if (ipBans.size() > 0) {
+                punishment = ipBans.get(0);
+            }
         }
 
         if (punishment != null) {

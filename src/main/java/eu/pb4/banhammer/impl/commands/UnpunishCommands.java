@@ -17,6 +17,9 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
+import java.net.URI;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 
@@ -179,9 +182,13 @@ public class UnpunishCommands {
                             placeholders.put("banned_uuid", player.uuid().toString());
                             placeholders.put("reason", reason);
 
-                            var msg =tempMessage.build(placeholders);
+                            var msg = HttpRequest.BodyPublishers.ofString(tempMessage.build(placeholders));
+
                             for (var hook : config.webhooks) {
-                                hook.send(msg);
+                                BanHammerImpl.HTTP_CLIENT.sendAsync(HttpRequest.newBuilder()
+                                        .uri(hook)
+                                        .headers("Content-Type", "application/json")
+                                        .POST(msg).build(), HttpResponse.BodyHandlers.discarding());
                             }
                         }
                     }

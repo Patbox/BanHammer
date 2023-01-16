@@ -10,6 +10,7 @@ public interface DatabaseHandlerInterface {
     void getPunishments(String id, PunishmentType type, Consumer<PunishmentData.Synced> consumer);
     void getAllPunishments(PunishmentType type, Consumer<PunishmentData.Synced> consumer);
     void getPunishmentsHistory(String toString, Consumer<PunishmentData> consumer);
+    void getAllPunishmentsHistory(Consumer<PunishmentData> consumer);
     int removePunishment(long id, PunishmentType type);
     int removePunishment(String id, PunishmentType type);
 
@@ -17,4 +18,5 @@ public interface DatabaseHandlerInterface {
 
     boolean insertPunishmentIntoHistory(PunishmentData punishment);
 
+    String name();
 }

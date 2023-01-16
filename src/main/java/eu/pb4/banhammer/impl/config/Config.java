@@ -1,21 +1,19 @@
 package eu.pb4.banhammer.impl.config;
 
-import club.minnced.discord.webhook.WebhookClient;
-import club.minnced.discord.webhook.WebhookClientBuilder;
-import club.minnced.discord.webhook.send.AllowedMentions;
+
 import com.mojang.authlib.GameProfile;
 import eu.pb4.banhammer.impl.BanHammerImpl;
 import eu.pb4.banhammer.impl.BHUtils;
 import eu.pb4.banhammer.impl.config.data.ConfigData;
 import eu.pb4.banhammer.impl.config.data.DiscordMessageData;
 import eu.pb4.banhammer.impl.config.data.MessageConfigData;
+import eu.pb4.banhammer.impl.config.database.DbConfig;
 import eu.pb4.placeholders.api.TextParserUtils;
 import eu.pb4.placeholders.api.node.TextNode;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.command.CommandSource;
-import okhttp3.OkHttpClient;
-import okhttp3.Protocol;
 
+import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -55,7 +53,7 @@ public class Config {
     public final TextNode unbanChatMessage;
     public final TextNode ipUnbanChatMessage;
     public final DiscordMessageData discordMessages;
-    public final List<WebhookClient> webhooks;
+    public final List<URI> webhooks;
     public final TextNode unwarnChatMessage;
 
     public Config(ConfigData data, MessageConfigData mData, DiscordMessageData discordMessages) {
@@ -105,20 +103,15 @@ public class Config {
         this.messageConfigData = mData;
         this.configData = data;
         this.webhooks = new ArrayList<>();
-
         if (!configData.discordWebhookUrls.isEmpty()) {
             for (var url : configData.discordWebhookUrls) {
-                try {
-                    WebhookClientBuilder builder = new WebhookClientBuilder(url);
-                    builder.setHttpClient(new OkHttpClient.Builder()
-                            .protocols(Collections.singletonList(Protocol.HTTP_1_1))
-                            .build());
-                    builder.setDaemon(true);
-                    builder.setAllowedMentions(AllowedMentions.none());
-                    this.webhooks.add(builder.build());
-                } catch (Exception e) {
-                    BanHammerImpl.LOGGER.error("Could use webhook!");
-                    e.printStackTrace();
+                if (url != null && !url.isEmpty()) {
+                    try {
+                        this.webhooks.add(URI.create(url));
+                    } catch (Throwable e) {
+                        BanHammerImpl.LOGGER.error("Could use webhook!");
+                        e.printStackTrace();
+                    }
                 }
             }
         }
@@ -148,5 +141,19 @@ public class Config {
 
     public boolean canPunish(GameProfile profile) {
         return !(this.configData.blockPunishments.contains(profile.getName()) || this.configData.blockPunishments.contains(profile.getId().toString()));
+    }
+
+    public DbConfig getDatabaseConfig(String type) {
+        var dbConfig = new DbConfig();
+        var key = "PB_BANHAMMER_" + type.toUpperCase(Locale.ROOT) + "_";
+        dbConfig.address = envOrVal(key + "ADDRESS", configData.databaseAddress);
+        dbConfig.database = envOrVal(key + "DATABASE", configData.databaseName);
+        dbConfig.username = envOrVal(key + "USERNAME", configData.databaseUsername);
+        dbConfig.password = envOrVal(key + "PASSWORD", configData.databasePassword);
+        return dbConfig;
+    }
+
+    private String envOrVal(String env, String val) {
+        return System.getenv().getOrDefault(env, val);
     }
 }

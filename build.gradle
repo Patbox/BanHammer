@@ -39,25 +39,17 @@ dependencies {
 
 	modImplementation include("me.lucko:fabric-permissions-api:0.1-SNAPSHOT")
 	modImplementation include("eu.pb4:sgui:1.2.0+1.19.3")
-	//modImplementation include("fr.catcore:server-translations-api:1.4.10+1.18.2")
 
-	implementation include("org.xerial:sqlite-jdbc:3.36.0.3")
-	implementation include('mysql:mysql-connector-java:8.0.29')
-	implementation transitiveInclude('club.minnced:discord-webhooks:0.8.0')
+	implementation include("org.xerial:sqlite-jdbc:3.40.0.0")
+	implementation include('com.mysql:mysql-connector-j:8.0.31')
+	implementation include('org.postgresql:postgresql:42.5.1')
 
-	project.configurations.transitiveInclude {
-		def includer = { self, Set<ResolvedDependency> dependencies ->
-			dependencies.forEach {
-				include("${it.moduleGroup}:${it.moduleName}:${it.moduleVersion}")
-				self(self, it.children)
-			}
-		}
-
-		includer(includer, resolvedConfiguration.firstLevelModuleDependencies)
-	}
+	modImplementation include("me.lucko:fabric-permissions-api:0.2-SNAPSHOT")
+	modImplementation include("eu.pb4:sgui:1.1.3+1.19.1")
 
 
 	modImplementation include("eu.pb4:placeholder-api:2.0.0-pre.2+1.19.3")
+
 
 	// PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
 	// You may need to force-disable transitiveness on them.

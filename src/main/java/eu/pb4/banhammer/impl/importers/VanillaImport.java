@@ -10,10 +10,8 @@ import net.minecraft.server.*;
 import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 
-import java.util.function.Consumer;
-
 public final class VanillaImport implements BanHammer.PunishmentImporter {
-    public boolean importPunishments(MinecraftServer server, Consumer<PunishmentData> consumer, boolean remove) {
+    public boolean importPunishments(MinecraftServer server, PunishmentConsumer consumer, boolean remove) {
         try {
             BannedPlayerList banList = BanHammerImpl.SERVER.getPlayerManager().getUserBanList();
             BannedIpList ipBanList = BanHammerImpl.SERVER.getPlayerManager().getIpBanList();

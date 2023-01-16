@@ -36,15 +36,17 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
     public boolean insertPunishmentIntoHistory(PunishmentData punishment) {
         try {
             PreparedStatement prepStmt = conn.prepareStatement(
-                    "insert into " + ConfigManager.getConfig().configData.databasePrefix + "history values (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+                    "insert into " + ConfigManager.getConfig().configData.databasePrefix + "history (" +
+                            "bannedUUID, bannedIP, bannedName, bannedDisplay," +
+                            "adminUUID, adminDisplay, time, duration, reason, type) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
             prepStmt.setString(1, punishment.playerUUID.toString());
             prepStmt.setString(2, punishment.playerIP);
             prepStmt.setString(3, punishment.playerName);
             prepStmt.setString(4, Text.Serializer.toJson(punishment.playerDisplayName));
             prepStmt.setString(5, punishment.adminUUID.toString());
             prepStmt.setString(6, Text.Serializer.toJson(punishment.adminDisplayName));
-            prepStmt.setString(7, String.valueOf(punishment.time));
-            prepStmt.setString(8, String.valueOf(punishment.duration));
+            prepStmt.setLong(7, punishment.time);
+            prepStmt.setLong(8, punishment.duration);
             prepStmt.setString(9, punishment.reason);
             prepStmt.setString(10, punishment.type.name);
 
@@ -62,15 +64,17 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
     public boolean insertPunishment(PunishmentData punishment) {
         try {
             PreparedStatement prepStmt = conn.prepareStatement(
-                    "insert into " + ConfigManager.getConfig().configData.databasePrefix + punishment.type.databaseName + " values (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+                    "insert into " + ConfigManager.getConfig().configData.databasePrefix + punishment.type.databaseName + "(" +
+                            "bannedUUID, bannedIP, bannedName, bannedDisplay," +
+                            "adminUUID, adminDisplay, time, duration, reason) values (?, ?, ?, ?, ?, ?, ?, ?, ?);");
             prepStmt.setString(1, punishment.playerUUID.toString());
             prepStmt.setString(2, punishment.playerIP);
             prepStmt.setString(3, punishment.playerName);
             prepStmt.setString(4, Text.Serializer.toJson(punishment.playerDisplayName));
             prepStmt.setString(5, punishment.adminUUID.toString());
             prepStmt.setString(6, Text.Serializer.toJson(punishment.adminDisplayName));
-            prepStmt.setString(7, String.valueOf(punishment.time));
-            prepStmt.setString(8, String.valueOf(punishment.duration));
+            prepStmt.setLong(7, punishment.time);
+            prepStmt.setLong(8, punishment.duration);
             prepStmt.setString(9, punishment.reason);
 
             prepStmt.executeUpdate();
@@ -112,6 +116,31 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
     public void getPunishmentsHistory(String id, Consumer<PunishmentData> consumer) {
         try {
             String query = "SELECT * FROM " + ConfigManager.getConfig().configData.databasePrefix + "history WHERE " + (InetAddresses.isInetAddress(id) ? "bannedIP" : "bannedUUID") + "='" + id + "';";
+            ResultSet result = stat.executeQuery(query);
+
+            while(!result.isClosed() && result.next()) {
+                consumer.accept(new PunishmentData(
+                        UUID.fromString(result.getString("bannedUUID")),
+                        result.getString("bannedIP"),
+                        Text.Serializer.fromJson(result.getString("bannedDisplay")),
+                        result.getString("bannedName"),
+                        UUID.fromString(result.getString("adminUUID")),
+                        Text.Serializer.fromJson(result.getString("adminDisplay")),
+                        result.getLong("time"),
+                        result.getLong("duration"),
+                        result.getString("reason"),
+                        PunishmentType.fromName(result.getString("type"))
+                ));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void getAllPunishmentsHistory(Consumer<PunishmentData> consumer) {
+        try {
+            String query = "SELECT * FROM " + ConfigManager.getConfig().configData.databasePrefix + "history;";
             ResultSet result = stat.executeQuery(query);
 
             while(!result.isClosed() && result.next()) {
