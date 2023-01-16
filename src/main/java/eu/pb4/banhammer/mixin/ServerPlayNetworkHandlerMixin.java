@@ -57,27 +57,30 @@ public abstract class ServerPlayNetworkHandlerMixin {
 
     @Inject(method = "onCommandExecution", at = @At("HEAD"), cancellable = true)
     private void banHammer_checkIfMutedCommand(CommandExecutionC2SPacket packet, CallbackInfo ci) {
-        for (var punishment : BanHammerImpl.CACHED_PUNISHMENTS) {
-            if (!punishment.isExpired() && punishment.type == PunishmentType.MUTE && punishment.playerUUID.equals(this.player.getUuid())) {
-                this.player.sendMessage(punishment.getDisconnectMessage(), false);
-                ci.cancel();
-                return;
-            }
-        }
-
-        var punishments = BanHammerImpl.getPlayersPunishments(this.player.getUuid().toString(), PunishmentType.MUTE);
         var string = packet.command();
-        if (punishments.size() > 0) {
-            var punishment = punishments.get(0);
+        int x = string.indexOf(" ");
+        String rawCommand = string.substring(0, x != -1 ? x : string.length());
+        for (String command : ConfigManager.getConfig().mutedCommands) {
+            if (rawCommand.equals(command)) {
+                for (var punishment : BanHammerImpl.CACHED_PUNISHMENTS) {
+                    if (!punishment.isExpired() && punishment.type == PunishmentType.MUTE && punishment.playerUUID.equals(this.player.getUuid())) {
+                        this.player.sendMessage(punishment.getDisconnectMessage(), false);
+                        ci.cancel();
+                        return;
+                    }
+                }
 
-            int x = string.indexOf(" ");
-            String rawCommand = string.substring(0, x != -1 ? x : string.length());
-            for (String command : ConfigManager.getConfig().mutedCommands) {
-                if (rawCommand.startsWith(command)) {
+                var punishments = BanHammerImpl.getPlayersPunishments(this.player.getUuid().toString(), PunishmentType.MUTE);
+
+                if (punishments.size() > 0) {
+                    var punishment = punishments.get(0);
+
+
                     ci.cancel();
                     this.player.sendMessage(punishment.getDisconnectMessage(), false);
-                    return;
                 }
+
+                return;
             }
         }
     }

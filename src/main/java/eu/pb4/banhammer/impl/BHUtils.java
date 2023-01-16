@@ -3,6 +3,7 @@ package eu.pb4.banhammer.impl;
 import com.google.common.net.InetAddresses;
 import com.mojang.authlib.GameProfile;
 import eu.pb4.banhammer.impl.config.ConfigManager;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -57,8 +58,19 @@ public final class BHUtils {
     public static boolean isPunishableBy(GameProfile profile, ServerCommandSource source) {
         var server = source.getServer();
         var entry = server.getPlayerManager().getOpList().get(profile);
+
+        boolean permission = true;
+
+        try {
+            permission = Permissions.check(source, "banhammer.can_ban_admins") || Permissions.check(profile, "banhammer.block_punishments").get();
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+
+
         return (server.getName().equals("Server") && source.getEntity() == null) || ((entry == null || source.hasPermissionLevel(entry.getPermissionLevel()))
                 && ConfigManager.getConfig().canPunish(profile)
+                && permission
                 && BanHammerImpl.CAN_PUNISH_CHECK_EVENT.invoker().canSourcePunish(profile, source).get());
     }
 
