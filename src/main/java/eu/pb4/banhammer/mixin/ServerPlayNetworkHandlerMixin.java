@@ -84,7 +84,7 @@ public abstract class ServerPlayNetworkHandlerMixin {
         int x = string.indexOf(" ");
         String rawCommand = string.substring(0, x != -1 ? x : string.length());
         for (String command : ConfigManager.getConfig().mutedCommands) {
-            if (rawCommand.startsWith(command)) {
+            if (rawCommand.equals(command)) {
                 for (var punishment : BanHammerImpl.CACHED_PUNISHMENTS) {
                     if (!punishment.isExpired() && punishment.type == PunishmentType.MUTE && punishment.playerUUID.equals(this.player.getUuid())) {
                         this.player.sendMessage(punishment.getDisconnectMessage(), false);
