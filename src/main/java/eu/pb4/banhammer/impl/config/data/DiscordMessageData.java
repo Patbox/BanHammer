@@ -1,9 +1,6 @@
 package eu.pb4.banhammer.impl.config.data;
 
-import club.minnced.discord.webhook.send.WebhookEmbed;
-import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
-import club.minnced.discord.webhook.send.WebhookMessage;
-import club.minnced.discord.webhook.send.WebhookMessageBuilder;
+import eu.pb4.banhammer.impl.discord.DiscordWebhookMessage;
 import net.minecraft.text.TextColor;
 
 import java.util.ArrayList;
@@ -196,8 +193,8 @@ public class DiscordMessageData {
             this.embedMessage = message;
         }
 
-        public WebhookMessage build(Map<String, String> placeholders) {
-            WebhookMessageBuilder builder = new WebhookMessageBuilder();
+        public String build(Map<String, String> placeholders) {
+            var builder = new DiscordWebhookMessage();
             String name = this.name;
             String avatar = this.avatar;
             String content = String.join("\n", this.message);
@@ -209,13 +206,13 @@ public class DiscordMessageData {
                 content = content.replace(key, entry.getValue());
             }
             if (!content.isEmpty()) {
-                builder.setContent(content);
+                builder.content(content);
             }
             if (!avatar.isEmpty()) {
-                builder.setAvatarUrl(avatar);
+                builder.avatar(avatar);
             }
             if (!name.isEmpty()) {
-                builder.setUsername(name);
+                builder.username(name);
             }
 
             if (this.embed) {
@@ -256,39 +253,43 @@ public class DiscordMessageData {
                     }
                 }
 
-                WebhookEmbedBuilder embed = new WebhookEmbedBuilder();
+                var embed = new DiscordWebhookMessage.Embed();
 
                 if (!author.isEmpty()) {
-                    embed.setAuthor(new WebhookEmbed.EmbedAuthor(author, authorIconUrl.isEmpty() ? null : authorIconUrl, authorUrl.isEmpty() ? null : authorUrl));
+                    embed.author(author, authorIconUrl.isEmpty() ? null : authorIconUrl, authorUrl.isEmpty() ? null : authorUrl);
                 }
                 if (!title.isEmpty()) {
-                    embed.setTitle(new WebhookEmbed.EmbedTitle(title, titleUrl.isEmpty() ? null : titleUrl));
+                    embed.title(title);
                 }
+                if (!titleUrl.isEmpty()) {
+                    embed.url(titleUrl);
+                }
+
                 if (!image.isEmpty()) {
-                    embed.setImageUrl(image);
+                    embed.image(image);
                 }
                 if (!thumbnail.isEmpty()) {
-                    embed.setThumbnailUrl(thumbnail);
+                    embed.thumbnail(thumbnail);
                 }
                 if (!footer.isEmpty()) {
-                    embed.setFooter(new WebhookEmbed.EmbedFooter(footer, footerIconUrl.isEmpty() ? null : footerIconUrl));
+                    embed.footer(footer, footerIconUrl.isEmpty() ? null : footerIconUrl);
                 }
 
                 if (color != null) {
-                    embed.setColor(color.getRgb());
+                    embed.color(color.getRgb());
                 }
                 if (!contentEmbed.isEmpty()) {
-                    embed.setDescription(contentEmbed);
+                    embed.description(contentEmbed);
                 }
 
                 for (Table table : tables) {
-                    embed.addField(new WebhookEmbed.EmbedField(table.inline, table.name, table.content));
+                    embed.field(table.name, table.content, table.inline);
                 }
 
-                builder.addEmbeds(embed.build());
+                builder.embed(embed);
             }
 
-            return builder.build();
+            return builder.toJson();
         }
 
 

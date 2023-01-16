@@ -13,11 +13,11 @@ import eu.pb4.banhammer.impl.commands.PunishCommands;
 import eu.pb4.banhammer.impl.commands.UnpunishCommands;
 import eu.pb4.banhammer.impl.config.Config;
 import eu.pb4.banhammer.impl.config.ConfigManager;
-import eu.pb4.banhammer.impl.config.data.ConfigData;
-import eu.pb4.banhammer.impl.config.data.DiscordMessageData;
 import eu.pb4.banhammer.impl.database.DatabaseHandlerInterface;
 import eu.pb4.banhammer.impl.database.MySQLDatabase;
+import eu.pb4.banhammer.impl.database.PostgreSQLDatabase;
 import eu.pb4.banhammer.impl.database.SQLiteDatabase;
+import eu.pb4.banhammer.impl.importers.BanHammerJsonImporter;
 import eu.pb4.banhammer.impl.importers.VanillaImport;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.api.ModInitializer;
@@ -27,19 +27,30 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import net.minecraft.util.LowercaseEnumTypeAdapterFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.*;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 public final class BanHammerImpl implements ModInitializer {
+    public static final int LOWER_LIMIT = 32;
+    public static final int UPPER_LIMIT = LOWER_LIMIT * 2;
+    public static final List<PunishmentData> CACHED_PUNISHMENTS = new CopyOnWriteArrayList<>();
     public static final Logger LOGGER = LogManager.getLogger("BanHammer");
+    public static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
+
     public static final Event<BanHammer.PunishmentEvent> PUNISHMENT_EVENT = EventFactory.createArrayBacked(BanHammer.PunishmentEvent.class, (callbacks) -> (punishment, s, i) -> {
         for (var callback : callbacks) {
             callback.onPunishment(punishment, s, i);
@@ -57,7 +68,11 @@ public final class BanHammerImpl implements ModInitializer {
 
         return TriState.TRUE;
     });
-    private static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
+    public static final Gson GSON = new GsonBuilder().disableHtmlEscaping()
+            .registerTypeHierarchyAdapter(Text.class, new Text.Serializer())
+           .registerTypeHierarchyAdapter(Style .class, new net.minecraft.text.Style.Serializer())
+            .registerTypeAdapterFactory(new LowercaseEnumTypeAdapterFactory())
+            .create();
     public static MinecraftServer SERVER;
     public static DatabaseHandlerInterface DATABASE;
     public static ConcurrentHashMap<UUID, String> UUID_TO_IP_CACHE = new ConcurrentHashMap<>();
@@ -70,6 +85,13 @@ public final class BanHammerImpl implements ModInitializer {
 
     public static void punishPlayer(PunishmentData punishment, boolean silent, boolean invisible) {
         Config config = ConfigManager.getConfig();
+        if (config.configData.cachePunishmentsLocally && punishment.type.databaseName != null) {
+            CACHED_PUNISHMENTS.add(punishment);
+            if (CACHED_PUNISHMENTS.size() > UPPER_LIMIT) {
+                var dynInt = new int[]{0};
+                CACHED_PUNISHMENTS.removeIf(x -> dynInt[0]++ < LOWER_LIMIT || x.isExpired());
+            }
+        }
 
         CompletableFuture.runAsync(() -> {
             if (punishment.type.databaseName != null) {
@@ -81,10 +103,13 @@ public final class BanHammerImpl implements ModInitializer {
             }
 
             if (!config.webhooks.isEmpty()) {
-                DiscordMessageData.Message message = punishment.getRawDiscordMessage();
-                var out = message.build(punishment.getStringPlaceholders());
+                var json = HttpRequest.BodyPublishers.ofString(punishment.getRawDiscordMessage().build(punishment.getStringPlaceholders()));
+
                 for (var hook : config.webhooks) {
-                    hook.send(out);
+                    HTTP_CLIENT.sendAsync(HttpRequest.newBuilder()
+                            .uri(hook)
+                            .headers("Content-Type", "application/json")
+                            .POST(json).build(), HttpResponse.BodyHandlers.discarding());
                 }
             }
 
@@ -225,6 +250,18 @@ public final class BanHammerImpl implements ModInitializer {
         return false;
     }
 
+    public static void addPunishment(PunishmentData punishment) {
+        if (punishment.isExpired()) {
+            CompletableFuture.runAsync(() -> {
+                if (ConfigManager.getConfig().configData.storeAllPunishmentsInHistory) {
+                    DATABASE.insertPunishmentIntoHistory(punishment);
+                }
+            });
+        } else {
+            punishPlayer(punishment,true, true);
+        }
+    }
+
     private void onServerStarting(MinecraftServer server) {
         CardboardWarning.checkAndAnnounce();
         SERVER = server;
@@ -257,28 +294,40 @@ public final class BanHammerImpl implements ModInitializer {
         }
 
         if (loaded) {
-            ConfigData configData = ConfigManager.getConfig().configData;
+            var config = ConfigManager.getConfig();
 
             try {
-                switch (configData.databaseType.toLowerCase(Locale.ROOT)) {
-                    case "sqlite" -> DATABASE = new SQLiteDatabase(configData.sqliteDatabaseLocation);
-                    case "mysql" -> DATABASE = new MySQLDatabase(configData.mysqlDatabaseAddress, configData.mysqlDatabaseName, configData.mysqlDatabaseUsername, configData.mysqlDatabasePassword, configData.mysqlDatabaseArgs);
+                switch (config.configData.databaseType.toLowerCase(Locale.ROOT)) {
+                    case "sqlite" -> DATABASE = new SQLiteDatabase(config.configData.sqliteDatabaseLocation);
+                    case "mysql" -> {
+                        var dbConfig = config.getDatabaseConfig("mysql");
+                        DATABASE = new MySQLDatabase(dbConfig.address, dbConfig.database, dbConfig.username, dbConfig.password, config.configData.databaseArgs);
+                    }
+                    case "postgresql", "postgres" -> {
+                        var dbConfig = config.getDatabaseConfig("postgresql");
+                        DATABASE = new PostgreSQLDatabase(dbConfig.address, dbConfig.database, dbConfig.username, dbConfig.password, config.configData.databaseArgs);
+                    }
                     default -> {
                         LOGGER.error("Config file is invalid (database)! Stopping server...");
-                        server.stop(true);
+                        server.shutdown();
+                        return;
                     }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
 
                 LOGGER.error("Couldn't connect to database! Stopping server...");
-                server.stop(true);
+                server.shutdown();
+                return;
             }
 
             IMPORTERS.put("vanilla", new VanillaImport());
+            IMPORTERS.put("banhammer_export", new BanHammerJsonImporter());
+
+            LOGGER.info("BanHammer connected successfully to " + DATABASE.name() + " database!");
         } else {
             LOGGER.error("Config file is invalid! Stopping server...");
-            server.stop(true);
+            server.shutdown();
         }
 
     }

@@ -1,14 +1,18 @@
 package eu.pb4.banhammer.impl.commands;
 
+import com.google.gson.Gson;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import eu.pb4.banhammer.api.BanHammer;
 import eu.pb4.banhammer.api.PunishmentData;
+import eu.pb4.banhammer.api.PunishmentType;
 import eu.pb4.banhammer.impl.BHUtils;
 import eu.pb4.banhammer.impl.BanHammerImpl;
 import eu.pb4.banhammer.impl.GenericModInfo;
 import eu.pb4.banhammer.impl.config.ConfigManager;
+import eu.pb4.banhammer.impl.importers.BanHammerJsonImporter;
 import eu.pb4.sgui.api.elements.BookElementBuilder;
 import eu.pb4.sgui.api.gui.BookGui;
 import me.lucko.fabric.api.permissions.v0.Permissions;
@@ -21,9 +25,8 @@ import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Locale;
+import java.nio.file.Files;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 import static net.minecraft.server.command.CommandManager.literal;
@@ -47,6 +50,11 @@ public class GeneralCommands {
                                                     .executes((ctx) -> GeneralCommands.importer(ctx, true))
                                             )
                                     )
+                            )
+                            .then(literal("export_all_punishments")
+                                    .requires(Permissions.require("banhammer.commands.export", 4))
+                                    .executes((ctx) -> GeneralCommands.exporter(ctx, false))
+                                    .then(literal("with_history").executes((ctx) -> GeneralCommands.exporter(ctx, true)))
                             )
                             .then(literal("list")
                                     .requires(Permissions.require("banhammer.commands.list", 4))
@@ -108,15 +116,8 @@ public class GeneralCommands {
     }
 
     private static int reloadConfig(CommandContext<ServerCommandSource> context) {
-        var oldConfig = ConfigManager.getConfig();
         if (ConfigManager.loadConfig()) {
             context.getSource().sendFeedback(Text.literal("Reloaded config!"), false);
-
-            if (oldConfig != null && !oldConfig.webhooks.isEmpty()) {
-                for (var hook : oldConfig.webhooks) {
-                    hook.close();
-                }
-            }
         } else {
             context.getSource().sendError(Text.literal("Error accrued while reloading config!").formatted(Formatting.RED));
         }
@@ -140,7 +141,22 @@ public class GeneralCommands {
         var importer = BanHammerImpl.IMPORTERS.get(type);
 
         if (importer != null) {
-            boolean result = importer.importPunishments(context.getSource().getServer(), (punishment) -> BanHammerImpl.punishPlayer(punishment, true, true), remove);
+            var history = new ArrayList<PunishmentData>();
+            var active = new ArrayList<PunishmentData>();
+
+            boolean result = importer.importPunishments(context.getSource().getServer(), BanHammer.PunishmentImporter.PunishmentConsumer.of(active::add, history::add), remove);
+
+            for (var p : active) {
+                BanHammerImpl.punishPlayer(p, true, true);
+            }
+
+            if (ConfigManager.getConfig().configData.storeAllPunishmentsInHistory && !history.isEmpty()) {
+                CompletableFuture.runAsync(() -> {
+                    for (var p : history) {
+                        BanHammerImpl.DATABASE.insertPunishmentIntoHistory(p);
+                    }
+                });
+            }
 
             if (result) {
                 context.getSource().sendFeedback(Text.literal("Successfully imported punishments!").formatted(Formatting.GREEN), false);
@@ -153,7 +169,20 @@ public class GeneralCommands {
             context.getSource().sendError(Text.literal("Invalid importer type!"));
             return 0;
         }
+    }
 
+    private static int exporter(CommandContext<ServerCommandSource> context, boolean history) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                Files.writeString(BanHammerJsonImporter.DEFAULT_PATH, BanHammerJsonImporter.exportJson(history));
+                context.getSource().sendFeedback(Text.literal("Successfully exported punishments to banhammer_exports.json file!").formatted(Formatting.GREEN), false);
+
+            } catch (Throwable e) {
+                context.getSource().sendError(Text.literal("Couldn't export punishments!"));
+                e.printStackTrace();
+            }
+        });
+        return 0 ;
     }
 
 

@@ -1,7 +1,5 @@
 package eu.pb4.banhammer.impl.config.data;
 
-import org.jetbrains.annotations.Nullable;
-
 import java.util.*;
 
 public final class ConfigData {
@@ -19,32 +17,59 @@ public final class ConfigData {
     public boolean autoBansFromIpBansAreSilent = true;
 
     public int defaultOpPermissionLevel = 3;
+    public boolean cachePunishmentsLocally = true;
 
     public List<String> discordWebhookUrls = new ArrayList<>();
 
     public String databaseType = "sqlite";
-
     public String sqliteDatabaseLocation = "banhammer-sqlite.db";
-    public String mysqlDatabaseAddress = "";
-    public String mysqlDatabaseName = "";
-    public String mysqlDatabaseUsername = "";
-    public String mysqlDatabasePassword = "";
-    public HashMap<String, String> mysqlDatabaseArgs = getMysqlArgs();
+
+    public String databaseAddress = "";
+    public String databaseName = "";
+    public String databaseUsername = "";
+    public String databasePassword = "";
+    public HashMap<String, String> databaseArgs = getMysqlArgs();
     public String databasePrefix = "";
 
     public Set<String> blockPunishments = new HashSet<>();
 
-    @Nullable
     @Deprecated
-    public String discordWebhookUrl = null;
+    public String mysqlDatabaseAddress = null;
+    @Deprecated
+    public String mysqlDatabaseName = null;
+    @Deprecated
+    public String mysqlDatabaseUsername = null;
+    @Deprecated
+    public String mysqlDatabasePassword = null;
+    @Deprecated
+    public HashMap<String, String> mysqlDatabaseArgs = null;
 
     public void update() {
-        if (this.discordWebhookUrl != null) {
-            this.discordWebhookUrls.add(this.discordWebhookUrl);
-            this.discordWebhookUrl = null;
+        if (mysqlDatabaseAddress != null) {
+            databaseAddress = mysqlDatabaseAddress;
+            mysqlDatabaseAddress = null;
+        }
+
+        if (mysqlDatabaseName != null) {
+            databaseName = mysqlDatabaseName;
+            mysqlDatabaseName = null;
+        }
+
+        if (mysqlDatabaseUsername != null) {
+            databaseUsername = mysqlDatabaseUsername;
+            mysqlDatabaseUsername = null;
+        }
+
+        if (mysqlDatabasePassword != null) {
+            databasePassword = mysqlDatabasePassword;
+            mysqlDatabasePassword = null;
+        }
+
+        if (mysqlDatabaseArgs != null) {
+            databaseArgs = mysqlDatabaseArgs;
+            mysqlDatabaseArgs = null;
         }
     }
-
 
     static private HashMap<String, String> exampleTempLimit() {
         HashMap<String, String> map = new HashMap<>();

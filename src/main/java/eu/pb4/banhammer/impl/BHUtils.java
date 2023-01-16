@@ -39,29 +39,16 @@ public final class BHUtils {
                 String numberOnly = x.replaceAll("[a-z]", "");
                 String suffixOnly = x.replaceAll("[^a-z]", "");
 
-                switch (suffixOnly) {
-                    case "c":
-                        time += Double.parseDouble(numberOnly) * 3155692600L;
-                        break;
-                    case "y":
-                        time += Double.parseDouble(numberOnly) * 31556926;
-                        break;
-                    case "mo":
-                        time += Double.parseDouble(numberOnly) * 2592000;
-                        break;
-                    case "d":
-                        time += Double.parseDouble(numberOnly) * 86400;
-                        break;
-                    case "h":
-                        time += Double.parseDouble(numberOnly) * 3600;
-                        break;
-                    case "m":
-                        time += Double.parseDouble(numberOnly) * 60;
-                        break;
-                    default:
-                        time += Double.parseDouble(numberOnly);
-                        break;
-                }
+                time += switch (suffixOnly) {
+                    case "c" -> Double.parseDouble(numberOnly) * 60 * 60 * 24L * 365L * 100L;
+                    case "y", "year", "years" -> Double.parseDouble(numberOnly) * 60 * 60 * 24L * 365L;
+                    case "mo", "month", "months" -> Double.parseDouble(numberOnly) * 60 * 60 * 24L * 30L;
+                    case "w", "week", "weeks" -> Double.parseDouble(numberOnly) * 60 * 60 * 24L * 7L;
+                    case "d", "day", "days" -> Double.parseDouble(numberOnly) * 60 * 60 * 24;
+                    case "h", "hour", "hours" -> Double.parseDouble(numberOnly) * 60 * 60;
+                    case "m", "minute", "minutes" -> Double.parseDouble(numberOnly) * 60;
+                    default -> Double.parseDouble(numberOnly);
+                };
             }
             return time;
         }

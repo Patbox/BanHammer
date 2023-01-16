@@ -30,9 +30,19 @@ public abstract class ServerPlayNetworkHandlerMixin {
 
     @Inject(method = "onChatMessage", at = @At("HEAD"), cancellable = true)
     private void banHammer_checkIfMuted(ChatMessageC2SPacket packet, CallbackInfo ci) {
+        for (var punishment : BanHammerImpl.CACHED_PUNISHMENTS) {
+            if (!punishment.isExpired() && punishment.type == PunishmentType.MUTE && punishment.playerUUID.equals(this.player.getUuid())) {
+                this.player.sendMessage(punishment.getDisconnectMessage(), false);
+
+                if (!packet.signature().isEmpty()) {
+                    this.server.getPlayerManager().sendMessageHeader(this.getSignedMessage(packet), Set.of());
+                }
+                ci.cancel();
+                return;
+            }
+        }
+
         var punishments = BanHammerImpl.getPlayersPunishments(this.player.getUuid().toString(), PunishmentType.MUTE);
-
-
 
         if (punishments.size() > 0) {
             var punishment = punishments.get(0);
@@ -47,6 +57,14 @@ public abstract class ServerPlayNetworkHandlerMixin {
 
     @Inject(method = "onCommandExecution", at = @At("HEAD"), cancellable = true)
     private void banHammer_checkIfMutedCommand(CommandExecutionC2SPacket packet, CallbackInfo ci) {
+        for (var punishment : BanHammerImpl.CACHED_PUNISHMENTS) {
+            if (!punishment.isExpired() && punishment.type == PunishmentType.MUTE && punishment.playerUUID.equals(this.player.getUuid())) {
+                this.player.sendMessage(punishment.getDisconnectMessage(), false);
+                ci.cancel();
+                return;
+            }
+        }
+
         var punishments = BanHammerImpl.getPlayersPunishments(this.player.getUuid().toString(), PunishmentType.MUTE);
         var string = packet.command();
         if (punishments.size() > 0) {

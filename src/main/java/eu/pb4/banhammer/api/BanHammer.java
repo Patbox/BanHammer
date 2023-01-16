@@ -124,9 +124,34 @@ public final class BanHammer {
         TriState canSourcePunish(GameProfile profile, ServerCommandSource source);
     }
 
-    @FunctionalInterface
     public interface PunishmentImporter {
-        boolean importPunishments(MinecraftServer server, Consumer<PunishmentData> consumer,  boolean remove);
+        @Deprecated
+        default boolean importPunishments(MinecraftServer server, Consumer<PunishmentData> consumer, boolean remove) {
+            return false;
+        }
+
+        default boolean importPunishments(MinecraftServer server, PunishmentConsumer consumer, boolean remove) {
+            return importPunishments(server, consumer, remove);
+        }
+
+        interface PunishmentConsumer extends Consumer<PunishmentData> {
+            static PunishmentConsumer of(Consumer<PunishmentData> active, Consumer<PunishmentData> history) {
+                return new PunishmentConsumer() {
+                    @Override
+                    public void accept(PunishmentData data) {
+                        active.accept(data);
+                    }
+
+                    @Override
+                    public void acceptHistory(PunishmentData data) {
+                        history.accept(data);
+                    }
+                };
+            }
+
+            void accept(PunishmentData data);
+            void acceptHistory(PunishmentData data);
+        }
     }
 
 
