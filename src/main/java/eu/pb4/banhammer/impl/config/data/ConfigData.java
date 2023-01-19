@@ -43,6 +43,7 @@ public final class ConfigData {
     public String mysqlDatabasePassword = null;
     @Deprecated
     public HashMap<String, String> mysqlDatabaseArgs = null;
+    public int databaseMaxConnections = 16;
 
     public void update() {
         if (mysqlDatabaseAddress != null) {

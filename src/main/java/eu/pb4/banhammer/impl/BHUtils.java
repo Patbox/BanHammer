@@ -62,7 +62,7 @@ public final class BHUtils {
         boolean permission = true;
 
         try {
-            permission = Permissions.check(source, "banhammer.can_ban_admins") || Permissions.check(profile, "banhammer.block_punishments").get();
+            permission = Permissions.check(source, "banhammer.can_ban_admins") || !Permissions.check(profile, "banhammer.block_punishments").get();
         } catch (Throwable e) {
             e.printStackTrace();
         }

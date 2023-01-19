@@ -7,38 +7,42 @@ import eu.pb4.banhammer.api.PunishmentType;
 import net.minecraft.text.Text;
 
 import java.sql.*;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
 
 public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
-    protected Connection conn;
-    protected Statement stat;
+    protected MiniConnectionPoolManager manager;
 
     protected abstract String getTableCreation();
+
     protected abstract String getHistoryTableCreation(String prefix);
 
-    public void createTables() throws SQLException  {
-        String create = this.getTableCreation();
-        String prefix = ConfigManager.getConfig().configData.databasePrefix;
-        String createHistory = this.getHistoryTableCreation(prefix);
+    public void createTables() throws SQLException {
+        try (var conn = this.manager.getConnection();
+             var stat = conn.createStatement()) {
 
-        for (var type : PunishmentType.values()) {
-            if (type.databaseName != null) {
-                stat.execute(String.format(create, prefix + type.databaseName));
+            String create = this.getTableCreation();
+            String prefix = ConfigManager.getConfig().configData.databasePrefix;
+            String createHistory = this.getHistoryTableCreation(prefix);
+
+            for (var type : PunishmentType.values()) {
+                if (type.databaseName != null) {
+                    stat.execute(String.format(create, prefix + type.databaseName));
+                }
             }
+            stat.execute(createHistory);
         }
-        stat.execute(createHistory);
+
     }
 
     public boolean insertPunishmentIntoHistory(PunishmentData punishment) {
-        try {
-            PreparedStatement prepStmt = conn.prepareStatement(
-                    "insert into " + ConfigManager.getConfig().configData.databasePrefix + "history (" +
-                            "bannedUUID, bannedIP, bannedName, bannedDisplay," +
-                            "adminUUID, adminDisplay, time, duration, reason, type) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+        try (var conn = this.manager.getConnection();
+             var prepStmt = conn.prepareStatement(
+                     "insert into " + ConfigManager.getConfig().configData.databasePrefix + "history (" +
+                             "bannedUUID, bannedIP, bannedName, bannedDisplay," +
+                             "adminUUID, adminDisplay, time, duration, reason, type) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);")) {
+
             prepStmt.setString(1, punishment.playerUUID.toString());
             prepStmt.setString(2, punishment.playerIP);
             prepStmt.setString(3, punishment.playerName);
@@ -62,11 +66,11 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
 
 
     public boolean insertPunishment(PunishmentData punishment) {
-        try {
-            PreparedStatement prepStmt = conn.prepareStatement(
+        try (var conn = this.manager.getConnection();
+            var prepStmt = conn.prepareStatement(
                     "insert into " + ConfigManager.getConfig().configData.databasePrefix + punishment.type.databaseName + "(" +
                             "bannedUUID, bannedIP, bannedName, bannedDisplay," +
-                            "adminUUID, adminDisplay, time, duration, reason) values (?, ?, ?, ?, ?, ?, ?, ?, ?);");
+                            "adminUUID, adminDisplay, time, duration, reason) values (?, ?, ?, ?, ?, ?, ?, ?, ?);")) {
             prepStmt.setString(1, punishment.playerUUID.toString());
             prepStmt.setString(2, punishment.playerIP);
             prepStmt.setString(3, punishment.playerName);
@@ -88,11 +92,11 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
 
     @Override
     public void getPunishments(String id, PunishmentType type, Consumer<PunishmentData.Synced> consumer) {
-        try {
-            String query = "SELECT * FROM " + ConfigManager.getConfig().configData.databasePrefix + type.databaseName + " WHERE " + (InetAddresses.isInetAddress(id) ? "bannedIP" : "bannedUUID") + "='" + id + "';";
-            ResultSet result = stat.executeQuery(query);
-
-            while(!result.isClosed() && result.next()) {
+        try (var conn = this.manager.getConnection();
+             var stat = conn.prepareStatement("SELECT * FROM " + ConfigManager.getConfig().configData.databasePrefix + type.databaseName + " WHERE " + (InetAddresses.isInetAddress(id) ? "bannedIP" : "bannedUUID") + "='" + id + "';");
+             var result = stat.executeQuery()
+        ) {
+            while (!result.isClosed() && result.next()) {
                 consumer.accept(new PunishmentData.Synced(
                         result.getLong("id"),
                         UUID.fromString(result.getString("bannedUUID")),
@@ -114,11 +118,11 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
 
     @Override
     public void getPunishmentsHistory(String id, Consumer<PunishmentData> consumer) {
-        try {
-            String query = "SELECT * FROM " + ConfigManager.getConfig().configData.databasePrefix + "history WHERE " + (InetAddresses.isInetAddress(id) ? "bannedIP" : "bannedUUID") + "='" + id + "';";
-            ResultSet result = stat.executeQuery(query);
-
-            while(!result.isClosed() && result.next()) {
+        try (var conn = this.manager.getConnection();
+             var stat = conn.prepareStatement("SELECT * FROM " + ConfigManager.getConfig().configData.databasePrefix + "history WHERE " + (InetAddresses.isInetAddress(id) ? "bannedIP" : "bannedUUID") + "='" + id + "';");
+             var result = stat.executeQuery()
+        ) {
+            while (!result.isClosed() && result.next()) {
                 consumer.accept(new PunishmentData(
                         UUID.fromString(result.getString("bannedUUID")),
                         result.getString("bannedIP"),
@@ -139,11 +143,12 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
 
     @Override
     public void getAllPunishmentsHistory(Consumer<PunishmentData> consumer) {
-        try {
-            String query = "SELECT * FROM " + ConfigManager.getConfig().configData.databasePrefix + "history;";
-            ResultSet result = stat.executeQuery(query);
+        try (var conn = this.manager.getConnection();
+             var stat = conn.prepareStatement("SELECT * FROM " + ConfigManager.getConfig().configData.databasePrefix + "history;");
+             var result = stat.executeQuery()
+        ) {
 
-            while(!result.isClosed() && result.next()) {
+            while (!result.isClosed() && result.next()) {
                 consumer.accept(new PunishmentData(
                         UUID.fromString(result.getString("bannedUUID")),
                         result.getString("bannedIP"),
@@ -164,11 +169,11 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
 
     @Override
     public void getAllPunishments(PunishmentType type, Consumer<PunishmentData.Synced> consumer) {
-        try {
-            String query = "SELECT * FROM " + ConfigManager.getConfig().configData.databasePrefix + type.databaseName + ";";
-            ResultSet result = stat.executeQuery(query);
-
-            while(!result.isClosed() && result.next()) {
+        try (var conn = this.manager.getConnection();
+             var stat = conn.prepareStatement("SELECT * FROM " + ConfigManager.getConfig().configData.databasePrefix + type.databaseName + ";");
+             var result = stat.executeQuery()
+        ) {
+            while (!result.isClosed() && result.next()) {
                 consumer.accept(new PunishmentData.Synced(
                         result.getLong("id"),
                         UUID.fromString(result.getString("bannedUUID")),
@@ -190,8 +195,10 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
 
     @Override
     public int removePunishment(long id, PunishmentType type) {
-        try {
-            return stat.executeUpdate("DELETE FROM " + ConfigManager.getConfig().configData.databasePrefix + type.databaseName + " WHERE id=" + id + ";");
+        try (var conn = this.manager.getConnection();
+             var stat = conn.prepareStatement("DELETE FROM " + ConfigManager.getConfig().configData.databasePrefix + type.databaseName + " WHERE id=" + id + ";");
+        ) {
+            return stat.executeUpdate();
         } catch (Exception x) {
             x.printStackTrace();
             return 0;
@@ -200,8 +207,10 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
 
     @Override
     public int removePunishment(String id, PunishmentType type) {
-        try {
-            return stat.executeUpdate("DELETE FROM " + ConfigManager.getConfig().configData.databasePrefix + type.databaseName + " WHERE " + (InetAddresses.isInetAddress(id) ? "bannedIP" : "bannedUUID") + "='" + id + "';");
+        try (var conn = this.manager.getConnection();
+             var stat = conn.prepareStatement("DELETE FROM " + ConfigManager.getConfig().configData.databasePrefix + type.databaseName + " WHERE " + (InetAddresses.isInetAddress(id) ? "bannedIP" : "bannedUUID") + "='" + id + "';");
+        ) {
+            return stat.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
             return 0;
@@ -210,7 +219,7 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
 
     public void closeConnection() {
         try {
-            conn.close();
+            this.manager.dispose();
         } catch (SQLException e) {
             e.printStackTrace();
         }
