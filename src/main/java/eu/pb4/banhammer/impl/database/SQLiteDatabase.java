@@ -1,15 +1,19 @@
 package eu.pb4.banhammer.impl.database;
 
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import eu.pb4.banhammer.impl.config.ConfigManager;
+import org.sqlite.javax.SQLiteConnectionPoolDataSource;
+
 
 public class SQLiteDatabase extends AbstractSQLDatabase {
     public SQLiteDatabase(String database) throws Exception {
         Class.forName("org.sqlite.JDBC");
 
-        conn = DriverManager.getConnection("jdbc:sqlite:" + database);
 
-        stat = conn.createStatement();
+
+        var source = new SQLiteConnectionPoolDataSource();
+        source.setUrl("jdbc:sqlite:" + database);
+
+        this.manager = new MiniConnectionPoolManager(source, ConfigManager.getConfig().configData.databaseMaxConnections);
         this.createTables();
     }
 

@@ -1,5 +1,8 @@
 package eu.pb4.banhammer.impl.database;
 
+import com.mysql.cj.jdbc.MysqlConnectionPoolDataSource;
+import eu.pb4.banhammer.impl.config.ConfigManager;
+
 import java.sql.DriverManager;
 import java.util.Map;
 
@@ -19,9 +22,13 @@ public class MySQLDatabase extends AbstractSQLDatabase {
                 argBuilder.append("&");
             }
         }
-        conn = DriverManager.getConnection("jdbc:mysql://" + address + "/" + database + (argBuilder.isEmpty() ? "" : "?" + argBuilder), username, password);
-        stat = conn.createStatement();
+        var source = new MysqlConnectionPoolDataSource();
+        source.setUrl("jdbc:mysql://" + address + "/" + database + (argBuilder.isEmpty() ? "" : "?" + argBuilder));
+        source.setUser(username);
+        source.setPassword(password);
+        source.setDatabaseName(database);
 
+        this.manager = new MiniConnectionPoolManager(source, ConfigManager.getConfig().configData.databaseMaxConnections);
         this.createTables();
     }
 
