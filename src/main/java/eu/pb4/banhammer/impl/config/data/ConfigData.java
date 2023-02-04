@@ -30,6 +30,7 @@ public final class ConfigData {
     public String databasePassword = "";
     public HashMap<String, String> databaseArgs = getMysqlArgs();
     public String databasePrefix = "";
+    public int databaseMaxConnections = 4;
 
     public Set<String> blockPunishments = new HashSet<>();
 
@@ -43,7 +44,6 @@ public final class ConfigData {
     public String mysqlDatabasePassword = null;
     @Deprecated
     public HashMap<String, String> mysqlDatabaseArgs = null;
-    public int databaseMaxConnections = 16;
 
     public void update() {
         if (mysqlDatabaseAddress != null) {
