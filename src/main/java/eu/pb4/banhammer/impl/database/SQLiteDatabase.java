@@ -13,7 +13,7 @@ public class SQLiteDatabase extends AbstractSQLDatabase {
         var source = new SQLiteConnectionPoolDataSource();
         source.setUrl("jdbc:sqlite:" + database);
 
-        this.manager = new MiniConnectionPoolManager(source, ConfigManager.getConfig().configData.databaseMaxConnections);
+        this.manager = new MiniConnectionPoolManager(source, 1);
         this.createTables();
     }
 
