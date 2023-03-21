@@ -12,14 +12,12 @@ import java.util.function.Consumer;
 
 
 public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
-    protected MiniConnectionPoolManager manager;
-
     protected abstract String getTableCreation();
 
     protected abstract String getHistoryTableCreation(String prefix);
 
     public void createTables() throws SQLException {
-        try (var conn = this.manager.getConnection();
+        try (var conn = this.getConnection();
              var stat = conn.createStatement()) {
 
             String create = this.getTableCreation();
@@ -37,7 +35,7 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
     }
 
     public boolean insertPunishmentIntoHistory(PunishmentData punishment) {
-        try (var conn = this.manager.getConnection();
+        try (var conn = this.getConnection();
              var prepStmt = conn.prepareStatement(
                      "insert into " + ConfigManager.getConfig().configData.databasePrefix + "history (" +
                              "bannedUUID, bannedIP, bannedName, bannedDisplay," +
@@ -66,7 +64,7 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
 
 
     public boolean insertPunishment(PunishmentData punishment) {
-        try (var conn = this.manager.getConnection();
+        try (var conn = this.getConnection();
             var prepStmt = conn.prepareStatement(
                     "insert into " + ConfigManager.getConfig().configData.databasePrefix + punishment.type.databaseName + "(" +
                             "bannedUUID, bannedIP, bannedName, bannedDisplay," +
@@ -92,7 +90,7 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
 
     @Override
     public void getPunishments(String id, PunishmentType type, Consumer<PunishmentData.Synced> consumer) {
-        try (var conn = this.manager.getConnection();
+        try (var conn = this.getConnection();
              var stat = conn.prepareStatement("SELECT * FROM " + ConfigManager.getConfig().configData.databasePrefix + type.databaseName + " WHERE " + (InetAddresses.isInetAddress(id) ? "bannedIP" : "bannedUUID") + "='" + id + "';");
              var result = stat.executeQuery()
         ) {
@@ -118,7 +116,7 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
 
     @Override
     public void getPunishmentsHistory(String id, Consumer<PunishmentData> consumer) {
-        try (var conn = this.manager.getConnection();
+        try (var conn = this.getConnection();
              var stat = conn.prepareStatement("SELECT * FROM " + ConfigManager.getConfig().configData.databasePrefix + "history WHERE " + (InetAddresses.isInetAddress(id) ? "bannedIP" : "bannedUUID") + "='" + id + "';");
              var result = stat.executeQuery()
         ) {
@@ -143,7 +141,7 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
 
     @Override
     public void getAllPunishmentsHistory(Consumer<PunishmentData> consumer) {
-        try (var conn = this.manager.getConnection();
+        try (var conn = this.getConnection();
              var stat = conn.prepareStatement("SELECT * FROM " + ConfigManager.getConfig().configData.databasePrefix + "history;");
              var result = stat.executeQuery()
         ) {
@@ -169,7 +167,7 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
 
     @Override
     public void getAllPunishments(PunishmentType type, Consumer<PunishmentData.Synced> consumer) {
-        try (var conn = this.manager.getConnection();
+        try (var conn = this.getConnection();
              var stat = conn.prepareStatement("SELECT * FROM " + ConfigManager.getConfig().configData.databasePrefix + type.databaseName + ";");
              var result = stat.executeQuery()
         ) {
@@ -193,9 +191,11 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
         }
     }
 
+    protected abstract Connection getConnection() throws SQLException;
+
     @Override
     public int removePunishment(long id, PunishmentType type) {
-        try (var conn = this.manager.getConnection();
+        try (var conn = this.getConnection();
              var stat = conn.prepareStatement("DELETE FROM " + ConfigManager.getConfig().configData.databasePrefix + type.databaseName + " WHERE id=" + id + ";");
         ) {
             return stat.executeUpdate();
@@ -207,7 +207,7 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
 
     @Override
     public int removePunishment(String id, PunishmentType type) {
-        try (var conn = this.manager.getConnection();
+        try (var conn = this.getConnection();
              var stat = conn.prepareStatement("DELETE FROM " + ConfigManager.getConfig().configData.databasePrefix + type.databaseName + " WHERE " + (InetAddresses.isInetAddress(id) ? "bannedIP" : "bannedUUID") + "='" + id + "';");
         ) {
             return stat.executeUpdate();
@@ -217,11 +217,4 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
         }
     }
 
-    public void closeConnection() {
-        try {
-            this.manager.dispose();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
 }

@@ -7,7 +7,7 @@ import org.postgresql.jdbc2.optional.PoolingDataSource;
 import java.sql.DriverManager;
 import java.util.Map;
 
-public class PostgreSQLDatabase extends AbstractSQLDatabase {
+public class PostgreSQLDatabase extends PooledSQLDatabase {
     public PostgreSQLDatabase(String address, String database, String username, String password, Map<String, String> args) throws Exception {
         Class.forName("org.postgresql.Driver");
 
