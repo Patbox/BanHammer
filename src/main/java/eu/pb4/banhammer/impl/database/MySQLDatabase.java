@@ -6,7 +6,7 @@ import eu.pb4.banhammer.impl.config.ConfigManager;
 import java.sql.DriverManager;
 import java.util.Map;
 
-public class MySQLDatabase extends AbstractSQLDatabase {
+public class MySQLDatabase extends PooledSQLDatabase {
     public MySQLDatabase(String address, String database, String username, String password, Map<String, String> args) throws Exception {
         Class.forName("com.mysql.cj.jdbc.Driver");
 
