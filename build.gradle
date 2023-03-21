@@ -131,6 +131,7 @@ curseforge {
 			changelog = System.getenv("CHANGELOG")
 			changelogType = "markdown"
 			addGameVersion ((String) project.minecraft_version.split("-")[0])
+			addGameVersion "1.19.4"
 			addGameVersion "Fabric"
 			addGameVersion "Quilt"
 			mainArtifact(remapJar)
@@ -156,7 +157,7 @@ if (System.getenv("MODRINTH")) {
 		projectId = 'Wpqg0ciI'
 		versionNumber = "" + version // The version of the mod to upload.
 		uploadFile = remapJar // This links to a task that builds your mod jar and sets "uploadFile" to the mod jar.
-		gameVersions = [((String) project.minecraft_version)]
+		gameVersions = [((String) project.minecraft_version), "1.19.4"]
 		changelog = System.getenv("CHANGELOG")
 		loaders = ["fabric", "quilt"]
 	}
