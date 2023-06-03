@@ -38,17 +38,16 @@ dependencies {
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
 	modImplementation include("me.lucko:fabric-permissions-api:0.1-SNAPSHOT")
-	modImplementation include("eu.pb4:sgui:1.2.0+1.19.3")
 
 	implementation include("org.xerial:sqlite-jdbc:3.40.0.0")
 	implementation include('com.mysql:mysql-connector-j:8.0.31')
 	implementation include('org.postgresql:postgresql:42.5.1')
 
 	modImplementation include("me.lucko:fabric-permissions-api:0.2-SNAPSHOT")
-	modImplementation include("eu.pb4:sgui:1.1.3+1.19.1")
+	modImplementation include("eu.pb4:sgui:1.2.2+1.20")
 
 
-	modImplementation include("eu.pb4:placeholder-api:2.0.0-pre.2+1.19.3")
+	modImplementation include("eu.pb4:placeholder-api:2.1.1+1.20")
 
 
 	// PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
@@ -121,6 +120,23 @@ publishing {
     }
 }
 
+
+if (System.getenv("MODRINTH")) {
+	modrinth {
+		token = System.getenv("MODRINTH")
+		projectId = 'Wpqg0ciI'
+		versionNumber = "" + version // The version of the mod to upload.
+		uploadFile = remapJar // This links to a task that builds your mod jar and sets "uploadFile" to the mod jar.
+		gameVersions = [((String) project.minecraft_version)]
+		changelog = System.getenv("CHANGELOG")
+		loaders = ["fabric", "quilt"]
+	}
+
+	remapJar {
+		finalizedBy project.tasks.modrinth
+	}
+}
+
 curseforge {
 	if (System.getenv("CURSEFORGE")) {
 		apiKey = System.getenv("CURSEFORGE")
@@ -131,7 +147,6 @@ curseforge {
 			changelog = System.getenv("CHANGELOG")
 			changelogType = "markdown"
 			addGameVersion ((String) project.minecraft_version.split("-")[0])
-			addGameVersion "1.19.4"
 			addGameVersion "Fabric"
 			addGameVersion "Quilt"
 			mainArtifact(remapJar)
@@ -150,20 +165,3 @@ curseforge {
 		finalizedBy project.tasks.curseforge
 	}
 }
-
-if (System.getenv("MODRINTH")) {
-	modrinth {
-		token = System.getenv("MODRINTH")
-		projectId = 'Wpqg0ciI'
-		versionNumber = "" + version // The version of the mod to upload.
-		uploadFile = remapJar // This links to a task that builds your mod jar and sets "uploadFile" to the mod jar.
-		gameVersions = [((String) project.minecraft_version), "1.19.4"]
-		changelog = System.getenv("CHANGELOG")
-		loaders = ["fabric", "quilt"]
-	}
-
-	remapJar {
-		finalizedBy project.tasks.modrinth
-	}
-}
-

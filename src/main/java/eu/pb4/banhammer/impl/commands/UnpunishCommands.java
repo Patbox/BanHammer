@@ -57,7 +57,7 @@ public class UnpunishCommands {
             var players = BHUtils.lookupPlayerData(playerNameOrIp, ctx.getSource().getServer());
 
             if (players.isEmpty()) {
-                ctx.getSource().sendFeedback(Text.literal("Couldn't find player " + playerNameOrIp + "!").formatted(Formatting.RED), false);
+                ctx.getSource().sendFeedback(() -> Text.literal("Couldn't find player " + playerNameOrIp + "!").formatted(Formatting.RED), false);
             }
 
             ServerPlayerEntity executor;
@@ -148,9 +148,9 @@ public class UnpunishCommands {
                             player.player().sendMessage(textMessage, false);
                         }
 
-                        ctx.getSource().sendFeedback(textMessage, false);
+                        ctx.getSource().sendFeedback(() -> textMessage, false);
                     } else {
-                        ctx.getSource().sendFeedback(textMessage, false);
+                        ctx.getSource().sendFeedback(() -> textMessage, false);
 
                         for (ServerPlayerEntity player2 : ctx.getSource().getServer().getPlayerManager().getPlayerList()) {
                             if (player2 != executor) {
@@ -193,7 +193,8 @@ public class UnpunishCommands {
                         }
                     }
                 } else {
-                    ctx.getSource().sendFeedback(Text.literal(altMessage).formatted(Formatting.RED), false);
+                    String finalAltMessage = altMessage;
+                    ctx.getSource().sendFeedback(() -> Text.literal(finalAltMessage).formatted(Formatting.RED), false);
                 }
             }
         });

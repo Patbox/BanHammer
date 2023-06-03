@@ -104,7 +104,7 @@ public class PunishCommands {
             var players = BHUtils.lookupPlayerData(playerNameOrIp, ctx.getSource().getServer());
 
             if (players.isEmpty()) {
-                ctx.getSource().sendFeedback(Text.literal("Couldn't find player " + playerNameOrIp + "!").formatted(Formatting.RED), false);
+                ctx.getSource().sendFeedback(() -> Text.literal("Couldn't find player " + playerNameOrIp + "!").formatted(Formatting.RED), false);
             } else {
                 for (var player : players) {
 
@@ -114,10 +114,10 @@ public class PunishCommands {
                         BanHammerImpl.punishPlayer(punishment, config.configData.punishmentsAreSilent || isSilent);
 
                         if (config.configData.punishmentsAreSilent && !Permissions.check(ctx.getSource(), "banhammer.seesilent", 1)) {
-                            ctx.getSource().sendFeedback(punishment.getChatMessage(), false);
+                            ctx.getSource().sendFeedback(() -> punishment.getChatMessage(), false);
                         }
                     } else {
-                        ctx.getSource().sendFeedback(Text.literal("You can't punish ").append(player.displayName()).append("!").formatted(Formatting.RED), false);
+                        ctx.getSource().sendFeedback(() -> Text.literal("You can't punish ").append(player.displayName()).append("!").formatted(Formatting.RED), false);
                     }
                 }
             }

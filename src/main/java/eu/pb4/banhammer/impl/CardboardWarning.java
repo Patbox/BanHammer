@@ -14,11 +14,12 @@ public class CardboardWarning implements PreLaunchEntrypoint {
     }
 
     public static void checkAndAnnounce() {
-        if (FabricLoader.getInstance().isModLoaded("cardboard")) {
+        if (FabricLoader.getInstance().isModLoaded("cardboard") || FabricLoader.getInstance().isModLoaded("banner")) {
             LOGGER.error("==============================================");
             LOGGER.error("");
-            LOGGER.error("Cardboard detected! This mod doesn't work with it!");
+            LOGGER.error("Cardboard/Banner detected! This mod doesn't work with it!");
             LOGGER.error("You won't get any support as long as it's present!");
+            LOGGER.error("Bukkit + Mods hybrid are never stable and are known to be problematic.");
             LOGGER.error("");
             LOGGER.error("Read more at: https://gist.github.com/Patbox/e44844294c358b614d347d369b0fc3bf");
             LOGGER.error("");

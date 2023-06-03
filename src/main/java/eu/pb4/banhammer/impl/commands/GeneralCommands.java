@@ -76,7 +76,7 @@ public class GeneralCommands {
             var players = BHUtils.lookupPlayerData(playerNameOrIp, ctx.getSource().getServer());
 
             if (players.isEmpty()) {
-                ctx.getSource().sendFeedback(Text.literal("Player not found!").formatted(Formatting.RED), false);
+                ctx.getSource().sendFeedback(() -> Text.literal("Player not found!").formatted(Formatting.RED), false);
                 return;
             }
 
@@ -117,7 +117,7 @@ public class GeneralCommands {
 
     private static int reloadConfig(CommandContext<ServerCommandSource> context) {
         if (ConfigManager.loadConfig()) {
-            context.getSource().sendFeedback(Text.literal("Reloaded config!"), false);
+            context.getSource().sendFeedback(() -> Text.literal("Reloaded config!"), false);
         } else {
             context.getSource().sendError(Text.literal("Error accrued while reloading config!").formatted(Formatting.RED));
         }
@@ -130,7 +130,7 @@ public class GeneralCommands {
         }
 
         for (var text : context.getSource().getEntity() instanceof ServerPlayerEntity ? GenericModInfo.getAboutFull() : GenericModInfo.getAboutConsole()) {
-            context.getSource().sendFeedback(text, false);
+            context.getSource().sendFeedback(() -> text, false);
         }
         return 1;
     }
@@ -159,7 +159,7 @@ public class GeneralCommands {
             }
 
             if (result) {
-                context.getSource().sendFeedback(Text.literal("Successfully imported punishments!").formatted(Formatting.GREEN), false);
+                context.getSource().sendFeedback(() -> Text.literal("Successfully imported punishments!").formatted(Formatting.GREEN), false);
                 return 1;
             } else {
                 context.getSource().sendError(Text.literal("Couldn't import punishments!"));
@@ -175,7 +175,7 @@ public class GeneralCommands {
         CompletableFuture.runAsync(() -> {
             try {
                 Files.writeString(BanHammerJsonImporter.DEFAULT_PATH, BanHammerJsonImporter.exportJson(history));
-                context.getSource().sendFeedback(Text.literal("Successfully exported punishments to banhammer_exports.json file!").formatted(Formatting.GREEN), false);
+                context.getSource().sendFeedback(() -> Text.literal("Successfully exported punishments to banhammer_exports.json file!").formatted(Formatting.GREEN), false);
 
             } catch (Throwable e) {
                 context.getSource().sendError(Text.literal("Couldn't export punishments!"));
