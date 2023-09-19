@@ -9,6 +9,7 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Util;
 
 import java.net.SocketAddress;
 import java.util.*;
@@ -142,7 +143,7 @@ public final class BHUtils {
                 return List.of(new BHPlayerData(profile, ip, Text.literal(profile.getName()), null));
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             return Collections.emptyList();
         }
     }

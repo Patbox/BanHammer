@@ -3,18 +3,17 @@ package eu.pb4.banhammer.mixin;
 import eu.pb4.banhammer.api.PunishmentType;
 import eu.pb4.banhammer.impl.BanHammerImpl;
 import eu.pb4.banhammer.impl.config.ConfigManager;
+import net.minecraft.network.ClientConnection;
 import net.minecraft.network.message.LastSeenMessageList;
 import net.minecraft.network.message.MessageChain;
-import net.minecraft.network.message.MessageChainTaskQueue;
 import net.minecraft.network.message.SignedMessage;
 import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
 import net.minecraft.network.packet.c2s.play.CommandExecutionC2SPacket;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.filter.FilteredMessage;
+import net.minecraft.server.network.ConnectedClientData;
+import net.minecraft.server.network.ServerCommonNetworkHandler;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -23,23 +22,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.time.Instant;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 @Mixin(ServerPlayNetworkHandler.class)
-public abstract class ServerPlayNetworkHandlerMixin {
+public abstract class ServerPlayNetworkHandlerMixin extends ServerCommonNetworkHandler {
     @Shadow public ServerPlayerEntity player;
 
-    @Shadow @Final private MinecraftServer server;
+    public ServerPlayNetworkHandlerMixin(MinecraftServer server, ClientConnection connection, ConnectedClientData clientData) {
+        super(server, connection, clientData);
+    }
 
     @Shadow protected abstract Optional<LastSeenMessageList> validateMessage(String message, Instant timestamp, LastSeenMessageList.Acknowledgment acknowledgment);
 
     @Shadow protected abstract SignedMessage getSignedMessage(ChatMessageC2SPacket packet, LastSeenMessageList lastSeenMessages) throws MessageChain.MessageChainException;
 
     @Shadow protected abstract void handleMessageChainException(MessageChain.MessageChainException exception);
-
-    @Shadow protected abstract CompletableFuture<FilteredMessage> filterText(String text);
-
-    @Shadow @Final private MessageChainTaskQueue messageChainTaskQueue;
 
     @Inject(method = "onChatMessage", at = @At("HEAD"), cancellable = true)
     private void banHammer_checkIfMuted(ChatMessageC2SPacket packet, CallbackInfo ci) {
