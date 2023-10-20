@@ -44,9 +44,9 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
             prepStmt.setString(1, punishment.playerUUID.toString());
             prepStmt.setString(2, punishment.playerIP);
             prepStmt.setString(3, punishment.playerName);
-            prepStmt.setString(4, Text.Serializer.toJson(punishment.playerDisplayName));
+            prepStmt.setString(4, Text.Serialization.toJsonString(punishment.playerDisplayName));
             prepStmt.setString(5, punishment.adminUUID.toString());
-            prepStmt.setString(6, Text.Serializer.toJson(punishment.adminDisplayName));
+            prepStmt.setString(6, Text.Serialization.toJsonString(punishment.adminDisplayName));
             prepStmt.setLong(7, punishment.time);
             prepStmt.setLong(8, punishment.duration);
             prepStmt.setString(9, punishment.reason);
@@ -72,9 +72,9 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
             prepStmt.setString(1, punishment.playerUUID.toString());
             prepStmt.setString(2, punishment.playerIP);
             prepStmt.setString(3, punishment.playerName);
-            prepStmt.setString(4, Text.Serializer.toJson(punishment.playerDisplayName));
+            prepStmt.setString(4, Text.Serialization.toJsonString(punishment.playerDisplayName));
             prepStmt.setString(5, punishment.adminUUID.toString());
-            prepStmt.setString(6, Text.Serializer.toJson(punishment.adminDisplayName));
+            prepStmt.setString(6, Text.Serialization.toJsonString(punishment.adminDisplayName));
             prepStmt.setLong(7, punishment.time);
             prepStmt.setLong(8, punishment.duration);
             prepStmt.setString(9, punishment.reason);
@@ -99,10 +99,10 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
                         result.getLong("id"),
                         UUID.fromString(result.getString("bannedUUID")),
                         result.getString("bannedIP"),
-                        Text.Serializer.fromJson(result.getString("bannedDisplay")),
+                        Text.Serialization.fromJson(result.getString("bannedDisplay")),
                         result.getString("bannedName"),
                         UUID.fromString(result.getString("adminUUID")),
-                        Text.Serializer.fromJson(result.getString("adminDisplay")),
+                        Text.Serialization.fromJson(result.getString("adminDisplay")),
                         result.getLong("time"),
                         result.getLong("duration"),
                         result.getString("reason"),
@@ -124,10 +124,10 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
                 consumer.accept(new PunishmentData(
                         UUID.fromString(result.getString("bannedUUID")),
                         result.getString("bannedIP"),
-                        Text.Serializer.fromJson(result.getString("bannedDisplay")),
+                        Text.Serialization.fromJson(result.getString("bannedDisplay")),
                         result.getString("bannedName"),
                         UUID.fromString(result.getString("adminUUID")),
-                        Text.Serializer.fromJson(result.getString("adminDisplay")),
+                        Text.Serialization.fromJson(result.getString("adminDisplay")),
                         result.getLong("time"),
                         result.getLong("duration"),
                         result.getString("reason"),
@@ -150,10 +150,10 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
                 consumer.accept(new PunishmentData(
                         UUID.fromString(result.getString("bannedUUID")),
                         result.getString("bannedIP"),
-                        Text.Serializer.fromJson(result.getString("bannedDisplay")),
+                        Text.Serialization.fromJson(result.getString("bannedDisplay")),
                         result.getString("bannedName"),
                         UUID.fromString(result.getString("adminUUID")),
-                        Text.Serializer.fromJson(result.getString("adminDisplay")),
+                        Text.Serialization.fromJson(result.getString("adminDisplay")),
                         result.getLong("time"),
                         result.getLong("duration"),
                         result.getString("reason"),
@@ -176,10 +176,10 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
                         result.getLong("id"),
                         UUID.fromString(result.getString("bannedUUID")),
                         result.getString("bannedIP"),
-                        Text.Serializer.fromJson(result.getString("bannedDisplay")),
+                        Text.Serialization.fromJson(result.getString("bannedDisplay")),
                         result.getString("bannedName"),
                         UUID.fromString(result.getString("adminUUID")),
-                        Text.Serializer.fromJson(result.getString("adminDisplay")),
+                        Text.Serialization.fromJson(result.getString("adminDisplay")),
                         result.getLong("time"),
                         result.getLong("duration"),
                         result.getString("reason"),

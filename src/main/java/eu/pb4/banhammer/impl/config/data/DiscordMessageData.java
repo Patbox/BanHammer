@@ -227,7 +227,7 @@ public class DiscordMessageData {
                 String footerIconUrl = this.embedFooterIconUrl;
                 String contentEmbed = String.join("\n", this.embedMessage);
 
-                TextColor color = TextColor.parse(this.embedColor);
+                TextColor color = TextColor.parse(this.embedColor).result().orElse(null);
 
                 List<Table> tables = new ArrayList<>();
                 for (Table table : this.embedFields) {

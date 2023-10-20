@@ -71,7 +71,6 @@ public final class BanHammerImpl implements ModInitializer {
     });
     public static final Gson GSON = new GsonBuilder().disableHtmlEscaping()
             .registerTypeHierarchyAdapter(Text.class, new Text.Serializer())
-           .registerTypeHierarchyAdapter(Style .class, new net.minecraft.text.Style.Serializer())
             .registerTypeAdapterFactory(new LowercaseEnumTypeAdapterFactory())
             .create();
     public static MinecraftServer SERVER;
