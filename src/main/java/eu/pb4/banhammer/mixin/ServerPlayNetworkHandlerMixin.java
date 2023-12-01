@@ -31,11 +31,11 @@ public abstract class ServerPlayNetworkHandlerMixin extends ServerCommonNetworkH
         super(server, connection, clientData);
     }
 
-    @Shadow protected abstract Optional<LastSeenMessageList> validateMessage(String message, Instant timestamp, LastSeenMessageList.Acknowledgment acknowledgment);
-
     @Shadow protected abstract SignedMessage getSignedMessage(ChatMessageC2SPacket packet, LastSeenMessageList lastSeenMessages) throws MessageChain.MessageChainException;
 
     @Shadow protected abstract void handleMessageChainException(MessageChain.MessageChainException exception);
+
+    @Shadow protected abstract Optional<LastSeenMessageList> validateMessage(LastSeenMessageList.Acknowledgment acknowledgment);
 
     @Inject(method = "onChatMessage", at = @At("HEAD"), cancellable = true)
     private void banHammer_checkIfMuted(ChatMessageC2SPacket packet, CallbackInfo ci) {
@@ -60,7 +60,7 @@ public abstract class ServerPlayNetworkHandlerMixin extends ServerCommonNetworkH
         }
 
         if (blocked) {
-            Optional<LastSeenMessageList> optional = this.validateMessage(packet.chatMessage(), packet.timestamp(), packet.acknowledgment());
+            Optional<LastSeenMessageList> optional = this.validateMessage(packet.acknowledgment());
             if (optional.isPresent()) {
                 this.server.submit(() -> {
                     try {
