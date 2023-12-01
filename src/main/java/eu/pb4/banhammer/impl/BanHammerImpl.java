@@ -102,7 +102,7 @@ public final class BanHammerImpl implements ModInitializer {
                 DATABASE.insertPunishmentIntoHistory(punishment);
             }
 
-            if (!config.webhooks.isEmpty()) {
+            if (!invisible && !config.webhooks.isEmpty()) {
                 var json = HttpRequest.BodyPublishers.ofString(punishment.getRawDiscordMessage().build(punishment.getStringPlaceholders()));
 
                 for (var hook : config.webhooks) {
@@ -197,7 +197,7 @@ public final class BanHammerImpl implements ModInitializer {
                 SERVER.sendMessage(message);
 
                 for (ServerPlayerEntity player : SERVER.getPlayerManager().getPlayerList()) {
-                    if (Permissions.check(player, "banhammer.seesilent", 1)) {
+                    if (Permissions.check(player, "banhammer.seesilent", 3)) {
                         player.sendMessage(message);
                     }
                 }
