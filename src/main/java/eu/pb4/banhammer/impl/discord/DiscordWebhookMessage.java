@@ -20,7 +20,7 @@ public final class DiscordWebhookMessage {
     public boolean tts = false;
     public List<Embed> embeds;
     @SerializedName("allowed_mentions")
-    public boolean allowedMentions = false;
+    public AllowedMentions allowedMentions = new AllowedMentions();
 
     public DiscordWebhookMessage content(String content) {
         this.content = content;
@@ -48,6 +48,10 @@ public final class DiscordWebhookMessage {
 
     public String toJson() {
         return GSON.toJson(this);
+    }
+
+    public static class AllowedMentions {
+        public String[] parse = new String[]{};
     }
 
     public static class Embed {
