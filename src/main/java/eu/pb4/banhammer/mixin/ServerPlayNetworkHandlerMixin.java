@@ -35,7 +35,7 @@ public abstract class ServerPlayNetworkHandlerMixin extends ServerCommonNetworkH
 
     @Shadow protected abstract void handleMessageChainException(MessageChain.MessageChainException exception);
 
-    @Shadow protected abstract Optional<LastSeenMessageList> validateMessage(LastSeenMessageList.Acknowledgment acknowledgment);
+    @Shadow protected abstract Optional<LastSeenMessageList> validateAcknowledgment(LastSeenMessageList.Acknowledgment acknowledgment);
 
     @Inject(method = "onChatMessage", at = @At("HEAD"), cancellable = true)
     private void banHammer_checkIfMuted(ChatMessageC2SPacket packet, CallbackInfo ci) {
@@ -60,7 +60,7 @@ public abstract class ServerPlayNetworkHandlerMixin extends ServerCommonNetworkH
         }
 
         if (blocked) {
-            Optional<LastSeenMessageList> optional = this.validateMessage(packet.acknowledgment());
+            Optional<LastSeenMessageList> optional = this.validateAcknowledgment(packet.acknowledgment());
             if (optional.isPresent()) {
                 this.server.submit(() -> {
                     try {

@@ -26,6 +26,7 @@ import net.fabricmc.fabric.api.event.EventFactory;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Style;
@@ -70,7 +71,7 @@ public final class BanHammerImpl implements ModInitializer {
         return TriState.TRUE;
     });
     public static final Gson GSON = new GsonBuilder().disableHtmlEscaping()
-            .registerTypeHierarchyAdapter(Text.class, new Text.Serializer())
+            .registerTypeHierarchyAdapter(Text.class, new Text.Serializer(DynamicRegistryManager.EMPTY))
             .registerTypeAdapterFactory(new LowercaseEnumTypeAdapterFactory())
             .create();
     public static MinecraftServer SERVER;
