@@ -1,12 +1,12 @@
 plugins {
-	id 'fabric-loom' version '1.5.+'
+	id 'fabric-loom' version '1.6.+'
 	id 'maven-publish'
 	id "com.modrinth.minotaur" version "2.+"
 	id 'com.matthewprenger.cursegradle' version '1.4.0'
 }
 
-sourceCompatibility = JavaVersion.VERSION_17
-targetCompatibility = JavaVersion.VERSION_17
+sourceCompatibility = JavaVersion.VERSION_21
+targetCompatibility = JavaVersion.VERSION_21
 
 archivesBaseName = project.archives_base_name
 version = project.mod_version
@@ -19,7 +19,6 @@ repositories {
     // See https://docs.gradle.org/current/userguide/declaring_repositories.html
     // for more information about repositories.
 	maven { url 'https://maven.nucleoid.xyz' }
-	maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
 	maven { url 'https://jitpack.io' }
 	mavenCentral()
 }
@@ -37,17 +36,16 @@ dependencies {
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-	modImplementation include("me.lucko:fabric-permissions-api:0.1-SNAPSHOT")
 
 	implementation include("org.xerial:sqlite-jdbc:3.44.1.0")
 	implementation include('com.mysql:mysql-connector-j:8.2.0')
 	implementation include('org.postgresql:postgresql:42.7.0')
 
-	modImplementation include("me.lucko:fabric-permissions-api:0.2-SNAPSHOT")
-	modImplementation include("eu.pb4:sgui:1.3.0+1.20.2")
+	modImplementation include("me.lucko:fabric-permissions-api:0.3.1")
+	modImplementation include("eu.pb4:sgui:1.5.0+1.20.5")
 
 
-	modImplementation include("eu.pb4:placeholder-api:2.3.0+1.20.3")
+	modImplementation include("eu.pb4:placeholder-api:2.4.0-pre.1+1.20.5")
 
 
 	// PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
@@ -72,7 +70,7 @@ tasks.withType(JavaCompile).configureEach {
 	// The Minecraft launcher currently installs Java 8 for users, so your mod probably wants to target Java 8 too
 	// JDK 9 introduced a new way of specifying this that will make sure no newer classes or methods are used.
 	// We'll use that if it's available, but otherwise we'll use the older option.
-	it.options.release = 17
+	it.options.release = 21
 }
 
 java {
