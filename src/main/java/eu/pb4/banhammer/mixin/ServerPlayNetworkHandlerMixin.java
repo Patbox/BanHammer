@@ -7,6 +7,7 @@ import net.minecraft.network.ClientConnection;
 import net.minecraft.network.message.LastSeenMessageList;
 import net.minecraft.network.message.MessageChain;
 import net.minecraft.network.message.SignedMessage;
+import net.minecraft.network.packet.c2s.play.ChatCommandSignedC2SPacket;
 import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
 import net.minecraft.network.packet.c2s.play.CommandExecutionC2SPacket;
 import net.minecraft.server.MinecraftServer;
@@ -16,6 +17,7 @@ import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -75,8 +77,20 @@ public abstract class ServerPlayNetworkHandlerMixin extends ServerCommonNetworkH
 
     @Inject(method = "onCommandExecution", at = @At("HEAD"), cancellable = true)
     private void banHammer_checkIfMutedCommand(CommandExecutionC2SPacket packet, CallbackInfo ci) {
-        var string = packet.command();
+        if (checkIfMutedCommand(packet.command())) {
+            ci.cancel();
+        }
+    }
 
+    @Inject(method = "handleCommandExecution", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/message/SignedCommandArguments$Impl;<init>(Ljava/util/Map;)V"), cancellable = true)
+    private void banHammer_checkIfMutedCommand(ChatCommandSignedC2SPacket packet, LastSeenMessageList lastSeenMessages, CallbackInfo ci) {
+        if (checkIfMutedCommand(packet.command())) {
+            ci.cancel();
+        }
+    }
+
+    @Unique
+    private boolean checkIfMutedCommand(String string) {
         int x = string.indexOf(" ");
         String rawCommand = string.substring(0, x != -1 ? x : string.length());
         for (String command : ConfigManager.getConfig().mutedCommands) {
@@ -84,8 +98,7 @@ public abstract class ServerPlayNetworkHandlerMixin extends ServerCommonNetworkH
                 for (var punishment : BanHammerImpl.CACHED_PUNISHMENTS) {
                     if (!punishment.isExpired() && punishment.type == PunishmentType.MUTE && punishment.playerUUID.equals(this.player.getUuid())) {
                         this.player.sendMessage(punishment.getDisconnectMessage(), false);
-                        ci.cancel();
-                        return;
+                        return true;
                     }
                 }
 
@@ -94,12 +107,12 @@ public abstract class ServerPlayNetworkHandlerMixin extends ServerCommonNetworkH
                     var punishment = punishments.get(0);
 
 
-                    ci.cancel();
                     this.player.sendMessage(punishment.getDisconnectMessage(), false);
+                    return true;
                 }
-
-                return;
+                return false;
             }
         }
+        return false;
     }
 }
