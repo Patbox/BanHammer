@@ -198,7 +198,7 @@ public final class BanHammerImpl implements ModInitializer {
                 SERVER.sendMessage(message);
 
                 for (ServerPlayerEntity player : SERVER.getPlayerManager().getPlayerList()) {
-                    if (Permissions.check(player, "banhammer.seesilent", 3)) {
+                    if (Permissions.check(player.getCommandSource(), "banhammer.seesilent", 3)) {
                         player.sendMessage(message);
                     }
                 }
