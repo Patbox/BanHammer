@@ -52,8 +52,8 @@ public abstract class ServerPlayNetworkHandlerMixin extends ServerCommonNetworkH
 
         if (!blocked) {
             var punishments = BanHammerImpl.getPlayersPunishments(this.player.getUuid().toString(), PunishmentType.MUTE);
-            if (punishments.size() > 0) {
-                var punishment = punishments.get(0);
+            if (!punishments.isEmpty()) {
+                var punishment = punishments.getFirst();
 
                 this.player.sendMessage(punishment.getDisconnectMessage(), false);
                 ci.cancel();
@@ -63,15 +63,13 @@ public abstract class ServerPlayNetworkHandlerMixin extends ServerCommonNetworkH
 
         if (blocked) {
             Optional<LastSeenMessageList> optional = this.validateAcknowledgment(packet.acknowledgment());
-            if (optional.isPresent()) {
-                this.server.submit(() -> {
-                    try {
-                        this.getSignedMessage(packet, (LastSeenMessageList)optional.get());
-                    } catch (MessageChain.MessageChainException var6) {
-                        this.handleMessageChainException(var6);
-                    }
-                });
-            }
+            optional.ifPresent(lastSeenMessageList -> this.server.submit(() -> {
+                try {
+                    this.getSignedMessage(packet, (LastSeenMessageList) lastSeenMessageList);
+                } catch (MessageChain.MessageChainException var6) {
+                    this.handleMessageChainException(var6);
+                }
+            }));
         }
     }
 
@@ -103,8 +101,8 @@ public abstract class ServerPlayNetworkHandlerMixin extends ServerCommonNetworkH
                 }
 
                 var punishments = BanHammerImpl.getPlayersPunishments(this.player.getUuid().toString(), PunishmentType.MUTE);
-                if (punishments.size() > 0) {
-                    var punishment = punishments.get(0);
+                if (!punishments.isEmpty()) {
+                    var punishment = punishments.getFirst();
 
 
                     this.player.sendMessage(punishment.getDisconnectMessage(), false);

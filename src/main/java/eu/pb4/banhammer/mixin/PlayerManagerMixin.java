@@ -53,10 +53,10 @@ public class PlayerManagerMixin {
             final var bans = BanHammerImpl.getPlayersPunishments(profile.getId().toString(), PunishmentType.BAN);
             final var ipBans = BanHammerImpl.getPlayersPunishments(ip, PunishmentType.IP_BAN);
 
-            if (bans.size() > 0) {
-                punishment = bans.get(0);
-            } else if (ipBans.size() > 0) {
-                punishment = ipBans.get(0);
+            if (!bans.isEmpty()) {
+                punishment = bans.getFirst();
+            } else if (!ipBans.isEmpty()) {
+                punishment = ipBans.getFirst();
             }
         }
 
