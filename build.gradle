@@ -37,15 +37,14 @@ dependencies {
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
 
-	implementation include("org.xerial:sqlite-jdbc:3.49.1.0")
-	implementation include('com.mysql:mysql-connector-j:9.2.0')
-	implementation include('org.postgresql:postgresql:42.7.5')
+	implementation include("org.xerial:sqlite-jdbc:3.50.1.0")
+	implementation include('com.mysql:mysql-connector-j:9.3.0')
+	implementation include('org.postgresql:postgresql:42.7.7')
 
-	modImplementation include("me.lucko:fabric-permissions-api:0.3.3")
-	modImplementation include("eu.pb4:sgui:1.9.0+1.21.5")
+	modImplementation include("me.lucko:fabric-permissions-api:0.3.4-patbox")
+	modImplementation include("eu.pb4:sgui:1.10.0+1.21.6")
 
-
-	modImplementation include("eu.pb4:placeholder-api:2.6.1+1.21.5")
+	modImplementation include("eu.pb4:placeholder-api:2.7.0+1.21.6")
 
 
 	// PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.

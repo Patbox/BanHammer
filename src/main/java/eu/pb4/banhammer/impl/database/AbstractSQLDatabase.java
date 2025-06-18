@@ -4,13 +4,11 @@ import com.google.common.net.InetAddresses;
 import eu.pb4.banhammer.impl.config.ConfigManager;
 import eu.pb4.banhammer.api.PunishmentData;
 import eu.pb4.banhammer.api.PunishmentType;
-import net.minecraft.text.Text;
+import eu.pb4.banhammer.impl.gson.CodecSerializer;
 
 import java.sql.*;
 import java.util.UUID;
 import java.util.function.Consumer;
-
-import static eu.pb4.banhammer.impl.BanHammerImpl.SERVER;
 
 
 public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
@@ -46,9 +44,9 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
             prepStmt.setString(1, punishment.playerUUID.toString());
             prepStmt.setString(2, punishment.playerIP);
             prepStmt.setString(3, punishment.playerName);
-            prepStmt.setString(4, Text.Serialization.toJsonString(punishment.playerDisplayName, SERVER.getRegistryManager()));
+            prepStmt.setString(4, CodecSerializer.TEXT.toJsonString(punishment.playerDisplayName));
             prepStmt.setString(5, punishment.adminUUID.toString());
-            prepStmt.setString(6, Text.Serialization.toJsonString(punishment.adminDisplayName, SERVER.getRegistryManager()));
+            prepStmt.setString(6, CodecSerializer.TEXT.toJsonString(punishment.adminDisplayName));
             prepStmt.setLong(7, punishment.time);
             prepStmt.setLong(8, punishment.duration);
             prepStmt.setString(9, punishment.reason);
@@ -74,9 +72,9 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
             prepStmt.setString(1, punishment.playerUUID.toString());
             prepStmt.setString(2, punishment.playerIP);
             prepStmt.setString(3, punishment.playerName);
-            prepStmt.setString(4, Text.Serialization.toJsonString(punishment.playerDisplayName, SERVER.getRegistryManager()));
+            prepStmt.setString(4, CodecSerializer.TEXT.toJsonString(punishment.playerDisplayName));
             prepStmt.setString(5, punishment.adminUUID.toString());
-            prepStmt.setString(6, Text.Serialization.toJsonString(punishment.adminDisplayName, SERVER.getRegistryManager()));
+            prepStmt.setString(6, CodecSerializer.TEXT.toJsonString(punishment.adminDisplayName));
             prepStmt.setLong(7, punishment.time);
             prepStmt.setLong(8, punishment.duration);
             prepStmt.setString(9, punishment.reason);
@@ -101,10 +99,10 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
                         result.getLong("id"),
                         UUID.fromString(result.getString("bannedUUID")),
                         result.getString("bannedIP"),
-                        Text.Serialization.fromJson(result.getString("bannedDisplay"), SERVER.getRegistryManager()),
+                        CodecSerializer.TEXT.fromJson(result.getString("bannedDisplay")),
                         result.getString("bannedName"),
                         UUID.fromString(result.getString("adminUUID")),
-                        Text.Serialization.fromJson(result.getString("adminDisplay"), SERVER.getRegistryManager()),
+                        CodecSerializer.TEXT.fromJson(result.getString("adminDisplay")),
                         result.getLong("time"),
                         result.getLong("duration"),
                         result.getString("reason"),
@@ -126,10 +124,10 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
                 consumer.accept(new PunishmentData(
                         UUID.fromString(result.getString("bannedUUID")),
                         result.getString("bannedIP"),
-                        Text.Serialization.fromJson(result.getString("bannedDisplay"), SERVER.getRegistryManager()),
+                        CodecSerializer.TEXT.fromJson(result.getString("bannedDisplay")),
                         result.getString("bannedName"),
                         UUID.fromString(result.getString("adminUUID")),
-                        Text.Serialization.fromJson(result.getString("adminDisplay"), SERVER.getRegistryManager()),
+                        CodecSerializer.TEXT.fromJson(result.getString("adminDisplay")),
                         result.getLong("time"),
                         result.getLong("duration"),
                         result.getString("reason"),
@@ -152,10 +150,10 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
                 consumer.accept(new PunishmentData(
                         UUID.fromString(result.getString("bannedUUID")),
                         result.getString("bannedIP"),
-                        Text.Serialization.fromJson(result.getString("bannedDisplay"), SERVER.getRegistryManager()),
+                        CodecSerializer.TEXT.fromJson(result.getString("bannedDisplay")),
                         result.getString("bannedName"),
                         UUID.fromString(result.getString("adminUUID")),
-                        Text.Serialization.fromJson(result.getString("adminDisplay"), SERVER.getRegistryManager()),
+                        CodecSerializer.TEXT.fromJson(result.getString("adminDisplay")),
                         result.getLong("time"),
                         result.getLong("duration"),
                         result.getString("reason"),
@@ -178,10 +176,10 @@ public abstract class AbstractSQLDatabase implements DatabaseHandlerInterface {
                         result.getLong("id"),
                         UUID.fromString(result.getString("bannedUUID")),
                         result.getString("bannedIP"),
-                        Text.Serialization.fromJson(result.getString("bannedDisplay"), SERVER.getRegistryManager()),
+                        CodecSerializer.TEXT.fromJson(result.getString("bannedDisplay")),
                         result.getString("bannedName"),
                         UUID.fromString(result.getString("adminUUID")),
-                        Text.Serialization.fromJson(result.getString("adminDisplay"), SERVER.getRegistryManager()),
+                        CodecSerializer.TEXT.fromJson(result.getString("adminDisplay")),
                         result.getLong("time"),
                         result.getLong("duration"),
                         result.getString("reason"),

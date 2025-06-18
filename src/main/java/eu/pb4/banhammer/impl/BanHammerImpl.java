@@ -13,6 +13,8 @@ import eu.pb4.banhammer.impl.commands.PunishCommands;
 import eu.pb4.banhammer.impl.commands.UnpunishCommands;
 import eu.pb4.banhammer.impl.config.Config;
 import eu.pb4.banhammer.impl.config.ConfigManager;
+import eu.pb4.banhammer.impl.gson.CodecSerializer;
+import eu.pb4.banhammer.impl.gson.LowercaseEnumTypeAdapterFactory;
 import eu.pb4.banhammer.impl.database.DatabaseHandlerInterface;
 import eu.pb4.banhammer.impl.database.MySQLDatabase;
 import eu.pb4.banhammer.impl.database.PostgreSQLDatabase;
@@ -29,9 +31,8 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Style;
 import net.minecraft.text.Text;
-import net.minecraft.util.LowercaseEnumTypeAdapterFactory;
+import net.minecraft.text.TextCodecs;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -71,7 +72,7 @@ public final class BanHammerImpl implements ModInitializer {
         return TriState.TRUE;
     });
     public static final Gson GSON = new GsonBuilder().disableHtmlEscaping()
-            .registerTypeHierarchyAdapter(Text.class, new Text.Serializer(DynamicRegistryManager.EMPTY))
+            .registerTypeHierarchyAdapter(Text.class, CodecSerializer.TEXT)
             .registerTypeAdapterFactory(new LowercaseEnumTypeAdapterFactory())
             .create();
     public static MinecraftServer SERVER;
