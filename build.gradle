@@ -37,11 +37,11 @@ dependencies {
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
 
-	implementation include("org.xerial:sqlite-jdbc:3.50.1.0")
+	implementation include("org.xerial:sqlite-jdbc:3.50.3.0")
 	implementation include('com.mysql:mysql-connector-j:9.3.0')
 	implementation include('org.postgresql:postgresql:42.7.7')
 
-	modImplementation include("me.lucko:fabric-permissions-api:0.3.4-patbox")
+	modImplementation include("me.lucko:fabric-permissions-api:0.4.0")
 	modImplementation include("eu.pb4:sgui:1.10.0+1.21.6")
 
 	modImplementation include("eu.pb4:placeholder-api:2.7.0+1.21.6")

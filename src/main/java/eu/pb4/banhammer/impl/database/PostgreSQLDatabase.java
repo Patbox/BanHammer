@@ -1,8 +1,7 @@
 package eu.pb4.banhammer.impl.database;
 
-import com.mysql.cj.jdbc.MysqlConnectionPoolDataSource;
-import org.postgresql.ds.PGPoolingDataSource;
-import org.postgresql.jdbc2.optional.PoolingDataSource;
+import eu.pb4.banhammer.impl.config.ConfigManager;
+import org.postgresql.ds.PGConnectionPoolDataSource;
 
 import java.sql.DriverManager;
 import java.util.Map;
@@ -24,11 +23,13 @@ public class PostgreSQLDatabase extends PooledSQLDatabase {
             }
         }
 
-        var source = new PGPoolingDataSource();
+        var source = new PGConnectionPoolDataSource();
         source.setUrl("jdbc:postgresql://" + address + "/" + database + (argBuilder.isEmpty() ? "" : "?" + argBuilder));
         source.setUser(username);
         source.setPassword(password);
         source.setDatabaseName(database);
+
+        this.manager = new MiniConnectionPoolManager(source, ConfigManager.getConfig().configData.databaseMaxConnections);
 
         this.createTables();
     }
