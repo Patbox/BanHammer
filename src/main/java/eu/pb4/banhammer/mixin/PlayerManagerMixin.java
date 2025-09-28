@@ -6,9 +6,14 @@ import eu.pb4.banhammer.impl.BanHammerImpl;
 import eu.pb4.banhammer.impl.config.ConfigManager;
 import eu.pb4.banhammer.api.PunishmentData;
 import eu.pb4.banhammer.api.PunishmentType;
+import eu.pb4.placeholders.api.PlaceholderContext;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.PlayerConfigEntry;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.text.Text;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -20,18 +25,20 @@ import java.util.Set;
 @Mixin(PlayerManager.class)
 public class PlayerManagerMixin {
 
+    @Shadow @Final private MinecraftServer server;
+
     @Inject(method = "checkCanJoin", at = @At("HEAD"))
-    private void banHammer_cachePlayersIP(SocketAddress address, GameProfile profile, CallbackInfoReturnable<Text> cir) {
+    private void banHammer_cachePlayersIP(SocketAddress address, PlayerConfigEntry profile, CallbackInfoReturnable<Text> cir) {
         if (address != null) {
             var stringAddress = BHUtils.stringifyAddress(address);
 
-            BanHammerImpl.UUID_TO_IP_CACHE.put(profile.getId(), stringAddress);
-            BanHammerImpl.IP_TO_UUID_CACHE.computeIfAbsent(stringAddress, (ip) -> new HashSet<>()).add(profile.getId());
+            BanHammerImpl.UUID_TO_IP_CACHE.put(profile.id(), stringAddress);
+            BanHammerImpl.IP_TO_UUID_CACHE.computeIfAbsent(stringAddress, (ip) -> new HashSet<>()).add(profile.id());
         }
     }
 
     @Inject(method = "checkCanJoin", at = @At("TAIL"), cancellable = true)
-    private void banHammer_checkIfBanned(SocketAddress address, GameProfile profile, CallbackInfoReturnable<Text> cir) {
+    private void banHammer_checkIfBanned(SocketAddress address, PlayerConfigEntry profile, CallbackInfoReturnable<Text> cir) {
         PunishmentData punishment = null;
 
         if (address == null || profile == null) {
@@ -42,7 +49,7 @@ public class PlayerManagerMixin {
 
         for (var pos : BanHammerImpl.CACHED_PUNISHMENTS) {
             if (!pos.isExpired() && ((pos.type == PunishmentType.IP_BAN && pos.playerIP.equals(ip))
-                    || (pos.type == PunishmentType.BAN && pos.playerUUID.equals(profile.getId())))) {
+                    || (pos.type == PunishmentType.BAN && pos.playerUUID.equals(profile.id())))) {
                 punishment = pos;
                 break;
             }
@@ -50,7 +57,7 @@ public class PlayerManagerMixin {
 
 
         if (punishment == null) {
-            final var bans = BanHammerImpl.getPlayersPunishments(profile.getId().toString(), PunishmentType.BAN);
+            final var bans = BanHammerImpl.getPlayersPunishments(profile.id().toString(), PunishmentType.BAN);
             final var ipBans = BanHammerImpl.getPlayersPunishments(ip, PunishmentType.IP_BAN);
 
             if (!bans.isEmpty()) {
@@ -64,7 +71,7 @@ public class PlayerManagerMixin {
             if (punishment.type == PunishmentType.IP_BAN && ConfigManager.getConfig().configData.standardBanPlayersWithBannedIps) {
                 final boolean silent = ConfigManager.getConfig().configData.autoBansFromIpBansAreSilent;
 
-                PunishmentData punishment1 = new PunishmentData(profile.getId(), BHUtils.stringifyAddress(address), Text.literal(profile.getName()), profile.getName(),
+                PunishmentData punishment1 = new PunishmentData(profile.id(), BHUtils.stringifyAddress(address), Text.literal(profile.name()), profile.name(),
                         punishment.adminUUID,
                         punishment.adminDisplayName,
                         punishment.time,
@@ -74,7 +81,7 @@ public class PlayerManagerMixin {
 
                 BanHammerImpl.punishPlayer(punishment1, silent, silent);
             }
-            cir.setReturnValue(punishment.getDisconnectMessage());
+            cir.setReturnValue(punishment.getDisconnectMessage(PlaceholderContext.of(new GameProfile(profile.id(), profile.name()), server)));
         }
     }
 }

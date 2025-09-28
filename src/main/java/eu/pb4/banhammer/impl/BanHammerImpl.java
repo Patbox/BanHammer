@@ -4,6 +4,7 @@ package eu.pb4.banhammer.impl;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import com.mojang.authlib.GameProfile;
 import eu.pb4.banhammer.api.BanHammer;
 import eu.pb4.banhammer.api.PunishmentData;
 import eu.pb4.banhammer.api.PunishmentType;
@@ -21,6 +22,7 @@ import eu.pb4.banhammer.impl.database.PostgreSQLDatabase;
 import eu.pb4.banhammer.impl.database.SQLiteDatabase;
 import eu.pb4.banhammer.impl.importers.BanHammerJsonImporter;
 import eu.pb4.banhammer.impl.importers.VanillaImport;
+import eu.pb4.placeholders.api.PlaceholderContext;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.Event;
@@ -152,9 +154,9 @@ public final class BanHammerImpl implements ModInitializer {
 
             for (ServerPlayerEntity player : SERVER.getPlayerManager().getPlayerList()) {
                 if (player.getIp().equals(punishment.playerIP)) {
-                    player.networkHandler.disconnect(punishment.getDisconnectMessage());
+                    player.networkHandler.disconnect(punishment.getDisconnectMessage(PlaceholderContext.of(player)));
                     if (ConfigManager.getConfig().configData.standardBanPlayersWithBannedIps && punishment.type == PunishmentType.IP_BAN) {
-                        PunishmentData punishment1 = new PunishmentData(player.getUuid(), player.getIp(), player.getDisplayName(), player.getGameProfile().getName(),
+                        PunishmentData punishment1 = new PunishmentData(player.getUuid(), player.getIp(), player.getDisplayName(), player.getGameProfile().name(),
                                 punishment.adminUUID,
                                 punishment.adminDisplayName,
                                 punishment.time,
@@ -186,15 +188,15 @@ public final class BanHammerImpl implements ModInitializer {
             ServerPlayerEntity player = SERVER.getPlayerManager().getPlayer(punishment.playerUUID);
 
             if (player != null) {
-                player.networkHandler.disconnect(punishment.getDisconnectMessage());
+                player.networkHandler.disconnect(punishment.getDisconnectMessage(PlaceholderContext.of(player)));
             }
         }
 
         if (!invisible) {
             if (!silent) {
-                SERVER.getPlayerManager().broadcast(punishment.getChatMessage(), false);
+                SERVER.getPlayerManager().broadcast(punishment.getChatMessage(PlaceholderContext.of(new GameProfile(punishment.playerUUID, punishment.playerName), SERVER)), false);
             } else {
-                Text message = punishment.getChatMessage();
+                Text message = punishment.getChatMessage(PlaceholderContext.of(new GameProfile(punishment.playerUUID, punishment.playerName), SERVER));
 
                 SERVER.sendMessage(message);
 
@@ -368,9 +370,9 @@ public final class BanHammerImpl implements ModInitializer {
         });
         ServerMessageEvents.ALLOW_CHAT_MESSAGE.register((message, sender, params) -> {
             var punishments = getPlayersPunishments(sender.getUuidAsString(), PunishmentType.MUTE);
-            if (punishments.size() > 0) {
-                var punishment = punishments.get(0);
-                sender.sendMessage(punishment.getDisconnectMessage(), false);
+            if (!punishments.isEmpty()) {
+                var punishment = punishments.getFirst();
+                sender.sendMessage(punishment.getDisconnectMessage(PlaceholderContext.of(sender)), false);
                 return false;
             }
             return true;

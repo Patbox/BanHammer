@@ -9,6 +9,7 @@ import eu.pb4.banhammer.impl.BHUtils;
 import eu.pb4.banhammer.impl.BanHammerImpl;
 import eu.pb4.banhammer.impl.config.Config;
 import eu.pb4.banhammer.impl.config.ConfigManager;
+import eu.pb4.placeholders.api.PlaceholderContext;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.server.command.ServerCommandSource;
@@ -114,7 +115,7 @@ public class PunishCommands {
                         BanHammerImpl.punishPlayer(punishment, config.configData.punishmentsAreSilent || isSilent);
 
                         if (config.configData.punishmentsAreSilent && !Permissions.check(ctx.getSource(), "banhammer.seesilent", 1)) {
-                            ctx.getSource().sendFeedback(() -> punishment.getChatMessage(), false);
+                            ctx.getSource().sendFeedback(() -> punishment.getChatMessage(player.placeholderContext(ctx.getSource().getServer())), false);
                         }
                     } else {
                         ctx.getSource().sendFeedback(() -> Text.literal("You can't punish ").append(player.displayName()).append("!").formatted(Formatting.RED), false);

@@ -30,10 +30,10 @@ public final class VanillaImport implements BanHammer.PunishmentImporter {
                     }
 
                     PunishmentData punishment = new PunishmentData(
-                            profile.getId(),
+                            profile.id(),
                             "undefined",
-                            Text.literal(profile.getName()),
-                            profile.getName(),
+                            Text.literal(profile.name()),
+                            profile.name(),
                             Util.NIL_UUID,
                             Text.literal(data.getSource()),
                             creation,

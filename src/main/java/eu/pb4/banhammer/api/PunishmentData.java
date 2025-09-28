@@ -5,8 +5,13 @@ import eu.pb4.banhammer.impl.config.Config;
 import eu.pb4.banhammer.impl.config.ConfigManager;
 import eu.pb4.banhammer.impl.config.data.DiscordMessageData;
 import eu.pb4.banhammer.impl.config.data.MessageConfigData;
+import eu.pb4.placeholders.api.ParserContext;
+import eu.pb4.placeholders.api.PlaceholderContext;
 import eu.pb4.placeholders.api.Placeholders;
 import eu.pb4.placeholders.api.node.EmptyNode;
+import eu.pb4.placeholders.api.parsers.NodeParser;
+import eu.pb4.placeholders.api.parsers.TagLikeParser;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
@@ -45,7 +50,7 @@ public sealed class PunishmentData permits PunishmentData.Synced {
     }
 
     public static PunishmentData create(ServerPlayerEntity punished, ServerCommandSource admin, String reason, long duration, PunishmentType type) {
-        return create(punished.getUuid(), punished.getIp(), punished.getDisplayName(), punished.getGameProfile().getName(), admin, reason, duration, type);
+        return create(punished.getUuid(), punished.getIp(), punished.getDisplayName(), punished.getGameProfile().name(), admin, reason, duration, type);
     }
 
     public static PunishmentData create(UUID uuid, String ip, Text displayName, String playerName, ServerCommandSource admin, String reason, long duration, PunishmentType type) {
@@ -108,7 +113,7 @@ public sealed class PunishmentData permits PunishmentData.Synced {
     }
 
 
-    public final Text getDisconnectMessage() {
+    public final Text getDisconnectMessage(PlaceholderContext context) {
         var message = switch (this.type) {
             case KICK -> ConfigManager.getConfig().kickScreenMessage;
             case BAN -> this.isTemporary() ? ConfigManager.getConfig().tempBanScreenMessage : ConfigManager.getConfig().banScreenMessage;
@@ -117,10 +122,10 @@ public sealed class PunishmentData permits PunishmentData.Synced {
             default -> EmptyNode.INSTANCE;
         };
 
-        return Placeholders.parseText(message, Placeholders.PREDEFINED_PLACEHOLDER_PATTERN, this.getPlaceholders());
+        return message.toText(context.asParserContext().with(Config.PLACEHOLDER, this.getPlaceholders()::get));
     }
 
-    public final Text getChatMessage() {
+    public final Text getChatMessage(PlaceholderContext context) {
         var message = switch (this.type) {
             case KICK -> ConfigManager.getConfig().kickChatMessage;
             case BAN -> this.isTemporary() ? ConfigManager.getConfig().tempBanChatMessage : ConfigManager.getConfig().banChatMessage;
@@ -129,7 +134,7 @@ public sealed class PunishmentData permits PunishmentData.Synced {
             case WARN -> this.isTemporary() ? ConfigManager.getConfig().tempWarnChatMessage : ConfigManager.getConfig().warnChatMessage;
         };
 
-        return Placeholders.parseText(message, Placeholders.PREDEFINED_PLACEHOLDER_PATTERN, this.getPlaceholders());
+        return message.toText(context.asParserContext().with(Config.PLACEHOLDER, this.getPlaceholders()::get));
     }
 
     public final DiscordMessageData.Message getRawDiscordMessage() {

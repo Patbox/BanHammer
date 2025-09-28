@@ -3,6 +3,7 @@ package eu.pb4.banhammer.mixin;
 import eu.pb4.banhammer.api.PunishmentType;
 import eu.pb4.banhammer.impl.BanHammerImpl;
 import eu.pb4.banhammer.impl.config.ConfigManager;
+import eu.pb4.placeholders.api.PlaceholderContext;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.message.LastSeenMessageList;
 import net.minecraft.network.message.MessageChain;
@@ -44,7 +45,7 @@ public abstract class ServerPlayNetworkHandlerMixin extends ServerCommonNetworkH
         boolean blocked = false;
         for (var punishment : BanHammerImpl.CACHED_PUNISHMENTS) {
             if (!punishment.isExpired() && punishment.type == PunishmentType.MUTE && punishment.playerUUID.equals(this.player.getUuid())) {
-                this.player.sendMessage(punishment.getDisconnectMessage(), false);
+                this.player.sendMessage(punishment.getDisconnectMessage(PlaceholderContext.of(this.player)), false);
                 ci.cancel();
                 blocked = true;
             }
@@ -55,7 +56,7 @@ public abstract class ServerPlayNetworkHandlerMixin extends ServerCommonNetworkH
             if (!punishments.isEmpty()) {
                 var punishment = punishments.getFirst();
 
-                this.player.sendMessage(punishment.getDisconnectMessage(), false);
+                this.player.sendMessage(punishment.getDisconnectMessage(PlaceholderContext.of(this.player)), false);
                 ci.cancel();
                 blocked = true;
             }
@@ -95,7 +96,7 @@ public abstract class ServerPlayNetworkHandlerMixin extends ServerCommonNetworkH
             if (rawCommand.equals(command)) {
                 for (var punishment : BanHammerImpl.CACHED_PUNISHMENTS) {
                     if (!punishment.isExpired() && punishment.type == PunishmentType.MUTE && punishment.playerUUID.equals(this.player.getUuid())) {
-                        this.player.sendMessage(punishment.getDisconnectMessage(), false);
+                        this.player.sendMessage(punishment.getDisconnectMessage(PlaceholderContext.of(this.player)), false);
                         return true;
                     }
                 }
@@ -105,7 +106,7 @@ public abstract class ServerPlayNetworkHandlerMixin extends ServerCommonNetworkH
                     var punishment = punishments.getFirst();
 
 
-                    this.player.sendMessage(punishment.getDisconnectMessage(), false);
+                    this.player.sendMessage(punishment.getDisconnectMessage(PlaceholderContext.of(this.player)), false);
                     return true;
                 }
                 return false;

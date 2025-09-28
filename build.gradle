@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '1.10.+'
+	id 'fabric-loom' version '1.11.+'
 	id 'maven-publish'
 	id "com.modrinth.minotaur" version "2.+"
 	id 'com.matthewprenger.cursegradle' version '1.4.0'
@@ -38,13 +38,13 @@ dependencies {
 
 
 	implementation include("org.xerial:sqlite-jdbc:3.50.3.0")
-	implementation include('com.mysql:mysql-connector-j:9.3.0')
-	implementation include('org.postgresql:postgresql:42.7.7')
+	implementation include('com.mysql:mysql-connector-j:9.4.0')
+	implementation include('org.postgresql:postgresql:42.7.8')
 
-	modImplementation include("me.lucko:fabric-permissions-api:0.4.0")
-	modImplementation include("eu.pb4:sgui:1.10.0+1.21.6")
+	modImplementation include("me.lucko:fabric-permissions-api:0.4.2-patbox.1")
+	modImplementation include("eu.pb4:sgui:1.11.0+1.21.9")
 
-	modImplementation include("eu.pb4:placeholder-api:2.7.0+1.21.6")
+	modImplementation include("eu.pb4:placeholder-api:2.8.0+1.21.9")
 
 
 	// PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.

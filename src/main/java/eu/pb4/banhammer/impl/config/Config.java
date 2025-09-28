@@ -8,16 +8,27 @@ import eu.pb4.banhammer.impl.config.data.ConfigData;
 import eu.pb4.banhammer.impl.config.data.DiscordMessageData;
 import eu.pb4.banhammer.impl.config.data.MessageConfigData;
 import eu.pb4.banhammer.impl.config.database.DbConfig;
-import eu.pb4.placeholders.api.TextParserUtils;
+import eu.pb4.placeholders.api.ParserContext;
 import eu.pb4.placeholders.api.node.TextNode;
+import eu.pb4.placeholders.api.parsers.NodeParser;
+import eu.pb4.placeholders.api.parsers.TagLikeParser;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.command.CommandSource;
+import net.minecraft.text.Text;
 
 import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.function.Function;
 
 public class Config {
+    public static final ParserContext.Key<Function<String, Text>> PLACEHOLDER = ParserContext.Key.of("ban_hammer");
+    private static final NodeParser PARSER = NodeParser.builder()
+            .quickText()
+            .simplifiedTextFormat()
+            .placeholders(TagLikeParser.PLACEHOLDER_USER, PLACEHOLDER)
+            .globalPlaceholders()
+            .build();
     public final List<String> mutedCommands;
     public final MessageConfigData messageConfigData;
 
@@ -118,11 +129,7 @@ public class Config {
     }
 
     private TextNode toSingleString(List<String> text) {
-        if (text.size() == 1) {
-            return TextParserUtils.formatNodes(text.get(0));
-        } else {
-            return TextParserUtils.formatNodes(String.join("\n", text));
-        }
+        return PARSER.parseNode(String.join("\n", text));
     }
 
     public long getDurationLimit(CommandSource source) {
@@ -140,7 +147,7 @@ public class Config {
     }
 
     public boolean canPunish(GameProfile profile) {
-        return !(this.configData.blockPunishments.contains(profile.getName()) || this.configData.blockPunishments.contains(profile.getId().toString()));
+        return !(this.configData.blockPunishments.contains(profile.name()) || this.configData.blockPunishments.contains(profile.id().toString()));
     }
 
     public DbConfig getDatabaseConfig(String type) {
