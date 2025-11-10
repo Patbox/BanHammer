@@ -7,6 +7,7 @@ import com.mojang.brigadier.context.CommandContext;
 import eu.pb4.banhammer.api.PunishmentType;
 import eu.pb4.banhammer.impl.BHUtils;
 import eu.pb4.banhammer.impl.BanHammerImpl;
+import eu.pb4.banhammer.impl.config.Config;
 import eu.pb4.banhammer.impl.config.ConfigManager;
 import eu.pb4.banhammer.impl.config.data.DiscordMessageData;
 import eu.pb4.placeholders.api.Placeholders;
@@ -141,7 +142,7 @@ public class UnpunishCommands {
                     list.put("banned", Text.literal(player.name()));
                     list.put("banned_uuid", Text.literal(player.uuid().toString()));
                     list.put("reason", Text.literal(reason));
-                    Text textMessage = Placeholders.parseText(message, Placeholders.PREDEFINED_PLACEHOLDER_PATTERN, list);
+                    Text textMessage = message.toText(player.placeholderContext(ctx.getSource().getServer()).asParserContext().with(Config.PLACEHOLDER, list::get));
 
                     if (config.configData.punishmentsAreSilent || isSilent) {
                         if (player.player() != null) {
