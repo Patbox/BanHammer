@@ -1,16 +1,16 @@
 plugins {
-	id 'fabric-loom' version '1.11.+'
+	id 'fabric-loom' version "${loom_version}"
 	id 'maven-publish'
 	id "com.modrinth.minotaur" version "2.+"
 	id 'com.matthewprenger.cursegradle' version '1.4.0'
 }
 
-sourceCompatibility = JavaVersion.VERSION_21
-targetCompatibility = JavaVersion.VERSION_21
-
-archivesBaseName = project.archives_base_name
 version = project.mod_version
 group = project.maven_group
+
+base {
+	archivesName = project.archives_base_name
+}
 
 repositories {
     // Add repositories to retrieve artifacts from in here.
@@ -41,7 +41,7 @@ dependencies {
 	implementation include('com.mysql:mysql-connector-j:9.4.0')
 	implementation include('org.postgresql:postgresql:42.7.8')
 
-	modImplementation include("me.lucko:fabric-permissions-api:0.4.2-patbox.1")
+	modImplementation include("me.lucko:fabric-permissions-api:0.5.0")
 	modImplementation include("eu.pb4:sgui:1.11.0+1.21.9")
 
 	modImplementation include("eu.pb4:placeholder-api:2.8.0+1.21.9")
@@ -77,11 +77,14 @@ java {
 	// if it is present.
 	// If you remove this line, sources will not be generated.
 	withSourcesJar()
+
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
 }
 
 jar {
 	from("LICENSE") {
-		rename { "${it}_${project.archivesBaseName}"}
+		rename { "${it}_${inputs.properties.archivesName}"}
 	}
 }
 
