@@ -29,12 +29,13 @@ import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.PlayerConfigEntry;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.text.TextCodecs;
+import net.minecraft.text.*;
+import net.minecraft.util.Formatting;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -376,6 +377,44 @@ public final class BanHammerImpl implements ModInitializer {
                 return false;
             }
             return true;
+        });
+
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            String ip = handler.player.getIp();
+            Set<UUID> associatedAccounts = IP_TO_UUID_CACHE.get(ip);
+            if (associatedAccounts.size() <= 1) return;
+            List<Text> playerMessages = new LinkedList<>();
+
+            for (UUID player : associatedAccounts) {
+                String name = SERVER.getApiServices().nameToIdCache().getByUuid(player).map(PlayerConfigEntry::name).orElse(player.toString());
+                MutableText text = Text.literal("[" + name + "]");
+
+                List<PunishmentData.Synced> punishments = getPlayersPunishments(player.toString(), PunishmentType.BAN);
+                playerMessages.add(text);
+                if (SERVER.getPlayerManager().getPlayer(player) != null || player.equals(handler.player.getUuid())) {
+                    text.formatted(Formatting.GREEN);
+                } else if (punishments.isEmpty()) {
+                    text.formatted(Formatting.GRAY);
+                } else {
+                    text.formatted(Formatting.RED);
+                    PunishmentData.Synced punishment = punishments.getFirst();
+
+                    text.styled(style ->
+                        style.withHoverEvent(new HoverEvent.ShowText(punishment.getChatMessage(PlaceholderContext.of(new GameProfile(punishment.playerUUID, punishment.playerName), SERVER))))
+                    );
+                }
+            }
+
+            Text message = Texts.join(playerMessages, Text.literal(" "));
+
+            SERVER.sendMessage(message);
+
+            for (ServerPlayerEntity player : SERVER.getPlayerManager().getPlayerList()) {
+                if (Permissions.check(player.getCommandSource(), "banhammer.seeassociated", 3)) {
+                    player.sendMessage(message);
+                }
+            }
+
         });
 
         PunishCommands.register();
