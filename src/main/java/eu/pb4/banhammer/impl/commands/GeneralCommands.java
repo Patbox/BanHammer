@@ -18,18 +18,17 @@ import eu.pb4.sgui.api.gui.BookGui;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.server.level.ServerPlayer;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
-import static net.minecraft.server.command.CommandManager.literal;
+import static net.minecraft.commands.Commands.literal;
 
 public class GeneralCommands {
     public static void register() {
@@ -68,7 +67,7 @@ public class GeneralCommands {
         });
     }
 
-    private static int listBans(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
+    private static int listBans(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         var mainPlayer = ctx.getSource().getPlayer();
         CompletableFuture.runAsync(() -> {
             var punishments = new ArrayList<PunishmentData>();
@@ -76,7 +75,7 @@ public class GeneralCommands {
             var players = BHUtils.lookupPlayerData(playerNameOrIp, ctx.getSource().getServer());
 
             if (players.isEmpty()) {
-                ctx.getSource().sendFeedback(() -> Text.literal("Player not found!").formatted(Formatting.RED), false);
+                ctx.getSource().sendSuccess(() -> Component.literal("Player not found!").withStyle(ChatFormatting.RED), false);
                 return;
             }
 
@@ -94,12 +93,12 @@ public class GeneralCommands {
 
             for (var p : punishments) {
                 book.addPage(
-                        Text.literal("User: ").setStyle(Style.EMPTY.withBold(true)).append(Text.literal(p.playerName).setStyle(Style.EMPTY.withBold(false))),
-                        Text.literal("Type: ").setStyle(Style.EMPTY.withBold(true)).append(Text.literal(p.type.name).setStyle(Style.EMPTY.withBold(false))),
-                        Text.literal("Date: ").setStyle(Style.EMPTY.withBold(true)).append(Text.literal(p.getFormattedDate()).setStyle(Style.EMPTY.withBold(false))),
-                        Text.literal("Expires: ").setStyle(Style.EMPTY.withBold(true)).append(Text.literal(p.getFormattedExpirationDate()).setStyle(Style.EMPTY.withBold(false))),
-                        Text.literal("By: ").setStyle(Style.EMPTY.withBold(true)).append(p.adminDisplayName.copy().setStyle(Style.EMPTY.withBold(p.adminDisplayName.getStyle().isBold() == true))),
-                        Text.literal("Reason: ").setStyle(Style.EMPTY.withBold(true)).append(Text.literal(p.reason).setStyle(Style.EMPTY.withBold(false)))
+                        Component.literal("User: ").setStyle(Style.EMPTY.withBold(true)).append(Component.literal(p.playerName).setStyle(Style.EMPTY.withBold(false))),
+                        Component.literal("Type: ").setStyle(Style.EMPTY.withBold(true)).append(Component.literal(p.type.name).setStyle(Style.EMPTY.withBold(false))),
+                        Component.literal("Date: ").setStyle(Style.EMPTY.withBold(true)).append(Component.literal(p.getFormattedDate()).setStyle(Style.EMPTY.withBold(false))),
+                        Component.literal("Expires: ").setStyle(Style.EMPTY.withBold(true)).append(Component.literal(p.getFormattedExpirationDate()).setStyle(Style.EMPTY.withBold(false))),
+                        Component.literal("By: ").setStyle(Style.EMPTY.withBold(true)).append(p.adminDisplayName.copy().setStyle(Style.EMPTY.withBold(p.adminDisplayName.getStyle().isBold() == true))),
+                        Component.literal("Reason: ").setStyle(Style.EMPTY.withBold(true)).append(Component.literal(p.reason).setStyle(Style.EMPTY.withBold(false)))
                 );
             }
 
@@ -115,27 +114,27 @@ public class GeneralCommands {
         return 0;
     }
 
-    private static int reloadConfig(CommandContext<ServerCommandSource> context) {
+    private static int reloadConfig(CommandContext<CommandSourceStack> context) {
         if (ConfigManager.loadConfig()) {
-            context.getSource().sendFeedback(() -> Text.literal("Reloaded config!"), false);
+            context.getSource().sendSuccess(() -> Component.literal("Reloaded config!"), false);
         } else {
-            context.getSource().sendError(Text.literal("Error accrued while reloading config!").formatted(Formatting.RED));
+            context.getSource().sendFailure(Component.literal("Error accrued while reloading config!").withStyle(ChatFormatting.RED));
         }
         return 1;
     }
 
-    private static int about(CommandContext<ServerCommandSource> context) {
+    private static int about(CommandContext<CommandSourceStack> context) {
         if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
             GenericModInfo.build(FabricLoader.getInstance().getModContainer("banhammer").get());
         }
 
-        for (var text : context.getSource().getEntity() instanceof ServerPlayerEntity ? GenericModInfo.getAboutFull() : GenericModInfo.getAboutConsole()) {
-            context.getSource().sendFeedback(() -> text, false);
+        for (var text : context.getSource().getEntity() instanceof ServerPlayer ? GenericModInfo.getAboutFull() : GenericModInfo.getAboutConsole()) {
+            context.getSource().sendSuccess(() -> text, false);
         }
         return 1;
     }
 
-    private static int importer(CommandContext<ServerCommandSource> context, boolean remove) {
+    private static int importer(CommandContext<CommandSourceStack> context, boolean remove) {
         String type = context.getArgument("source", String.class);
 
         var importer = BanHammerImpl.IMPORTERS.get(type);
@@ -159,26 +158,26 @@ public class GeneralCommands {
             }
 
             if (result) {
-                context.getSource().sendFeedback(() -> Text.literal("Successfully imported punishments!").formatted(Formatting.GREEN), false);
+                context.getSource().sendSuccess(() -> Component.literal("Successfully imported punishments!").withStyle(ChatFormatting.GREEN), false);
                 return 1;
             } else {
-                context.getSource().sendError(Text.literal("Couldn't import punishments!"));
+                context.getSource().sendFailure(Component.literal("Couldn't import punishments!"));
                 return 0;
             }
         } else {
-            context.getSource().sendError(Text.literal("Invalid importer type!"));
+            context.getSource().sendFailure(Component.literal("Invalid importer type!"));
             return 0;
         }
     }
 
-    private static int exporter(CommandContext<ServerCommandSource> context, boolean history) {
+    private static int exporter(CommandContext<CommandSourceStack> context, boolean history) {
         CompletableFuture.runAsync(() -> {
             try {
                 Files.writeString(BanHammerJsonImporter.DEFAULT_PATH, BanHammerJsonImporter.exportJson(history));
-                context.getSource().sendFeedback(() -> Text.literal("Successfully exported punishments to banhammer_exports.json file!").formatted(Formatting.GREEN), false);
+                context.getSource().sendSuccess(() -> Component.literal("Successfully exported punishments to banhammer_exports.json file!").withStyle(ChatFormatting.GREEN), false);
 
             } catch (Throwable e) {
-                context.getSource().sendError(Text.literal("Couldn't export punishments!"));
+                context.getSource().sendFailure(Component.literal("Couldn't export punishments!"));
                 e.printStackTrace();
             }
         });
@@ -186,8 +185,8 @@ public class GeneralCommands {
     }
 
 
-    public static RequiredArgumentBuilder<ServerCommandSource, String> importArgument(String name) {
-        return CommandManager.argument(name, StringArgumentType.word())
+    public static RequiredArgumentBuilder<CommandSourceStack, String> importArgument(String name) {
+        return Commands.argument(name, StringArgumentType.word())
                 .suggests((ctx, builder) -> {
                     String remaining = builder.getRemaining().toLowerCase(Locale.ROOT);
 
@@ -201,8 +200,8 @@ public class GeneralCommands {
                 });
     }
 
-    public static RequiredArgumentBuilder<ServerCommandSource, String> playerArgument(String name) {
-        return CommandManager.argument(name, StringArgumentType.word())
+    public static RequiredArgumentBuilder<CommandSourceStack, String> playerArgument(String name) {
+        return Commands.argument(name, StringArgumentType.word())
                 .suggests((ctx, builder) -> {
                     String remaining = builder.getRemaining().toLowerCase(Locale.ROOT);
 

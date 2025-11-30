@@ -4,18 +4,18 @@ import eu.pb4.banhammer.api.PunishmentType;
 import eu.pb4.banhammer.impl.BanHammerImpl;
 import eu.pb4.banhammer.impl.config.ConfigManager;
 import eu.pb4.placeholders.api.PlaceholderContext;
-import net.minecraft.network.ClientConnection;
-import net.minecraft.network.message.LastSeenMessageList;
-import net.minecraft.network.message.MessageChain;
-import net.minecraft.network.message.SignedMessage;
-import net.minecraft.network.packet.c2s.play.ChatCommandSignedC2SPacket;
-import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
-import net.minecraft.network.packet.c2s.play.CommandExecutionC2SPacket;
+import net.minecraft.network.Connection;
+import net.minecraft.network.chat.LastSeenMessages;
+import net.minecraft.network.chat.PlayerChatMessage;
+import net.minecraft.network.chat.SignedMessageChain;
+import net.minecraft.network.protocol.game.ServerboundChatCommandPacket;
+import net.minecraft.network.protocol.game.ServerboundChatCommandSignedPacket;
+import net.minecraft.network.protocol.game.ServerboundChatPacket;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ConnectedClientData;
-import net.minecraft.server.network.ServerCommonNetworkHandler;
-import net.minecraft.server.network.ServerPlayNetworkHandler;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.CommonListenerCookie;
+import net.minecraft.server.network.ServerCommonPacketListenerImpl;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -26,63 +26,63 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.time.Instant;
 import java.util.Optional;
 
-@Mixin(ServerPlayNetworkHandler.class)
-public abstract class ServerPlayNetworkHandlerMixin extends ServerCommonNetworkHandler {
-    @Shadow public ServerPlayerEntity player;
+@Mixin(ServerGamePacketListenerImpl.class)
+public abstract class ServerPlayNetworkHandlerMixin extends ServerCommonPacketListenerImpl {
+    @Shadow public ServerPlayer player;
 
-    public ServerPlayNetworkHandlerMixin(MinecraftServer server, ClientConnection connection, ConnectedClientData clientData) {
+    public ServerPlayNetworkHandlerMixin(MinecraftServer server, Connection connection, CommonListenerCookie clientData) {
         super(server, connection, clientData);
     }
 
-    @Shadow protected abstract SignedMessage getSignedMessage(ChatMessageC2SPacket packet, LastSeenMessageList lastSeenMessages) throws MessageChain.MessageChainException;
+    @Shadow protected abstract PlayerChatMessage getSignedMessage(ServerboundChatPacket packet, LastSeenMessages lastSeenMessages) throws SignedMessageChain.DecodeException;
 
-    @Shadow protected abstract void handleMessageChainException(MessageChain.MessageChainException exception);
+    @Shadow protected abstract void handleMessageDecodeFailure(SignedMessageChain.DecodeException exception);
 
-    @Shadow protected abstract Optional<LastSeenMessageList> validateAcknowledgment(LastSeenMessageList.Acknowledgment acknowledgment);
+    @Shadow protected abstract Optional<LastSeenMessages> unpackAndApplyLastSeen(LastSeenMessages.Update acknowledgment);
 
-    @Inject(method = "onChatMessage", at = @At("HEAD"), cancellable = true)
-    private void banHammer_checkIfMuted(ChatMessageC2SPacket packet, CallbackInfo ci) {
+    @Inject(method = "handleChat", at = @At("HEAD"), cancellable = true)
+    private void banHammer_checkIfMuted(ServerboundChatPacket packet, CallbackInfo ci) {
         boolean blocked = false;
         for (var punishment : BanHammerImpl.CACHED_PUNISHMENTS) {
-            if (!punishment.isExpired() && punishment.type == PunishmentType.MUTE && punishment.playerUUID.equals(this.player.getUuid())) {
-                this.player.sendMessage(punishment.getDisconnectMessage(PlaceholderContext.of(this.player)), false);
+            if (!punishment.isExpired() && punishment.type == PunishmentType.MUTE && punishment.playerUUID.equals(this.player.getUUID())) {
+                this.player.displayClientMessage(punishment.getDisconnectMessage(PlaceholderContext.of(this.player)), false);
                 ci.cancel();
                 blocked = true;
             }
         }
 
         if (!blocked) {
-            var punishments = BanHammerImpl.getPlayersPunishments(this.player.getUuid().toString(), PunishmentType.MUTE);
+            var punishments = BanHammerImpl.getPlayersPunishments(this.player.getUUID().toString(), PunishmentType.MUTE);
             if (!punishments.isEmpty()) {
                 var punishment = punishments.getFirst();
 
-                this.player.sendMessage(punishment.getDisconnectMessage(PlaceholderContext.of(this.player)), false);
+                this.player.displayClientMessage(punishment.getDisconnectMessage(PlaceholderContext.of(this.player)), false);
                 ci.cancel();
                 blocked = true;
             }
         }
 
         if (blocked) {
-            Optional<LastSeenMessageList> optional = this.validateAcknowledgment(packet.acknowledgment());
+            Optional<LastSeenMessages> optional = this.unpackAndApplyLastSeen(packet.lastSeenMessages());
             optional.ifPresent(lastSeenMessageList -> this.server.submit(() -> {
                 try {
-                    this.getSignedMessage(packet, (LastSeenMessageList) lastSeenMessageList);
-                } catch (MessageChain.MessageChainException var6) {
-                    this.handleMessageChainException(var6);
+                    this.getSignedMessage(packet, (LastSeenMessages) lastSeenMessageList);
+                } catch (SignedMessageChain.DecodeException var6) {
+                    this.handleMessageDecodeFailure(var6);
                 }
             }));
         }
     }
 
-    @Inject(method = "onCommandExecution", at = @At("HEAD"), cancellable = true)
-    private void banHammer_checkIfMutedCommand(CommandExecutionC2SPacket packet, CallbackInfo ci) {
+    @Inject(method = "handleChatCommand", at = @At("HEAD"), cancellable = true)
+    private void banHammer_checkIfMutedCommand(ServerboundChatCommandPacket packet, CallbackInfo ci) {
         if (checkIfMutedCommand(packet.command())) {
             ci.cancel();
         }
     }
 
-    @Inject(method = "handleCommandExecution", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/message/SignedCommandArguments$Impl;<init>(Ljava/util/Map;)V"), cancellable = true)
-    private void banHammer_checkIfMutedCommand(ChatCommandSignedC2SPacket packet, LastSeenMessageList lastSeenMessages, CallbackInfo ci) {
+    @Inject(method = "performSignedChatCommand", at = @At(value = "INVOKE", target = "Lnet/minecraft/commands/CommandSigningContext$SignedArguments;<init>(Ljava/util/Map;)V"), cancellable = true)
+    private void banHammer_checkIfMutedCommand(ServerboundChatCommandSignedPacket packet, LastSeenMessages lastSeenMessages, CallbackInfo ci) {
         if (checkIfMutedCommand(packet.command())) {
             ci.cancel();
         }
@@ -95,18 +95,18 @@ public abstract class ServerPlayNetworkHandlerMixin extends ServerCommonNetworkH
         for (String command : ConfigManager.getConfig().mutedCommands) {
             if (rawCommand.equals(command)) {
                 for (var punishment : BanHammerImpl.CACHED_PUNISHMENTS) {
-                    if (!punishment.isExpired() && punishment.type == PunishmentType.MUTE && punishment.playerUUID.equals(this.player.getUuid())) {
-                        this.player.sendMessage(punishment.getDisconnectMessage(PlaceholderContext.of(this.player)), false);
+                    if (!punishment.isExpired() && punishment.type == PunishmentType.MUTE && punishment.playerUUID.equals(this.player.getUUID())) {
+                        this.player.displayClientMessage(punishment.getDisconnectMessage(PlaceholderContext.of(this.player)), false);
                         return true;
                     }
                 }
 
-                var punishments = BanHammerImpl.getPlayersPunishments(this.player.getUuid().toString(), PunishmentType.MUTE);
+                var punishments = BanHammerImpl.getPlayersPunishments(this.player.getUUID().toString(), PunishmentType.MUTE);
                 if (!punishments.isEmpty()) {
                     var punishment = punishments.getFirst();
 
 
-                    this.player.sendMessage(punishment.getDisconnectMessage(PlaceholderContext.of(this.player)), false);
+                    this.player.displayClientMessage(punishment.getDisconnectMessage(PlaceholderContext.of(this.player)), false);
                     return true;
                 }
                 return false;

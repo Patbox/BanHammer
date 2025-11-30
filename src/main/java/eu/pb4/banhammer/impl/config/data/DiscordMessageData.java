@@ -1,12 +1,11 @@
 package eu.pb4.banhammer.impl.config.data;
 
 import eu.pb4.banhammer.impl.discord.DiscordWebhookMessage;
-import net.minecraft.text.TextColor;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import net.minecraft.network.chat.TextColor;
 
 public class DiscordMessageData {
     public boolean sendBanMessage = true;
@@ -227,7 +226,7 @@ public class DiscordMessageData {
                 String footerIconUrl = this.embedFooterIconUrl;
                 String contentEmbed = String.join("\n", this.embedMessage);
 
-                TextColor color = TextColor.parse(this.embedColor).result().orElse(null);
+                TextColor color = TextColor.parseColor(this.embedColor).result().orElse(null);
 
                 List<Table> tables = new ArrayList<>();
                 for (Table table : this.embedFields) {
@@ -276,7 +275,7 @@ public class DiscordMessageData {
                 }
 
                 if (color != null) {
-                    embed.color(color.getRgb());
+                    embed.color(color.getValue());
                 }
                 if (!contentEmbed.isEmpty()) {
                     embed.description(contentEmbed);

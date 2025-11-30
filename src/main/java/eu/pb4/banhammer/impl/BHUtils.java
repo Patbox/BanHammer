@@ -5,19 +5,20 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.PropertyMap;
 import eu.pb4.banhammer.impl.config.ConfigManager;
 import me.lucko.fabric.api.permissions.v0.Permissions;
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.PlayerConfigEntry;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permission;
+import net.minecraft.server.players.NameAndId;
 import net.minecraft.util.Util;
 
 import java.net.SocketAddress;
 import java.util.*;
 
 public final class BHUtils {
-    private static final Text UNKNOWN_PLAYER = Text.literal("Unknown player").formatted(Formatting.ITALIC);
+    private static final Component UNKNOWN_PLAYER = Component.literal("Unknown player").withStyle(ChatFormatting.ITALIC);
 
     public static String stringifyAddress(SocketAddress socketAddress) {
         String string = socketAddress.toString();
@@ -58,9 +59,9 @@ public final class BHUtils {
         }
     }
 
-    public static boolean isPunishableBy(GameProfile profile, ServerCommandSource source) {
+    public static boolean isPunishableBy(GameProfile profile, CommandSourceStack source) {
         var server = source.getServer();
-        var entry = server.getPlayerManager().getOpList().get(new PlayerConfigEntry(profile));
+        var entry = server.getPlayerList().getOps().get(new NameAndId(profile));
 
         boolean permission = true;
 
@@ -71,7 +72,7 @@ public final class BHUtils {
         }
 
 
-        return (server.getName().equals("Server") && source.getEntity() == null) || ((entry == null || source.hasPermissionLevel(entry.getPermissionLevel()))
+        return (server.name().equals("Server") && source.getEntity() == null) || ((entry == null || source.permissions().hasPermission(new Permission.HasCommandLevel(entry.permissions().level())))
                 && ConfigManager.getConfig().canPunish(profile)
                 && permission
                 && BanHammerImpl.CAN_PUNISH_CHECK_EVENT.invoker().canSourcePunish(profile, source).get());
@@ -92,14 +93,14 @@ public final class BHUtils {
             }
 
 
-            ServerPlayerEntity player = isUuid
-                    ? server.getPlayerManager().getPlayer(uuid)
+            ServerPlayer player = isUuid
+                    ? server.getPlayerList().getPlayer(uuid)
                     : isIpLike
                     ? null
-                    : server.getPlayerManager().getPlayer(usernameOrIp);
+                    : server.getPlayerList().getPlayerByName(usernameOrIp);
 
             if (player != null) {
-                return List.of(new BHPlayerData(player.getGameProfile(), player.getIp(), player.getDisplayName(), player));
+                return List.of(new BHPlayerData(player.getGameProfile(), player.getIpAddress(), player.getDisplayName(), player));
             }
 
             if (isIpLike) {
@@ -110,13 +111,13 @@ public final class BHUtils {
                     var list = new ArrayList<BHPlayerData>();
 
                     for (var uuid2 : uuids) {
-                        var optional = server.getApiServices().nameToIdCache().getByUuid(uuid2);
+                        var optional = server.services().nameToIdCache().get(uuid2);
 
                         if (optional.isPresent()) {
                             var profile = optional.get();
-                            list.add(new BHPlayerData(new GameProfile(profile.id(), profile.name()), usernameOrIp, Text.literal(profile.name()), server.getPlayerManager().getPlayer(profile.id())));
+                            list.add(new BHPlayerData(new GameProfile(profile.id(), profile.name()), usernameOrIp, Component.literal(profile.name()), server.getPlayerList().getPlayer(profile.id())));
                         } else {
-                            list.add(new BHPlayerData(new GameProfile(uuid2, null), usernameOrIp, Text.literal("??: " + uuid2).formatted(Formatting.ITALIC), null));
+                            list.add(new BHPlayerData(new GameProfile(uuid2, null), usernameOrIp, Component.literal("??: " + uuid2).withStyle(ChatFormatting.ITALIC), null));
                         }
                     }
 
@@ -129,10 +130,10 @@ public final class BHUtils {
 
             if (isUuid) {
                 ip = BanHammerImpl.UUID_TO_IP_CACHE.getOrDefault(uuid, "unknown");
-                var tmp = server.getApiServices().nameToIdCache().getByUuid(uuid).orElse(null);
+                var tmp = server.services().nameToIdCache().get(uuid).orElse(null);
                 profile = tmp != null ? new GameProfile(tmp.id(), tmp.name()) : null;
             } else {
-                var possibleProfile = server.getApiServices().nameToIdCache().findByName(usernameOrIp);
+                var possibleProfile = server.services().nameToIdCache().get(usernameOrIp);
 
                 if (possibleProfile.isPresent()) {
                     profile = new GameProfile(possibleProfile.get().id(), possibleProfile.get().name(), PropertyMap.EMPTY);
@@ -143,7 +144,7 @@ public final class BHUtils {
             if (profile == null) {
                 return List.of(new BHPlayerData(new GameProfile(uuid, ""), ip, UNKNOWN_PLAYER, null));
             } else {
-                return List.of(new BHPlayerData(profile, ip, Text.literal(profile.name()), null));
+                return List.of(new BHPlayerData(profile, ip, Component.literal(profile.name()), null));
             }
         } catch (Exception e) {
             //e.printStackTrace();

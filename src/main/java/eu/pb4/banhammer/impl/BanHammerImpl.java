@@ -31,11 +31,14 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentUtils;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.PlayerConfigEntry;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.*;
-import net.minecraft.util.Formatting;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.NameAndId;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -75,7 +78,7 @@ public final class BanHammerImpl implements ModInitializer {
         return TriState.TRUE;
     });
     public static final Gson GSON = new GsonBuilder().disableHtmlEscaping()
-            .registerTypeHierarchyAdapter(Text.class, CodecSerializer.TEXT)
+            .registerTypeHierarchyAdapter(Component.class, CodecSerializer.TEXT)
             .registerTypeAdapterFactory(new LowercaseEnumTypeAdapterFactory())
             .create();
     public static MinecraftServer SERVER;
@@ -136,7 +139,7 @@ public final class BanHammerImpl implements ModInitializer {
                     List<String> finalActions = actions;
                     SERVER.execute(() -> {
                         for (var i : finalActions) {
-                            SERVER.getCommandManager().executeWithPrefix(SERVER.getCommandSource(),
+                            SERVER.getCommands().performPrefixedCommand(SERVER.createCommandSourceStack(),
                                     i
                                             .replace("${uuid}", punishment.playerUUID.toString())
                                             .replace("${name}", punishment.playerName)
@@ -153,11 +156,11 @@ public final class BanHammerImpl implements ModInitializer {
         if (punishment.type.kick && punishment.type.ipBased) {
             boolean alreadyStandardBanned = false;
 
-            for (ServerPlayerEntity player : SERVER.getPlayerManager().getPlayerList()) {
-                if (player.getIp().equals(punishment.playerIP)) {
-                    player.networkHandler.disconnect(punishment.getDisconnectMessage(PlaceholderContext.of(player)));
+            for (ServerPlayer player : SERVER.getPlayerList().getPlayers()) {
+                if (player.getIpAddress().equals(punishment.playerIP)) {
+                    player.connection.disconnect(punishment.getDisconnectMessage(PlaceholderContext.of(player)));
                     if (ConfigManager.getConfig().configData.standardBanPlayersWithBannedIps && punishment.type == PunishmentType.IP_BAN) {
-                        PunishmentData punishment1 = new PunishmentData(player.getUuid(), player.getIp(), player.getDisplayName(), player.getGameProfile().name(),
+                        PunishmentData punishment1 = new PunishmentData(player.getUUID(), player.getIpAddress(), player.getDisplayName(), player.getGameProfile().name(),
                                 punishment.adminUUID,
                                 punishment.adminDisplayName,
                                 punishment.time,
@@ -165,7 +168,7 @@ public final class BanHammerImpl implements ModInitializer {
                                 punishment.reason,
                                 PunishmentType.BAN);
 
-                        if (player.getUuid() == punishment.playerUUID) {
+                        if (player.getUUID() == punishment.playerUUID) {
                             alreadyStandardBanned = true;
                         }
 
@@ -186,24 +189,24 @@ public final class BanHammerImpl implements ModInitializer {
                 punishPlayer(punishment1, true, true);
             }
         } else if (punishment.type.kick) {
-            ServerPlayerEntity player = SERVER.getPlayerManager().getPlayer(punishment.playerUUID);
+            ServerPlayer player = SERVER.getPlayerList().getPlayer(punishment.playerUUID);
 
             if (player != null) {
-                player.networkHandler.disconnect(punishment.getDisconnectMessage(PlaceholderContext.of(player)));
+                player.connection.disconnect(punishment.getDisconnectMessage(PlaceholderContext.of(player)));
             }
         }
 
         if (!invisible) {
             if (!silent) {
-                SERVER.getPlayerManager().broadcast(punishment.getChatMessage(PlaceholderContext.of(new GameProfile(punishment.playerUUID, punishment.playerName), SERVER)), false);
+                SERVER.getPlayerList().broadcastSystemMessage(punishment.getChatMessage(PlaceholderContext.of(new GameProfile(punishment.playerUUID, punishment.playerName), SERVER)), false);
             } else {
-                Text message = punishment.getChatMessage(PlaceholderContext.of(new GameProfile(punishment.playerUUID, punishment.playerName), SERVER));
+                Component message = punishment.getChatMessage(PlaceholderContext.of(new GameProfile(punishment.playerUUID, punishment.playerName), SERVER));
 
-                SERVER.sendMessage(message);
+                SERVER.sendSystemMessage(message);
 
-                for (ServerPlayerEntity player : SERVER.getPlayerManager().getPlayerList()) {
-                    if (Permissions.check(player.getCommandSource(), "banhammer.seesilent", 3)) {
-                        player.sendMessage(message);
+                for (ServerPlayer player : SERVER.getPlayerList().getPlayers()) {
+                    if (Permissions.check(player.createCommandSourceStack(), "banhammer.seesilent", 3)) {
+                        player.sendSystemMessage(message);
                     }
                 }
             }
@@ -316,7 +319,7 @@ public final class BanHammerImpl implements ModInitializer {
                     }
                     default -> {
                         LOGGER.error("Config file is invalid (database)! Stopping server...");
-                        server.shutdown();
+                        server.stopServer();
                         return;
                     }
                 }
@@ -324,7 +327,7 @@ public final class BanHammerImpl implements ModInitializer {
                 e.printStackTrace();
 
                 LOGGER.error("Couldn't connect to database! Stopping server...");
-                server.shutdown();
+                server.stopServer();
                 return;
             }
 
@@ -334,7 +337,7 @@ public final class BanHammerImpl implements ModInitializer {
             LOGGER.info("BanHammer connected successfully to " + DATABASE.name() + " database!");
         } else {
             LOGGER.error("Config file is invalid! Stopping server...");
-            server.shutdown();
+            server.stopServer();
         }
 
     }
@@ -370,48 +373,48 @@ public final class BanHammerImpl implements ModInitializer {
             }
         });
         ServerMessageEvents.ALLOW_CHAT_MESSAGE.register((message, sender, params) -> {
-            var punishments = getPlayersPunishments(sender.getUuidAsString(), PunishmentType.MUTE);
+            var punishments = getPlayersPunishments(sender.getStringUUID(), PunishmentType.MUTE);
             if (!punishments.isEmpty()) {
                 var punishment = punishments.getFirst();
-                sender.sendMessage(punishment.getDisconnectMessage(PlaceholderContext.of(sender)), false);
+                sender.displayClientMessage(punishment.getDisconnectMessage(PlaceholderContext.of(sender)), false);
                 return false;
             }
             return true;
         });
 
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-            String ip = handler.player.getIp();
+            String ip = handler.player.getIpAddress();
             Set<UUID> associatedAccounts = IP_TO_UUID_CACHE.get(ip);
             if (associatedAccounts.size() <= 1) return;
-            List<Text> playerMessages = new LinkedList<>();
+            List<Component> playerMessages = new LinkedList<>();
 
             for (UUID player : associatedAccounts) {
-                String name = SERVER.getApiServices().nameToIdCache().getByUuid(player).map(PlayerConfigEntry::name).orElse(player.toString());
-                MutableText text = Text.literal("[" + name + "]");
+                String name = SERVER.services().nameToIdCache().get(player).map(NameAndId::name).orElse(player.toString());
+                MutableComponent text = Component.literal("[" + name + "]");
 
                 List<PunishmentData.Synced> punishments = getPlayersPunishments(player.toString(), PunishmentType.BAN);
                 playerMessages.add(text);
-                if (SERVER.getPlayerManager().getPlayer(player) != null || player.equals(handler.player.getUuid())) {
-                    text.formatted(Formatting.GREEN);
+                if (SERVER.getPlayerList().getPlayer(player) != null || player.equals(handler.player.getUUID())) {
+                    text.withStyle(ChatFormatting.GREEN);
                 } else if (punishments.isEmpty()) {
-                    text.formatted(Formatting.GRAY);
+                    text.withStyle(ChatFormatting.GRAY);
                 } else {
-                    text.formatted(Formatting.RED);
+                    text.withStyle(ChatFormatting.RED);
                     PunishmentData.Synced punishment = punishments.getFirst();
 
-                    text.styled(style ->
+                    text.withStyle(style ->
                         style.withHoverEvent(new HoverEvent.ShowText(punishment.getChatMessage(PlaceholderContext.of(new GameProfile(punishment.playerUUID, punishment.playerName), SERVER))))
                     );
                 }
             }
 
-            Text message = Texts.join(playerMessages, Text.literal(" "));
+            Component message = ComponentUtils.formatList(playerMessages, Component.literal(" "));
 
-            SERVER.sendMessage(message);
+            SERVER.sendSystemMessage(message);
 
-            for (ServerPlayerEntity player : SERVER.getPlayerManager().getPlayerList()) {
-                if (Permissions.check(player.getCommandSource(), "banhammer.seeassociated", 3)) {
-                    player.sendMessage(message);
+            for (ServerPlayer player : SERVER.getPlayerList().getPlayers()) {
+                if (Permissions.check(player.createCommandSourceStack(), "banhammer.seeassociated", 3)) {
+                    player.sendSystemMessage(message);
                 }
             }
 

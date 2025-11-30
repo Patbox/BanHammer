@@ -12,14 +12,13 @@ import eu.pb4.banhammer.impl.config.ConfigManager;
 import eu.pb4.placeholders.api.PlaceholderContext;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.Component;
 import java.util.concurrent.CompletableFuture;
 
-import static net.minecraft.server.command.CommandManager.argument;
-import static net.minecraft.server.command.CommandManager.literal;
+import static net.minecraft.commands.Commands.argument;
+import static net.minecraft.commands.Commands.literal;
 
 public class PunishCommands {
     public static void register() {
@@ -40,7 +39,7 @@ public class PunishCommands {
         });
     }
 
-    private static LiteralArgumentBuilder<ServerCommandSource> create(String command, PunishmentType type, boolean temp) {
+    private static LiteralArgumentBuilder<CommandSourceStack> create(String command, PunishmentType type, boolean temp) {
         return literal(command)
                 .requires(ConfigManager.requirePermissionOrOp("banhammer.punish." + command))
                 .then(temp ? GeneralCommands.playerArgument("player")
@@ -56,7 +55,7 @@ public class PunishCommands {
                 );
     }
 
-    private static int punishCommand(CommandContext<ServerCommandSource> ctx, boolean isTemp, PunishmentType type) {
+    private static int punishCommand(CommandContext<CommandSourceStack> ctx, boolean isTemp, PunishmentType type) {
         CompletableFuture.runAsync(() -> {
             Config config = ConfigManager.getConfig();
             String playerNameOrIp = ctx.getArgument("player", String.class);
@@ -76,7 +75,7 @@ public class PunishCommands {
                     }
 
                 } catch (Exception e) {
-                    ctx.getSource().sendError(Text.literal("Invalid duration!"));
+                    ctx.getSource().sendFailure(Component.literal("Invalid duration!"));
                     return;
                 }
             }
@@ -105,7 +104,7 @@ public class PunishCommands {
             var players = BHUtils.lookupPlayerData(playerNameOrIp, ctx.getSource().getServer());
 
             if (players.isEmpty()) {
-                ctx.getSource().sendFeedback(() -> Text.literal("Couldn't find player " + playerNameOrIp + "!").formatted(Formatting.RED), false);
+                ctx.getSource().sendSuccess(() -> Component.literal("Couldn't find player " + playerNameOrIp + "!").withStyle(ChatFormatting.RED), false);
             } else {
                 for (var player : players) {
 
@@ -115,10 +114,10 @@ public class PunishCommands {
                         BanHammerImpl.punishPlayer(punishment, config.configData.punishmentsAreSilent || isSilent);
 
                         if (config.configData.punishmentsAreSilent && !Permissions.check(ctx.getSource(), "banhammer.seesilent", 1)) {
-                            ctx.getSource().sendFeedback(() -> punishment.getChatMessage(player.placeholderContext(ctx.getSource().getServer())), false);
+                            ctx.getSource().sendSuccess(() -> punishment.getChatMessage(player.placeholderContext(ctx.getSource().getServer())), false);
                         }
                     } else {
-                        ctx.getSource().sendFeedback(() -> Text.literal("You can't punish ").append(player.displayName()).append("!").formatted(Formatting.RED), false);
+                        ctx.getSource().sendSuccess(() -> Component.literal("You can't punish ").append(player.displayName()).append("!").withStyle(ChatFormatting.RED), false);
                     }
                 }
             }

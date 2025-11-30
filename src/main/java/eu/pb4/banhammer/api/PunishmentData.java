@@ -11,10 +11,10 @@ import eu.pb4.placeholders.api.Placeholders;
 import eu.pb4.placeholders.api.node.EmptyNode;
 import eu.pb4.placeholders.api.parsers.NodeParser;
 import eu.pb4.placeholders.api.parsers.TagLikeParser;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Util;
 import org.jetbrains.annotations.ApiStatus;
 
@@ -30,13 +30,13 @@ public sealed class PunishmentData permits PunishmentData.Synced {
     public final UUID playerUUID;
     public final String playerIP;
     public final UUID adminUUID;
-    public final Text adminDisplayName;
+    public final Component adminDisplayName;
     public final String reason;
-    public final Text playerDisplayName;
+    public final Component playerDisplayName;
     public final String playerName;
 
     @ApiStatus.Internal
-    public PunishmentData(UUID playerUUID, String playerIP, Text playerName, String playerNameRaw, UUID adminUUID, Text adminDisplay, long time, long duration, String reason, PunishmentType type) {
+    public PunishmentData(UUID playerUUID, String playerIP, Component playerName, String playerNameRaw, UUID adminUUID, Component adminDisplay, long time, long duration, String reason, PunishmentType type) {
         this.time = time;
         this.playerUUID = playerUUID;
         this.playerIP = playerIP;
@@ -49,12 +49,12 @@ public sealed class PunishmentData permits PunishmentData.Synced {
         this.type = type;
     }
 
-    public static PunishmentData create(ServerPlayerEntity punished, ServerCommandSource admin, String reason, long duration, PunishmentType type) {
-        return create(punished.getUuid(), punished.getIp(), punished.getDisplayName(), punished.getGameProfile().name(), admin, reason, duration, type);
+    public static PunishmentData create(ServerPlayer punished, CommandSourceStack admin, String reason, long duration, PunishmentType type) {
+        return create(punished.getUUID(), punished.getIpAddress(), punished.getDisplayName(), punished.getGameProfile().name(), admin, reason, duration, type);
     }
 
-    public static PunishmentData create(UUID uuid, String ip, Text displayName, String playerName, ServerCommandSource admin, String reason, long duration, PunishmentType type) {
-        return new PunishmentData(uuid, ip, displayName, playerName, admin.getEntity() != null ? admin.getEntity().getUuid() : Util.NIL_UUID, admin.getDisplayName(), BHUtils.getNow(), duration, reason, type);
+    public static PunishmentData create(UUID uuid, String ip, Component displayName, String playerName, CommandSourceStack admin, String reason, long duration, PunishmentType type) {
+        return new PunishmentData(uuid, ip, displayName, playerName, admin.getEntity() != null ? admin.getEntity().getUUID() : Util.NIL_UUID, admin.getDisplayName(), BHUtils.getNow(), duration, reason, type);
     }
 
     public final boolean isExpired() {
@@ -113,7 +113,7 @@ public sealed class PunishmentData permits PunishmentData.Synced {
     }
 
 
-    public final Text getDisconnectMessage(PlaceholderContext context) {
+    public final Component getDisconnectMessage(PlaceholderContext context) {
         var message = switch (this.type) {
             case KICK -> ConfigManager.getConfig().kickScreenMessage;
             case BAN -> this.isTemporary() ? ConfigManager.getConfig().tempBanScreenMessage : ConfigManager.getConfig().banScreenMessage;
@@ -125,7 +125,7 @@ public sealed class PunishmentData permits PunishmentData.Synced {
         return message.toText(context.asParserContext().with(Config.PLACEHOLDER, this.getPlaceholders()::get));
     }
 
-    public final Text getChatMessage(PlaceholderContext context) {
+    public final Component getChatMessage(PlaceholderContext context) {
         var message = switch (this.type) {
             case KICK -> ConfigManager.getConfig().kickChatMessage;
             case BAN -> this.isTemporary() ? ConfigManager.getConfig().tempBanChatMessage : ConfigManager.getConfig().banChatMessage;
@@ -182,17 +182,17 @@ public sealed class PunishmentData permits PunishmentData.Synced {
         return message;
     }
 
-    public final Map<String, Text> getPlaceholders() {
-        HashMap<String, Text> list = new HashMap<>();
+    public final Map<String, Component> getPlaceholders() {
+        HashMap<String, Component> list = new HashMap<>();
 
         list.put("operator", this.adminDisplayName.copy());
-        list.put("operator_uuid", Text.literal(this.adminUUID.toString()));
-        list.put("reason", Text.literal(this.reason));
-        list.put("expiration_date", Text.literal(this.getFormattedExpirationDate()));
-        list.put("expiration_time", Text.literal(this.getFormattedExpirationTime()));
+        list.put("operator_uuid", Component.literal(this.adminUUID.toString()));
+        list.put("reason", Component.literal(this.reason));
+        list.put("expiration_date", Component.literal(this.getFormattedExpirationDate()));
+        list.put("expiration_time", Component.literal(this.getFormattedExpirationTime()));
         list.put("banned", this.playerDisplayName.copy());
-        list.put("banned_name", Text.literal(this.playerName));
-        list.put("banned_uuid", Text.literal(this.playerUUID.toString()));
+        list.put("banned_name", Component.literal(this.playerName));
+        list.put("banned_uuid", Component.literal(this.playerUUID.toString()));
 
         return list;
     }
@@ -221,7 +221,7 @@ public sealed class PunishmentData permits PunishmentData.Synced {
         private final long id;
 
         @ApiStatus.Internal
-        public Synced(long id, UUID playerUUID, String playerIP, Text playerName, String playerNameRaw, UUID adminUUID, Text adminDisplay, long time, long duration, String reason, PunishmentType type) {
+        public Synced(long id, UUID playerUUID, String playerIP, Component playerName, String playerNameRaw, UUID adminUUID, Component adminDisplay, long time, long duration, String reason, PunishmentType type) {
             super(playerUUID, playerIP, playerName, playerNameRaw, adminUUID, adminDisplay, time, duration, reason, type);
             this.id = id;
         }

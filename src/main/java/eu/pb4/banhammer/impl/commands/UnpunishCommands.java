@@ -13,19 +13,18 @@ import eu.pb4.banhammer.impl.config.data.DiscordMessageData;
 import eu.pb4.placeholders.api.Placeholders;
 import eu.pb4.placeholders.api.node.TextNode;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 
-import static net.minecraft.server.command.CommandManager.argument;
-import static net.minecraft.server.command.CommandManager.literal;
+import static net.minecraft.commands.Commands.argument;
+import static net.minecraft.commands.Commands.literal;
 
 public class UnpunishCommands {
     public static void register() {
@@ -38,7 +37,7 @@ public class UnpunishCommands {
         });
     }
 
-    private static LiteralArgumentBuilder<ServerCommandSource> create(String command, PunishmentType type) {
+    private static LiteralArgumentBuilder<CommandSourceStack> create(String command, PunishmentType type) {
         return literal(command)
                 .requires(ConfigManager.requirePermissionOrOp("banhammer.unpunish." + command))
                 .then(GeneralCommands.playerArgument("player")
@@ -49,7 +48,7 @@ public class UnpunishCommands {
                 );
     }
 
-    private static int removePunishmentCommand(CommandContext<ServerCommandSource> ctx, PunishmentType type) {
+    private static int removePunishmentCommand(CommandContext<CommandSourceStack> ctx, PunishmentType type) {
         CompletableFuture.runAsync(() -> {
 
             var config = ConfigManager.getConfig();
@@ -58,10 +57,10 @@ public class UnpunishCommands {
             var players = BHUtils.lookupPlayerData(playerNameOrIp, ctx.getSource().getServer());
 
             if (players.isEmpty()) {
-                ctx.getSource().sendFeedback(() -> Text.literal("Couldn't find player " + playerNameOrIp + "!").formatted(Formatting.RED), false);
+                ctx.getSource().sendSuccess(() -> Component.literal("Couldn't find player " + playerNameOrIp + "!").withStyle(ChatFormatting.RED), false);
             }
 
-            ServerPlayerEntity executor;
+            ServerPlayer executor;
             try {
                 executor = ctx.getSource().getPlayer();
             } catch (Exception e) {
@@ -136,26 +135,26 @@ public class UnpunishCommands {
                 }
 
                 if (n > 0) {
-                    HashMap<String, Text> list = new HashMap<>();
+                    HashMap<String, Component> list = new HashMap<>();
 
                     list.put("operator", ctx.getSource().getDisplayName());
-                    list.put("banned", Text.literal(player.name()));
-                    list.put("banned_uuid", Text.literal(player.uuid().toString()));
-                    list.put("reason", Text.literal(reason));
-                    Text textMessage = message.toText(player.placeholderContext(ctx.getSource().getServer()).asParserContext().with(Config.PLACEHOLDER, list::get));
+                    list.put("banned", Component.literal(player.name()));
+                    list.put("banned_uuid", Component.literal(player.uuid().toString()));
+                    list.put("reason", Component.literal(reason));
+                    Component textMessage = message.toText(player.placeholderContext(ctx.getSource().getServer()).asParserContext().with(Config.PLACEHOLDER, list::get));
 
                     if (config.configData.punishmentsAreSilent || isSilent) {
                         if (player.player() != null) {
-                            player.player().sendMessage(textMessage, false);
+                            player.player().displayClientMessage(textMessage, false);
                         }
 
-                        ctx.getSource().sendFeedback(() -> textMessage, false);
+                        ctx.getSource().sendSuccess(() -> textMessage, false);
                     } else {
-                        ctx.getSource().sendFeedback(() -> textMessage, false);
+                        ctx.getSource().sendSuccess(() -> textMessage, false);
 
-                        for (ServerPlayerEntity player2 : ctx.getSource().getServer().getPlayerManager().getPlayerList()) {
+                        for (ServerPlayer player2 : ctx.getSource().getServer().getPlayerList().getPlayers()) {
                             if (player2 != executor) {
-                                player2.sendMessage(textMessage);
+                                player2.sendSystemMessage(textMessage);
                             }
                         }
                     }
@@ -195,7 +194,7 @@ public class UnpunishCommands {
                     }
                 } else {
                     String finalAltMessage = altMessage;
-                    ctx.getSource().sendFeedback(() -> Text.literal(finalAltMessage).formatted(Formatting.RED), false);
+                    ctx.getSource().sendSuccess(() -> Component.literal(finalAltMessage).withStyle(ChatFormatting.RED), false);
                 }
             }
         });

@@ -3,10 +3,9 @@ package eu.pb4.banhammer.api;
 import com.google.common.net.InetAddresses;
 import com.mojang.authlib.GameProfile;
 import eu.pb4.banhammer.impl.BanHammerImpl;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.util.Identifier;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -121,7 +120,7 @@ public final class BanHammer {
 
     @FunctionalInterface
     public interface PunishmentCheckEvent {
-        TriState canSourcePunish(GameProfile profile, ServerCommandSource source);
+        TriState canSourcePunish(GameProfile profile, CommandSourceStack source);
     }
 
     public interface PunishmentImporter {

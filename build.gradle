@@ -30,21 +30,21 @@ configurations {
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+	mappings loom.officialMojangMappings()
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
 
-	implementation include("org.xerial:sqlite-jdbc:3.50.3.0")
-	implementation include('com.mysql:mysql-connector-j:9.4.0')
+	implementation include("org.xerial:sqlite-jdbc:3.51.0.0")
+	implementation include('com.mysql:mysql-connector-j:9.5.0')
 	implementation include('org.postgresql:postgresql:42.7.8')
 
-	modImplementation include("me.lucko:fabric-permissions-api:0.5.0")
+	modImplementation include("me.lucko:fabric-permissions-api:0.6.0-patbox")
 	modImplementation include("eu.pb4:sgui:1.11.0+1.21.9")
 
-	modImplementation include("eu.pb4:placeholder-api:2.8.0+1.21.9")
+	modImplementation include("eu.pb4:placeholder-api:2.8.1+1.21.10")
 
 
 	// PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
@@ -146,7 +146,7 @@ curseforge {
 			releaseType = "release"
 			changelog = System.getenv("CHANGELOG")
 			changelogType = "markdown"
-			addGameVersion((project.minecraft_version.contains("-") ? ((String) project.minecraft_version.split("-")[0] + "-Snapshot") : project.minecraft_version))
+			addGameVersion((project.minecraft_version.contains("-") ? ((String) project.minecraft_version.split("-")[0] + "-snapshot") : project.minecraft_version))
 			addGameVersion "Fabric"
 			addGameVersion "Quilt"
 			mainArtifact(remapJar)

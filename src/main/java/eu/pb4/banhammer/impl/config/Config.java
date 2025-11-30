@@ -13,16 +13,15 @@ import eu.pb4.placeholders.api.node.TextNode;
 import eu.pb4.placeholders.api.parsers.NodeParser;
 import eu.pb4.placeholders.api.parsers.TagLikeParser;
 import me.lucko.fabric.api.permissions.v0.Permissions;
-import net.minecraft.command.CommandSource;
-import net.minecraft.text.Text;
-
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.network.chat.Component;
 import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.function.Function;
 
 public class Config {
-    public static final ParserContext.Key<Function<String, Text>> PLACEHOLDER = ParserContext.Key.of("ban_hammer");
+    public static final ParserContext.Key<Function<String, Component>> PLACEHOLDER = ParserContext.Key.of("ban_hammer");
     private static final NodeParser PARSER = NodeParser.builder()
             .quickText()
             .simplifiedTextFormat()
@@ -132,7 +131,7 @@ public class Config {
         return PARSER.parseNode(String.join("\n", text));
     }
 
-    public long getDurationLimit(CommandSource source) {
+    public long getDurationLimit(SharedSuggestionProvider source) {
         long out = 0;
         boolean custom = false;
 

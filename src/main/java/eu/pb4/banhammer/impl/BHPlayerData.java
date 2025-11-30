@@ -2,15 +2,15 @@ package eu.pb4.banhammer.impl;
 
 import com.mojang.authlib.GameProfile;
 import eu.pb4.placeholders.api.PlaceholderContext;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Util;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
-public record BHPlayerData(GameProfile gameProfile, String ip, Text displayName, @Nullable ServerPlayerEntity player) {
+public record BHPlayerData(GameProfile gameProfile, String ip, Component displayName, @Nullable ServerPlayer player) {
     public UUID uuid() {
         return this.gameProfile.id() == null ? Util.NIL_UUID : this.gameProfile.id();
     }

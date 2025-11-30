@@ -7,10 +7,10 @@ import eu.pb4.banhammer.impl.config.ConfigManager;
 import eu.pb4.banhammer.api.PunishmentData;
 import eu.pb4.banhammer.api.PunishmentType;
 import eu.pb4.placeholders.api.PlaceholderContext;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.PlayerConfigEntry;
-import net.minecraft.server.PlayerManager;
-import net.minecraft.text.Text;
+import net.minecraft.server.players.NameAndId;
+import net.minecraft.server.players.PlayerList;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -22,13 +22,13 @@ import java.net.SocketAddress;
 import java.util.HashSet;
 import java.util.Set;
 
-@Mixin(PlayerManager.class)
+@Mixin(PlayerList.class)
 public class PlayerManagerMixin {
 
     @Shadow @Final private MinecraftServer server;
 
-    @Inject(method = "checkCanJoin", at = @At("HEAD"))
-    private void banHammer_cachePlayersIP(SocketAddress address, PlayerConfigEntry profile, CallbackInfoReturnable<Text> cir) {
+    @Inject(method = "canPlayerLogin", at = @At("HEAD"))
+    private void banHammer_cachePlayersIP(SocketAddress address, NameAndId profile, CallbackInfoReturnable<Component> cir) {
         if (address != null) {
             var stringAddress = BHUtils.stringifyAddress(address);
 
@@ -37,8 +37,8 @@ public class PlayerManagerMixin {
         }
     }
 
-    @Inject(method = "checkCanJoin", at = @At("TAIL"), cancellable = true)
-    private void banHammer_checkIfBanned(SocketAddress address, PlayerConfigEntry profile, CallbackInfoReturnable<Text> cir) {
+    @Inject(method = "canPlayerLogin", at = @At("TAIL"), cancellable = true)
+    private void banHammer_checkIfBanned(SocketAddress address, NameAndId profile, CallbackInfoReturnable<Component> cir) {
         PunishmentData punishment = null;
 
         if (address == null || profile == null) {
@@ -71,7 +71,7 @@ public class PlayerManagerMixin {
             if (punishment.type == PunishmentType.IP_BAN && ConfigManager.getConfig().configData.standardBanPlayersWithBannedIps) {
                 final boolean silent = ConfigManager.getConfig().configData.autoBansFromIpBansAreSilent;
 
-                PunishmentData punishment1 = new PunishmentData(profile.id(), BHUtils.stringifyAddress(address), Text.literal(profile.name()), profile.name(),
+                PunishmentData punishment1 = new PunishmentData(profile.id(), BHUtils.stringifyAddress(address), Component.literal(profile.name()), profile.name(),
                         punishment.adminUUID,
                         punishment.adminDisplayName,
                         punishment.time,

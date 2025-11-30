@@ -7,7 +7,7 @@ import eu.pb4.banhammer.impl.config.data.ConfigData;
 import eu.pb4.banhammer.impl.config.data.DiscordMessageData;
 import eu.pb4.banhammer.impl.config.data.MessageConfigData;
 import me.lucko.fabric.api.permissions.v0.Permissions;
-import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.commands.CommandSourceStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
@@ -75,7 +75,7 @@ public class ConfigManager {
 
 
     @NotNull
-    public static Predicate<ServerCommandSource> requirePermissionOrOp(@NotNull String permission) {
+    public static Predicate<CommandSourceStack> requirePermissionOrOp(@NotNull String permission) {
         Objects.requireNonNull(permission, "permission");
         return (player) -> Permissions.check(player, permission, CONFIG.configData.defaultOpPermissionLevel);
     }

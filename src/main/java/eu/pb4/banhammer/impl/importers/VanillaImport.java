@@ -6,25 +6,29 @@ import eu.pb4.banhammer.impl.BanHammerImpl;
 import eu.pb4.banhammer.mixin.accessor.ServerConfigEntryAccessor;
 import eu.pb4.banhammer.api.PunishmentData;
 import eu.pb4.banhammer.api.PunishmentType;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.*;
-import net.minecraft.text.Text;
+import net.minecraft.server.players.IpBanList;
+import net.minecraft.server.players.IpBanListEntry;
+import net.minecraft.server.players.UserBanList;
+import net.minecraft.server.players.UserBanListEntry;
 import net.minecraft.util.Util;
 
 public final class VanillaImport implements BanHammer.PunishmentImporter {
     public boolean importPunishments(MinecraftServer server, PunishmentConsumer consumer, boolean remove) {
         try {
-            BannedPlayerList banList = BanHammerImpl.SERVER.getPlayerManager().getUserBanList();
-            BannedIpList ipBanList = BanHammerImpl.SERVER.getPlayerManager().getIpBanList();
+            UserBanList banList = BanHammerImpl.SERVER.getPlayerList().getBans();
+            IpBanList ipBanList = BanHammerImpl.SERVER.getPlayerList().getIpBans();
 
-            for (BannedPlayerEntry data : banList.values()) {
+            for (UserBanListEntry data : banList.getEntries()) {
                 try {
                     GameProfile profile = ((ServerConfigEntryAccessor<GameProfile>) data).getKeyServer();
 
-                    long creation = data.getCreationDate().getTime() / 1000;
+                    long creation = data.getCreated().getTime() / 1000;
                     long expiration;
 
                     try {
-                        expiration = data.getExpiryDate().getTime() / 1000 - creation;
+                        expiration = data.getExpires().getTime() / 1000 - creation;
                     } catch (Exception e) {
                         expiration = -1;
                     }
@@ -32,10 +36,10 @@ public final class VanillaImport implements BanHammer.PunishmentImporter {
                     PunishmentData punishment = new PunishmentData(
                             profile.id(),
                             "undefined",
-                            Text.literal(profile.name()),
+                            Component.literal(profile.name()),
                             profile.name(),
                             Util.NIL_UUID,
-                            Text.literal(data.getSource()),
+                            Component.literal(data.getSource()),
                             creation,
                             expiration,
                             data.getReason(),
@@ -51,15 +55,15 @@ public final class VanillaImport implements BanHammer.PunishmentImporter {
                 }
             }
 
-            for (BannedIpEntry data : ipBanList.values()) {
+            for (IpBanListEntry data : ipBanList.getEntries()) {
                 try {
                     String ip = ((ServerConfigEntryAccessor<String>) data).getKeyServer();
 
-                    long creation = data.getCreationDate().getTime() / 1000;
+                    long creation = data.getCreated().getTime() / 1000;
                     long expiration;
 
                     try {
-                        expiration = data.getExpiryDate().getTime() / 1000 - creation;
+                        expiration = data.getExpires().getTime() / 1000 - creation;
                     } catch (Exception e) {
                         expiration = -1;
                     }
@@ -67,10 +71,10 @@ public final class VanillaImport implements BanHammer.PunishmentImporter {
                     PunishmentData punishment = new PunishmentData(
                             Util.NIL_UUID,
                             ip,
-                            Text.literal("Unknown player"),
+                            Component.literal("Unknown player"),
                             "Unknown player",
                             Util.NIL_UUID,
-                            Text.literal(data.getSource()),
+                            Component.literal(data.getSource()),
                             creation,
                             expiration,
                             data.getReason(),
