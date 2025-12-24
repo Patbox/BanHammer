@@ -4,10 +4,10 @@
   "package": "eu.pb4.banhammer.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "PlayerManagerMixin",
-    "ServerPlayNetworkHandlerMixin",
+    "PlayerListMixin",
+    "ServerGamePacketListenerImplMixin",
     "accessor.ServerConfigEntryAccessor",
-    "vanilla.BanCommandMixin",
+    "vanilla.BanPlayerCommandMixin",
     "vanilla.BanIpCommandMixin",
     "vanilla.KickCommandMixin",
     "vanilla.PardonCommandMixin"

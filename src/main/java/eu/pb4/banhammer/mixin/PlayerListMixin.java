@@ -20,10 +20,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.net.SocketAddress;
 import java.util.HashSet;
-import java.util.Set;
 
 @Mixin(PlayerList.class)
-public class PlayerManagerMixin {
+public class PlayerListMixin {
 
     @Shadow @Final private MinecraftServer server;
 

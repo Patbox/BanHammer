@@ -105,7 +105,7 @@ public final class BHUtils {
 
             if (isIpLike) {
                 var uuids = BanHammerImpl.IP_TO_UUID_CACHE.get(usernameOrIp);
-                if (uuids.isEmpty()) {
+                if (uuids == null || uuids.isEmpty()) {
                     return Collections.emptyList();
                 } else {
                     var list = new ArrayList<BHPlayerData>();

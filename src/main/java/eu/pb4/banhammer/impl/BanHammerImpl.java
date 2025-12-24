@@ -383,9 +383,13 @@ public final class BanHammerImpl implements ModInitializer {
         });
 
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            if (!ConfigManager.getConfig().configData.showAssociatedAccounts) {
+                return;
+            }
+
             String ip = handler.player.getIpAddress();
             Set<UUID> associatedAccounts = IP_TO_UUID_CACHE.get(ip);
-            if (associatedAccounts.size() <= 1) return;
+            if (associatedAccounts == null || associatedAccounts.size() <= 1) return;
             List<Component> playerMessages = new LinkedList<>();
 
             for (UUID player : associatedAccounts) {

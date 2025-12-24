@@ -18,6 +18,7 @@ public final class ConfigData {
 
     public int defaultOpPermissionLevel = 3;
     public boolean cachePunishmentsLocally = true;
+    public boolean showAssociatedAccounts = true;
 
     public List<String> discordWebhookUrls = new ArrayList<>();
 
