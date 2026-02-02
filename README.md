@@ -95,7 +95,16 @@ It's little more tricky as it has many values:
 
 
 Discord and ingame messages can use predefined variables:
-For punishments: `${operator}`, `${operator_uuid}`, 
-`${banned}`, `${banned_uuid}`, `${reason}`, `${expiration_date}`, `${expiration_time}`
+For punishments:
+- `${operator}`: Operator username
+- `${operator_uuid}`: Operator UUID 
+- `${banned}`: Punished user's username
+- `${banned_uuid}`: Punished user's UUID
+- `${reason}`: Reason given for the punishment
+   - Value is `Unknown reason` if no reason was given
+- `${expiration_date}`: Absolute date of when the punishment will expire (if applicable)
+- `${expiration_time}`: Relative time of when the punishment will expire (if applicable)
+- `${expiration_timestamp}`: Timestamp when the punishment will expire (if applicable)
+- `${punishment_timestamp}`: Timestamp of when the punishment was given
 
 For removing: `${operator}`, `${operator_uuid}`, `${banned}`, `${banned_uuid}`
