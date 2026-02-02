@@ -190,11 +190,13 @@ public sealed class PunishmentData permits PunishmentData.Synced {
         list.put("reason", Component.literal(this.reason));
         list.put("expiration_date", Component.literal(this.getFormattedExpirationDate()));
         list.put("expiration_time", Component.literal(this.getFormattedExpirationTime()));
+		list.put("expiration_timestamp", Component.literal(String.valueOf(this.getExpirationDate().getTime() / 1000)));
         list.put("banned", this.playerDisplayName.copy());
         list.put("banned_name", Component.literal(this.playerName));
         list.put("banned_uuid", Component.literal(this.playerUUID.toString()));
+		list.put("punishment_timestamp", Component.literal(String.valueOf(this.getDate().getTime() / 1000)));
 
-        return list;
+		return list;
     }
 
     public final Map<String, String> getStringPlaceholders() {
@@ -209,8 +211,9 @@ public sealed class PunishmentData permits PunishmentData.Synced {
         list.put("banned", this.playerDisplayName.getString());
         list.put("banned_name", this.playerName);
         list.put("banned_uuid", this.playerUUID.toString());
+		list.put("punishment_timestamp", String.valueOf(this.getDate().getTime() / 1000));
 
-        return list;
+		return list;
     }
 
     public final boolean isTemporary() {
