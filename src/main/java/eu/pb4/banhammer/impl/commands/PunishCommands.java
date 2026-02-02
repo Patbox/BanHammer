@@ -74,6 +74,11 @@ public class PunishCommands {
                         duration = Math.min(temp2, temp);
                     }
 
+                    if (duration < 0) {
+                        ctx.getSource().sendFailure(Component.literal("Negative duration isn't allowed!"));
+                        return;
+                    }
+
                 } catch (Exception e) {
                     ctx.getSource().sendFailure(Component.literal("Invalid duration!"));
                     return;

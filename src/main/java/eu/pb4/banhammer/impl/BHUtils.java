@@ -60,6 +60,9 @@ public final class BHUtils {
     }
 
     public static boolean isPunishableBy(GameProfile profile, CommandSourceStack source) {
+        if (profile == null) {
+            return true;
+        }
         var server = source.getServer();
         var entry = server.getPlayerList().getOps().get(new NameAndId(profile));
 
@@ -106,7 +109,7 @@ public final class BHUtils {
             if (isIpLike) {
                 var uuids = BanHammerImpl.IP_TO_UUID_CACHE.get(usernameOrIp);
                 if (uuids == null || uuids.isEmpty()) {
-                    return Collections.emptyList();
+                    return List.of(new BHPlayerData(null, usernameOrIp, Component.literal("??: <UNKNOWN>"), null));
                 } else {
                     var list = new ArrayList<BHPlayerData>();
 
