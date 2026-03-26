@@ -26,7 +26,7 @@ public class Config {
             .quickText()
             .simplifiedTextFormat()
             .placeholders(TagLikeParser.PLACEHOLDER_USER, PLACEHOLDER)
-            .globalPlaceholders()
+            .serverPlaceholders()
             .build();
     public final List<String> mutedCommands;
     public final MessageConfigData messageConfigData;

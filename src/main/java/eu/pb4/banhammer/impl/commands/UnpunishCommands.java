@@ -141,11 +141,11 @@ public class UnpunishCommands {
                     list.put("banned", Component.literal(player.name()));
                     list.put("banned_uuid", Component.literal(player.uuid().toString()));
                     list.put("reason", Component.literal(reason));
-                    Component textMessage = message.toText(player.placeholderContext(ctx.getSource().getServer()).asParserContext().with(Config.PLACEHOLDER, list::get));
+                    Component textMessage = message.toComponent(player.placeholderContext(ctx.getSource().getServer()).asParserContext().with(Config.PLACEHOLDER, list::get));
 
                     if (config.configData.punishmentsAreSilent || isSilent) {
                         if (player.player() != null) {
-                            player.player().displayClientMessage(textMessage, false);
+                            player.player().sendSystemMessage(textMessage, false);
                         }
 
                         ctx.getSource().sendSuccess(() -> textMessage, false);

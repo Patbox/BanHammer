@@ -23,6 +23,7 @@ import eu.pb4.banhammer.impl.database.SQLiteDatabase;
 import eu.pb4.banhammer.impl.importers.BanHammerJsonImporter;
 import eu.pb4.banhammer.impl.importers.VanillaImport;
 import eu.pb4.placeholders.api.PlaceholderContext;
+import eu.pb4.placeholders.api.ServerPlaceholderContext;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.Event;
@@ -158,7 +159,7 @@ public final class BanHammerImpl implements ModInitializer {
 
             for (ServerPlayer player : SERVER.getPlayerList().getPlayers()) {
                 if (player.getIpAddress().equals(punishment.playerIP)) {
-                    player.connection.disconnect(punishment.getDisconnectMessage(PlaceholderContext.of(player)));
+                    player.connection.disconnect(punishment.getDisconnectMessage(ServerPlaceholderContext.of(player)));
                     if (ConfigManager.getConfig().configData.standardBanPlayersWithBannedIps && punishment.type == PunishmentType.IP_BAN) {
                         PunishmentData punishment1 = new PunishmentData(player.getUUID(), player.getIpAddress(), player.getDisplayName(), player.getGameProfile().name(),
                                 punishment.adminUUID,
@@ -192,15 +193,15 @@ public final class BanHammerImpl implements ModInitializer {
             ServerPlayer player = SERVER.getPlayerList().getPlayer(punishment.playerUUID);
 
             if (player != null) {
-                player.connection.disconnect(punishment.getDisconnectMessage(PlaceholderContext.of(player)));
+                player.connection.disconnect(punishment.getDisconnectMessage(ServerPlaceholderContext.of(player)));
             }
         }
 
         if (!invisible) {
             if (!silent) {
-                SERVER.getPlayerList().broadcastSystemMessage(punishment.getChatMessage(PlaceholderContext.of(new GameProfile(punishment.playerUUID, punishment.playerName), SERVER)), false);
+                SERVER.getPlayerList().broadcastSystemMessage(punishment.getChatMessage(ServerPlaceholderContext.of(new GameProfile(punishment.playerUUID, punishment.playerName), SERVER)), false);
             } else {
-                Component message = punishment.getChatMessage(PlaceholderContext.of(new GameProfile(punishment.playerUUID, punishment.playerName), SERVER));
+                Component message = punishment.getChatMessage(ServerPlaceholderContext.of(new GameProfile(punishment.playerUUID, punishment.playerName), SERVER));
 
                 SERVER.sendSystemMessage(message);
 
@@ -324,7 +325,7 @@ public final class BanHammerImpl implements ModInitializer {
                     }
                     default -> {
                         LOGGER.error("Config file is invalid (database)! Stopping server...");
-                        server.stopServer();
+                        server.close();
                         return;
                     }
                 }
@@ -332,7 +333,7 @@ public final class BanHammerImpl implements ModInitializer {
                 e.printStackTrace();
 
                 LOGGER.error("Couldn't connect to database! Stopping server...");
-                server.stopServer();
+                server.close();
                 return;
             }
 
@@ -342,7 +343,7 @@ public final class BanHammerImpl implements ModInitializer {
             LOGGER.info("BanHammer connected successfully to " + DATABASE.name() + " database!");
         } else {
             LOGGER.error("Config file is invalid! Stopping server...");
-            server.stopServer();
+            server.close();
         }
 
     }
@@ -381,7 +382,7 @@ public final class BanHammerImpl implements ModInitializer {
             var punishments = getPlayersPunishments(sender.getStringUUID(), PunishmentType.MUTE);
             if (!punishments.isEmpty()) {
                 var punishment = punishments.getFirst();
-                sender.displayClientMessage(punishment.getDisconnectMessage(PlaceholderContext.of(sender)), false);
+                sender.sendSystemMessage(punishment.getDisconnectMessage(ServerPlaceholderContext.of(sender)), false);
                 return false;
             }
             return true;
@@ -412,7 +413,7 @@ public final class BanHammerImpl implements ModInitializer {
                     PunishmentData.Synced punishment = punishments.getFirst();
 
                     text.withStyle(style ->
-                        style.withHoverEvent(new HoverEvent.ShowText(punishment.getChatMessage(PlaceholderContext.of(new GameProfile(punishment.playerUUID, punishment.playerName), SERVER))))
+                        style.withHoverEvent(new HoverEvent.ShowText(punishment.getChatMessage(ServerPlaceholderContext.of(new GameProfile(punishment.playerUUID, punishment.playerName), SERVER))))
                     );
                 }
             }

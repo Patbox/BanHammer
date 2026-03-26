@@ -8,6 +8,7 @@ import eu.pb4.banhammer.impl.config.data.MessageConfigData;
 import eu.pb4.placeholders.api.ParserContext;
 import eu.pb4.placeholders.api.PlaceholderContext;
 import eu.pb4.placeholders.api.Placeholders;
+import eu.pb4.placeholders.api.ServerPlaceholderContext;
 import eu.pb4.placeholders.api.node.EmptyNode;
 import eu.pb4.placeholders.api.parsers.NodeParser;
 import eu.pb4.placeholders.api.parsers.TagLikeParser;
@@ -113,7 +114,7 @@ public sealed class PunishmentData permits PunishmentData.Synced {
     }
 
 
-    public final Component getDisconnectMessage(PlaceholderContext context) {
+    public final Component getDisconnectMessage(ServerPlaceholderContext context) {
         var message = switch (this.type) {
             case KICK -> ConfigManager.getConfig().kickScreenMessage;
             case BAN -> this.isTemporary() ? ConfigManager.getConfig().tempBanScreenMessage : ConfigManager.getConfig().banScreenMessage;
@@ -122,10 +123,10 @@ public sealed class PunishmentData permits PunishmentData.Synced {
             default -> EmptyNode.INSTANCE;
         };
 
-        return message.toText(context.asParserContext().with(Config.PLACEHOLDER, this.getPlaceholders()::get));
+        return message.toComponent(context.asParserContext().with(Config.PLACEHOLDER, this.getPlaceholders()::get));
     }
 
-    public final Component getChatMessage(PlaceholderContext context) {
+    public final Component getChatMessage(ServerPlaceholderContext context) {
         var message = switch (this.type) {
             case KICK -> ConfigManager.getConfig().kickChatMessage;
             case BAN -> this.isTemporary() ? ConfigManager.getConfig().tempBanChatMessage : ConfigManager.getConfig().banChatMessage;
@@ -134,7 +135,7 @@ public sealed class PunishmentData permits PunishmentData.Synced {
             case WARN -> this.isTemporary() ? ConfigManager.getConfig().tempWarnChatMessage : ConfigManager.getConfig().warnChatMessage;
         };
 
-        return message.toText(context.asParserContext().with(Config.PLACEHOLDER, this.getPlaceholders()::get));
+        return message.toComponent(context.asParserContext().with(Config.PLACEHOLDER, this.getPlaceholders()::get));
     }
 
     public final DiscordMessageData.Message getRawDiscordMessage() {

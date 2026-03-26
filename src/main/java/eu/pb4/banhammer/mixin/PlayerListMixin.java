@@ -7,6 +7,7 @@ import eu.pb4.banhammer.impl.config.ConfigManager;
 import eu.pb4.banhammer.api.PunishmentData;
 import eu.pb4.banhammer.api.PunishmentType;
 import eu.pb4.placeholders.api.PlaceholderContext;
+import eu.pb4.placeholders.api.ServerPlaceholderContext;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.players.NameAndId;
@@ -80,7 +81,7 @@ public class PlayerListMixin {
 
                 BanHammerImpl.punishPlayer(punishment1, silent, silent);
             }
-            cir.setReturnValue(punishment.getDisconnectMessage(PlaceholderContext.of(new GameProfile(profile.id(), profile.name()), server)));
+            cir.setReturnValue(punishment.getDisconnectMessage(ServerPlaceholderContext.of(new GameProfile(profile.id(), profile.name()), server)));
         }
     }
 }

@@ -4,6 +4,7 @@ import eu.pb4.banhammer.api.PunishmentType;
 import eu.pb4.banhammer.impl.BanHammerImpl;
 import eu.pb4.banhammer.impl.config.ConfigManager;
 import eu.pb4.placeholders.api.PlaceholderContext;
+import eu.pb4.placeholders.api.ServerPlaceholderContext;
 import net.minecraft.network.Connection;
 import net.minecraft.network.chat.LastSeenMessages;
 import net.minecraft.network.chat.PlayerChatMessage;
@@ -44,7 +45,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
         boolean blocked = false;
         for (var punishment : BanHammerImpl.CACHED_PUNISHMENTS) {
             if (!punishment.isExpired() && punishment.type == PunishmentType.MUTE && punishment.playerUUID.equals(this.player.getUUID())) {
-                this.player.displayClientMessage(punishment.getDisconnectMessage(PlaceholderContext.of(this.player)), false);
+                this.player.sendSystemMessage(punishment.getDisconnectMessage(ServerPlaceholderContext.of(this.player)), false);
                 ci.cancel();
                 blocked = true;
             }
@@ -55,7 +56,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
             if (!punishments.isEmpty()) {
                 var punishment = punishments.getFirst();
 
-                this.player.displayClientMessage(punishment.getDisconnectMessage(PlaceholderContext.of(this.player)), false);
+                this.player.sendSystemMessage(punishment.getDisconnectMessage(ServerPlaceholderContext.of(this.player)), false);
                 ci.cancel();
                 blocked = true;
             }
@@ -95,7 +96,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
             if (rawCommand.equals(command)) {
                 for (var punishment : BanHammerImpl.CACHED_PUNISHMENTS) {
                     if (!punishment.isExpired() && punishment.type == PunishmentType.MUTE && punishment.playerUUID.equals(this.player.getUUID())) {
-                        this.player.displayClientMessage(punishment.getDisconnectMessage(PlaceholderContext.of(this.player)), false);
+                        this.player.sendSystemMessage(punishment.getDisconnectMessage(ServerPlaceholderContext.of(this.player)), false);
                         return true;
                     }
                 }
@@ -103,9 +104,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                 var punishments = BanHammerImpl.getPlayersPunishments(this.player.getUUID().toString(), PunishmentType.MUTE);
                 if (!punishments.isEmpty()) {
                     var punishment = punishments.getFirst();
-
-
-                    this.player.displayClientMessage(punishment.getDisconnectMessage(PlaceholderContext.of(this.player)), false);
+                    this.player.sendSystemMessage(punishment.getDisconnectMessage(ServerPlaceholderContext.of(this.player)), false);
                     return true;
                 }
                 return false;
