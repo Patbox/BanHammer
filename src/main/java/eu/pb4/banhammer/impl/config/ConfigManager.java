@@ -6,14 +6,16 @@ import eu.pb4.banhammer.impl.BanHammerImpl;
 import eu.pb4.banhammer.impl.config.data.ConfigData;
 import eu.pb4.banhammer.impl.config.data.DiscordMessageData;
 import eu.pb4.banhammer.impl.config.data.MessageConfigData;
-import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.server.permissions.PermissionLevel;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.function.Predicate;
+
+import static eu.pb4.banhammer.impl.BanHammerImpl.id;
 
 public class ConfigManager {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
@@ -77,6 +79,6 @@ public class ConfigManager {
     @NotNull
     public static Predicate<CommandSourceStack> requirePermissionOrOp(@NotNull String permission) {
         Objects.requireNonNull(permission, "permission");
-        return (player) -> Permissions.check(player, permission, CONFIG.configData.defaultOpPermissionLevel);
+        return (player) -> player.checkPermission(id(permission), PermissionLevel.byId(CONFIG.configData.defaultOpPermissionLevel));
     }
 }

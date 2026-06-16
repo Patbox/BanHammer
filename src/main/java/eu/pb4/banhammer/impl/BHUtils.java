@@ -4,18 +4,21 @@ import com.google.common.net.InetAddresses;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.PropertyMap;
 import eu.pb4.banhammer.impl.config.ConfigManager;
-import me.lucko.fabric.api.permissions.v0.Permissions;
+import net.fabricmc.fabric.api.permission.v1.PermissionContext;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.permissions.Permission;
+import net.minecraft.server.permissions.PermissionLevel;
 import net.minecraft.server.players.NameAndId;
 import net.minecraft.util.Util;
 
 import java.net.SocketAddress;
 import java.util.*;
+
+import static eu.pb4.banhammer.impl.BanHammerImpl.id;
 
 public final class BHUtils {
     private static final Component UNKNOWN_PLAYER = Component.literal("Unknown player").withStyle(ChatFormatting.ITALIC);
@@ -69,7 +72,9 @@ public final class BHUtils {
         boolean permission = true;
 
         try {
-            permission = Permissions.check(source, "banhammer.can_ban_admins") || !Permissions.check(profile, "banhammer.block_punishments").get();
+            permission = source.checkPermission(id("can_ban_admins"), false)
+                    || !PermissionContext.offlinePlayer(new NameAndId(profile), server)
+                    .thenApply(x -> x.checkPermission(id("block_punishments"), false)).get();
         } catch (Throwable e) {
             e.printStackTrace();
         }

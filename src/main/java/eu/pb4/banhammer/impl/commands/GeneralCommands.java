@@ -15,8 +15,8 @@ import eu.pb4.banhammer.impl.config.ConfigManager;
 import eu.pb4.banhammer.impl.importers.BanHammerJsonImporter;
 import eu.pb4.sgui.api.elements.BookElementBuilder;
 import eu.pb4.sgui.api.gui.BookGui;
-import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.permission.v1.PermissionPredicates;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
@@ -24,10 +24,13 @@ import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.PermissionLevel;
+
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
+import static eu.pb4.banhammer.impl.BanHammerImpl.id;
 import static net.minecraft.commands.Commands.literal;
 
 public class GeneralCommands {
@@ -35,14 +38,14 @@ public class GeneralCommands {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             dispatcher.register(
                     literal("banhammer")
-                            .requires(Permissions.require("banhammer.commands.main", true))
+                            .requires(PermissionPredicates.require(id("commands/main"), true))
                             .executes(GeneralCommands::about)
                             .then(literal("reload")
-                                    .requires(Permissions.require("banhammer.commands.reload", 4))
+                                    .requires(PermissionPredicates.require(id("commands/reload"), PermissionLevel.ADMINS))
                                     .executes(GeneralCommands::reloadConfig)
                             )
                             .then(literal("import")
-                                    .requires(Permissions.require("banhammer.commands.import", 4))
+                                    .requires(PermissionPredicates.require(id("commands/import"), PermissionLevel.ADMINS))
                                     .then(importArgument("source")
                                             .executes((ctx) -> GeneralCommands.importer(ctx, false))
                                             .then(literal("remove")
@@ -51,12 +54,12 @@ public class GeneralCommands {
                                     )
                             )
                             .then(literal("export_all_punishments")
-                                    .requires(Permissions.require("banhammer.commands.export", 4))
+                                    .requires(PermissionPredicates.require(id("commands/export"), PermissionLevel.ADMINS))
                                     .executes((ctx) -> GeneralCommands.exporter(ctx, false))
                                     .then(literal("with_history").executes((ctx) -> GeneralCommands.exporter(ctx, true)))
                             )
                             .then(literal("list")
-                                    .requires(Permissions.require("banhammer.commands.list", 4))
+                                    .requires(PermissionPredicates.require(id("commands/list"), PermissionLevel.ADMINS))
                                     .then(playerArgument("player")
                                             .executes(GeneralCommands::listBans)
                                     )

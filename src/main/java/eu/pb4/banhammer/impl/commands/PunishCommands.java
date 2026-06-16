@@ -9,14 +9,15 @@ import eu.pb4.banhammer.impl.BHUtils;
 import eu.pb4.banhammer.impl.BanHammerImpl;
 import eu.pb4.banhammer.impl.config.Config;
 import eu.pb4.banhammer.impl.config.ConfigManager;
-import eu.pb4.placeholders.api.PlaceholderContext;
-import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.permissions.PermissionLevel;
+
 import java.util.concurrent.CompletableFuture;
 
+import static eu.pb4.banhammer.impl.BanHammerImpl.id;
 import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
 
@@ -41,7 +42,7 @@ public class PunishCommands {
 
     private static LiteralArgumentBuilder<CommandSourceStack> create(String command, PunishmentType type, boolean temp) {
         return literal(command)
-                .requires(ConfigManager.requirePermissionOrOp("banhammer.punish." + command))
+                .requires(ConfigManager.requirePermissionOrOp("punish/" + command))
                 .then(temp ? GeneralCommands.playerArgument("player")
                                 .then(argument("duration", StringArgumentType.word())
                                         .executes(ctx -> punishCommand(ctx, true, type))
@@ -66,7 +67,7 @@ public class PunishCommands {
                     String durText = ctx.getArgument("duration", String.class);
                     long temp = BHUtils.parseDuration(durText);
 
-                    if (Permissions.check(ctx.getSource(), "banhammer.ignoreTempLimit", 2)) {
+                    if (ctx.getSource().checkPermission(id("ignore_temp_limit"), PermissionLevel.GAMEMASTERS)) {
                         duration = temp;
                     } else {
                         long temp2 = ConfigManager.getConfig().getDurationLimit(ctx.getSource());
@@ -118,7 +119,7 @@ public class PunishCommands {
 
                         BanHammerImpl.punishPlayer(punishment, config.configData.punishmentsAreSilent || isSilent);
 
-                        if (config.configData.punishmentsAreSilent && !Permissions.check(ctx.getSource(), "banhammer.seesilent", 1)) {
+                        if (config.configData.punishmentsAreSilent && !ctx.getSource().checkPermission(id("seesilent"), PermissionLevel.MODERATORS)) {
                             ctx.getSource().sendSuccess(() -> punishment.getChatMessage(player.placeholderContext(ctx.getSource().getServer())), false);
                         }
                     } else {

@@ -24,21 +24,23 @@ import eu.pb4.banhammer.impl.importers.BanHammerJsonImporter;
 import eu.pb4.banhammer.impl.importers.VanillaImport;
 import eu.pb4.placeholders.api.PlaceholderContext;
 import eu.pb4.placeholders.api.ServerPlaceholderContext;
-import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.fabricmc.fabric.api.permission.v1.PermissionNode;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.PermissionLevel;
 import net.minecraft.server.players.NameAndId;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -211,7 +213,7 @@ public final class BanHammerImpl implements ModInitializer {
                 }
 
                 for (ServerPlayer player : SERVER.getPlayerList().getPlayers()) {
-                    if (player != punishedPlayer && Permissions.check(player.createCommandSourceStack(), "banhammer.seesilent", 3)) {
+                    if (player != punishedPlayer && player.checkPermission(id("seesilent"), PermissionLevel.ADMINS)) {
                         player.sendSystemMessage(message);
                     }
                 }
@@ -219,6 +221,10 @@ public final class BanHammerImpl implements ModInitializer {
         }
 
         PUNISHMENT_EVENT.invoker().onPunishment(punishment, silent, invisible);
+    }
+
+    public static Identifier id(String path) {
+        return Identifier.fromNamespaceAndPath("banhammer", path);
     }
 
     public static int removePunishment(String id, PunishmentType type) {
@@ -423,7 +429,7 @@ public final class BanHammerImpl implements ModInitializer {
             SERVER.sendSystemMessage(message);
 
             for (ServerPlayer player : SERVER.getPlayerList().getPlayers()) {
-                if (Permissions.check(player.createCommandSourceStack(), "banhammer.seeassociated", 3)) {
+                if (player.checkPermission(id("seeassociated"), PermissionLevel.ADMINS)) {
                     player.sendSystemMessage(message);
                 }
             }

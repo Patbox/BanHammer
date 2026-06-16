@@ -12,13 +12,15 @@ import eu.pb4.placeholders.api.ParserContext;
 import eu.pb4.placeholders.api.node.TextNode;
 import eu.pb4.placeholders.api.parsers.NodeParser;
 import eu.pb4.placeholders.api.parsers.TagLikeParser;
-import me.lucko.fabric.api.permissions.v0.Permissions;
-import net.minecraft.commands.SharedSuggestionProvider;
+import net.fabricmc.fabric.api.permission.v1.PermissionNode;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.function.Function;
+
+import static eu.pb4.banhammer.impl.BanHammerImpl.id;
 
 public class Config {
     public static final ParserContext.Key<Function<String, Component>> PLACEHOLDER = ParserContext.Key.of("ban_hammer");
@@ -131,12 +133,17 @@ public class Config {
         return PARSER.parseNode(String.join("\n", text));
     }
 
-    public long getDurationLimit(SharedSuggestionProvider source) {
+    public long getDurationLimit(CommandSourceStack source) {
         long out = 0;
         boolean custom = false;
 
+        if (source.checkPermission(PermissionNode.ofInteger(id("max_duration"))) instanceof Integer max) {
+            out = max;
+            custom = true;
+        }
+
         for (Map.Entry<String, Long> x : this.tempDurationLimit.entrySet()) {
-            if (Permissions.check(source, "banhammer.duration." + x.getKey()) && out < x.getValue()) {
+            if (source.checkPermission(id("duration/" + x.getKey()), false) && out < x.getValue()) {
                 out = x.getValue();
                 custom = true;
             }
