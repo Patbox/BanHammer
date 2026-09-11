@@ -39,7 +39,7 @@ public class UnpunishCommands {
 
     private static LiteralArgumentBuilder<CommandSourceStack> create(String command, PunishmentType type) {
         return literal(command)
-                .requires(ConfigManager.requirePermissionOrOp("banhammer.unpunish." + command))
+                .requires(ConfigManager.requirePermissionOrOp("unpunish/" + command))
                 .then(GeneralCommands.playerArgument("player")
                         .executes(ctx -> removePunishmentCommand(ctx, type))
                         .then(argument("reason", StringArgumentType.greedyString())
